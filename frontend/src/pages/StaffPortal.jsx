@@ -40,10 +40,24 @@ export default function StaffPortal() {
     navigate('/login')
   }
 
+  const scrollToSection = (id) => {
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
+
+  const handleFilterCard = (filter) => {
+    setRoomFilter(prev => prev === filter ? 'all' : filter)
+    scrollToSection('rooms-section')
+  }
+
   const handleRoomSelect = (room) => {
     setSelectedRoom(room)
     if (room.status === 'available') {
       setShowForm(true)
+    } else {
+      // Occupied — scroll to checkout panel
+      scrollToSection('checkout-panel')
     }
   }
 
@@ -125,14 +139,14 @@ export default function StaffPortal() {
         <div className="dashboard-stats">
           <div 
             className={`stat-card clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
-            onClick={() => setRoomFilter(roomFilter === 'occupied' ? 'all' : 'occupied')}
+            onClick={() => handleFilterCard('occupied')}
           >
             <h3>Occupied Rooms</h3>
             <p className="stat-value">{totalRoomsTaken}</p>
           </div>
           <div 
             className={`stat-card clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
-            onClick={() => setRoomFilter(roomFilter === 'available' ? 'all' : 'available')}
+            onClick={() => handleFilterCard('available')}
           >
             <h3>Remaining Rooms</h3>
             <p className="stat-value">{rooms.length - totalRoomsTaken}</p>
@@ -201,7 +215,7 @@ export default function StaffPortal() {
         )}
 
         {/* Room Selection */}
-        <div className="rooms-section">
+        <div className="rooms-section" id="rooms-section">
           <h2>Select a Room {roomFilter !== 'all' && `(${roomFilter})`}</h2>
           <div className="rooms-grid">
             {displayedRooms.map((room) => (
@@ -223,7 +237,7 @@ export default function StaffPortal() {
         {selectedRoom && selectedRoom.status === 'occupied' && (() => {
           const activeTx = getActiveTransaction(selectedRoom.id)
           return (
-            <div className="room-details-panel">
+            <div className="room-details-panel" id="checkout-panel">
               <h3>{selectedRoom.name} - Occupied</h3>
               {activeTx ? (
                 <>
