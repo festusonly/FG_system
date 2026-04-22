@@ -32,7 +32,11 @@ export default function StaffPortal() {
 
   // Cash on Hand: all transactions since the last collection
   const cashOnHand = transactions
-    .filter(tx => new Date(tx.time) > lastCollectionTime)
+    .filter(tx => {
+      const txTime = new Date(tx.time).getTime()
+      const collTime = lastCollectionTime.getTime()
+      return txTime > collTime
+    })
     .reduce((sum, tx) => sum + tx.amount, 0)
 
   // Stats

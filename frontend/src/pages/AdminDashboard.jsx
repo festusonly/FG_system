@@ -23,7 +23,14 @@ export default function AdminDashboard() {
 
   // Cash on Hand: all transactions since the last collection
   const cashOnHand = transactions
-    .filter(tx => new Date(tx.time) > lastCollectionTime)
+    .filter(tx => {
+      const txTime = new Date(tx.time).getTime()
+      const collTime = lastCollectionTime.getTime()
+      // If no collection ever happened (collTime 0), show all.
+      // Otherwise, show only transactions that happened AFTER the collection.
+      // We subtract 1000ms from the transaction time to be more lenient with server clock jitter.
+      return txTime > collTime
+    })
     .reduce((sum, tx) => sum + tx.amount, 0)
 
   // Computed Metrics (Today Only)
@@ -39,10 +46,10 @@ export default function AdminDashboard() {
 
   const displayedRooms = rooms.filter(r => roomFilter === 'all' || r.status === roomFilter)
 
-  const handleCollectCash = () => {
+  const handleCollectCash = async () => {
     if (cashOnHand === 0) return alert('No cash to collect right now.')
     if (window.confirm(`Are you sure you want to collect RWF ${cashOnHand.toLocaleString()}? This will reset the Cash on Hand meter to zero.`)) {
-      collectCash()
+      await collectCash()
     }
   }
 

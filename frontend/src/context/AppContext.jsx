@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { useAuth } from './AuthContext'
 
@@ -16,10 +16,6 @@ export function AppProvider({ children }) {
   const [expenses, setExpenses] = useState([])
   const [loadingData, setLoadingData] = useState(true)
   const [dataError, setDataError] = useState(null)
-  const [lastCollectionTime, setLastCollectionTime] = useState(() => {
-    const stored = localStorage.getItem('lastCashCollectionTime')
-    return stored ? new Date(stored) : new Date(0)
-  })
 
   // -----------------------------------------------------------------
   // FETCH INITIAL DATA
@@ -250,14 +246,39 @@ export function AppProvider({ children }) {
     }
   }
 
-  const collectCash = () => {
-    // Store the current collection timestamp in localStorage.
-    // This is instant, requires no database change, and persists across page refreshes.
-    const now = new Date().toISOString()
-    localStorage.setItem('lastCashCollectionTime', now)
-    // Force re-render by updating a dummy state
-    setLastCollectionTime(new Date(now))
-    return { success: true }
+  const lastCollectionTime = useMemo(() => {
+    // Filter for system marker events
+    const collections = expenses.filter(e => 
+      e.description === 'SYSTEM_CASH_COLLECTION' || 
+      e.description?.includes('SYSTEM_CASH_COLLECTION')
+    )
+    
+    if (collections.length === 0) return new Date(0)
+    
+    // Find the absolute latest collection timestamp
+    const timestamps = collections.map(e => new Date(e.time).getTime())
+    return new Date(Math.max(...timestamps))
+  }, [expenses])
+
+  const collectCash = async () => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .insert({
+          worker_id: user.id,
+          amount_rwf: 1, // Using 1 RWF instead of 0.01 in case the DB column is Integer type
+          description: 'SYSTEM_CASH_COLLECTION',
+        })
+      
+      if (error) throw error
+      return { success: true }
+    } catch (err) {
+      console.error('Error collecting cash:', err.message)
+      setDataError(err.message)
+      return { success: false, error: err.message }
+    }
   }
 
   const value = {
