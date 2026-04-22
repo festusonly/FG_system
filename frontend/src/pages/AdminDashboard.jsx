@@ -251,17 +251,20 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayedRooms.map((room) => (
-                      <tr key={room.id}>
-                        <td className="room-cell">{room.name}</td>
-                        <td>
-                          <span className={`status-badge ${room.status}`}>
-                            {room.status === 'occupied' ? 'Occupied' : 'Available'}
-                          </span>
-                        </td>
-                        <td className="count-cell">{room.usageCount} times</td>
-                      </tr>
-                    ))}
+                    {displayedRooms.map((room) => {
+                      const todayUsage = todaysTransactions.filter(tx => tx.roomId === room.id).length
+                      return (
+                        <tr key={room.id}>
+                          <td className="room-cell">{room.name}</td>
+                          <td>
+                            <span className={`status-badge ${room.status}`}>
+                              {room.status === 'occupied' ? 'Occupied' : 'Available'}
+                            </span>
+                          </td>
+                          <td className="count-cell">{todayUsage} times today</td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
