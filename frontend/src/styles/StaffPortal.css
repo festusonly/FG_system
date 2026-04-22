@@ -9,7 +9,7 @@
   color: var(--accent-color);
   padding: 0.75rem 1rem;
   border-radius: var(--border-radius);
-  border-left: 4px solid var(--accent-color);
+  border: 1px solid var(--accent-color);
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
 }
@@ -19,7 +19,7 @@
   color: var(--danger-color);
   padding: 0.75rem 1rem;
   border-radius: var(--border-radius);
-  border-left: 4px solid var(--danger-color);
+  border: 1px solid var(--danger-color);
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
   display: flex;
@@ -38,40 +38,43 @@
 }
 
 .staff-header {
-  background-color: #064e3b; /* Deep green to match admin */
-  padding: 1.5rem 2rem;
+  background-color: #ffffff;
+  padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-left h1 {
   font-size: 1.5rem;
-  color: #f8fafc; /* White text */
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
   font-weight: 600;
 }
 
 .header-left p {
-  color: #94a3b8; /* Light gray text */
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .btn-logout {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
-  border: 1px solid #334155;
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
+  background-color: #ffffff;
+  color: #0d9488;
+  border: 2px solid #0d9488;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: var(--transition);
-  font-weight: 500;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
 .btn-logout:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background-color: #0d9488;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .staff-content {
@@ -120,6 +123,27 @@
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.btn-details-card {
+  margin-top: 1rem;
+  width: max-content;
+  align-self: center;
+  padding: 0.5rem 1.2rem;
+  background-color: #f0fdfa;
+  color: #0d9488;
+  border: 1px solid #ccfbf1;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-details-card:hover {
+  background-color: #0d9488;
+  color: white;
 }
 
 .stat-value {
@@ -129,7 +153,7 @@
 }
 
 .primary-stat .stat-value {
-  color: var(--accent-color);
+  color: #0d9488;
 }
 
 .action-stat {
@@ -226,8 +250,8 @@
 }
 
 .room-btn.active {
-  ring: 2px solid var(--accent-color);
-  box-shadow: 0 0 0 2px var(--accent-color);
+  ring: 2px solid #0d9488;
+  box-shadow: 0 0 0 2px #0d9488;
 }
 
 /* Room Details Panel */
@@ -237,7 +261,6 @@
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
-  border-left: 4px solid var(--danger-color);
   margin-bottom: 2rem;
 }
 
@@ -286,6 +309,151 @@
   backdrop-filter: blur(4px);
 }
 
+.modal-content {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.modal-content.modal-large {
+  max-width: 700px;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.p-0 { padding: 0 !important; }
+
+.modal-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.modal-stat {
+  background-color: var(--bg-color);
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.modal-stat span {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.modal-stat strong {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.modal-subtitle {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.modal-rooms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-room-item {
+  padding: 1rem;
+  background-color: var(--bg-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.room-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.room-item-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.room-item-total {
+  font-weight: 700;
+  color: #0d9488;
+}
+
+.room-item-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.stat-short { color: #0d9488; }
+.stat-night { color: #7c3aed; }
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.modal-total {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-total strong {
+  color: var(--danger-color);
+  font-size: 1.1rem;
+}
+
+.btn-modal-close {
+  padding: 0.6rem 1.5rem;
+  background-color: #0d9488;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .modal-form {
   background-color: var(--card-bg);
   padding: 2rem;
@@ -293,6 +461,12 @@
   width: 100%;
   max-width: 500px;
   box-shadow: var(--shadow-lg);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-form h3 {
@@ -364,7 +538,7 @@
 
 .btn-submit {
   flex: 2;
-  background-color: var(--accent-color);
+  background-color: #0d9488;
   color: white;
   border: none;
   padding: 0.75rem;
@@ -375,7 +549,13 @@
 }
 
 .btn-submit:hover {
-  background-color: #0369a1;
+  background-color: #0d9488;
+  filter: brightness(1.1);
+}
+
+.btn-details-room {
+  background-color: #0d9488;
+  color: white;
 }
 
 .btn-cancel {

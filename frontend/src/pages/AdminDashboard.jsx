@@ -12,6 +12,9 @@ export default function AdminDashboard() {
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'available', 'occupied'
   const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history'
   const [selectedDayDetails, setSelectedDayDetails] = useState(null)
+  const [viewingExpense, setViewingExpense] = useState(null)
+  const [showExpensesModal, setShowExpensesModal] = useState(false)
+  const [showClientsModal, setShowClientsModal] = useState(false)
 
   const todayString = new Date().toDateString()
   
@@ -44,7 +47,12 @@ export default function AdminDashboard() {
   const shortStayCount = activeTransactions.filter(tx => tx.type === 'short_hours').length
   const nightStayCount = activeTransactions.filter(tx => tx.type === 'night' || tx.type === 'many_days').length
 
-  const displayedRooms = rooms.filter(r => roomFilter === 'all' || r.status === roomFilter)
+  const displayedRooms = rooms
+    .filter(r => roomFilter === 'all' || r.status === roomFilter)
+    .sort((a, b) => {
+      // Numerical sort based on roomNumber
+      return parseInt(a.roomNumber) - parseInt(b.roomNumber)
+    })
 
   const handleCollectCash = async () => {
     if (cashOnHand === 0) return alert('No cash to collect right now.')
@@ -179,6 +187,17 @@ export default function AdminDashboard() {
           </div>
 
           <div className="metric-card info">
+            <h3>Total Clients Today</h3>
+            <p className="metric-value">{todaysTransactions.length}</p>
+            <button 
+              className="btn-details-card"
+              onClick={() => setShowClientsModal(true)}
+            >
+              View Details
+            </button>
+          </div>
+
+          <div className="metric-card primary">
             <h3>Stay Breakdown</h3>
             <p className="metric-value breakdown-value">
               <span className="short-stay">{shortStayCount} Short</span>
@@ -188,10 +207,15 @@ export default function AdminDashboard() {
             <span className="metric-label">Active bookings</span>
           </div>
 
-          <div className="metric-card danger clickable" onClick={() => scrollToSection('expenses-section')}>
+          <div className="metric-card danger">
             <h3>Total Expenses</h3>
             <p className="metric-value">RWF {totalExpenses.toLocaleString()}</p>
-            <span className="metric-label">Recorded outgoings</span>
+            <button 
+              className="btn-details-card"
+              onClick={() => setShowExpensesModal(true)}
+            >
+              View Details
+            </button>
           </div>
         </div>
 
@@ -270,40 +294,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Recent Expenses */}
-            <div className="panel-section" id="expenses-section">
-              <h2>Recent Expenses</h2>
-              <div className="table-responsive">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Amount</th>
-                      <th>Description</th>
-                      <th>Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {todaysExpenses.length > 0 ? (
-                      todaysExpenses.map((exp) => (
-                        <tr key={exp.id}>
-                          <td className="amount-cell text-danger">
-                            - RWF {exp.amount.toLocaleString()}
-                          </td>
-                          <td className="desc-cell">{exp.description}</td>
-                          <td className="time-cell">{formatDate(exp.time)}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="3" className="empty-state">
-                          No expenses recorded today
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+
           </div>
         </div>
           </>
@@ -401,6 +392,151 @@ export default function AdminDashboard() {
                   ))
                 })()}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Expense Detail Modal */}
+      {viewingExpense && (
+        <div className="modal-overlay" onClick={() => setViewingExpense(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Expense Details</h2>
+              <button className="btn-close" onClick={() => setViewingExpense(null)}>&times;</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="detail-item">
+                <span className="detail-label">Amount</span>
+                <span className="detail-value text-danger">RWF {viewingExpense.amount.toLocaleString()}</span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="detail-label">Description</span>
+                <p className="detail-text">{viewingExpense.description}</p>
+              </div>
+              
+              <div className="detail-item">
+                <span className="detail-label">Time & Date</span>
+                <span className="detail-value">{formatDate(viewingExpense.time)}</span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="detail-label">Recorded By</span>
+                <span className="detail-value">{viewingExpense.workers?.name || 'Unknown'}</span>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn-modal-close" onClick={() => setViewingExpense(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* All Expenses List Modal */}
+      {showExpensesModal && (
+        <div className="modal-overlay" onClick={() => setShowExpensesModal(false)}>
+          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Today's Expenses List</h2>
+              <button className="btn-close" onClick={() => setShowExpensesModal(false)}>&times;</button>
+            </div>
+            
+            <div className="modal-body p-0">
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Description</th>
+                      <th>Amount</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {todaysExpenses.length > 0 ? (
+                      todaysExpenses.map((exp) => (
+                        <tr key={exp.id}>
+                          <td className="desc-cell">{exp.description}</td>
+                          <td className="amount-cell text-danger">RWF {exp.amount.toLocaleString()}</td>
+                          <td className="time-cell">{formatDate(exp.time)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" className="empty-state">No expenses recorded today</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <div className="modal-total">
+                <span>Total:</span>
+                <strong>RWF {totalExpenses.toLocaleString()}</strong>
+              </div>
+              <button className="btn-modal-close" onClick={() => setShowExpensesModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Today's Client Usage Modal */}
+      {showClientsModal && (
+        <div className="modal-overlay" onClick={() => setShowClientsModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Today's Room Usage Breakdown</h2>
+              <button className="btn-close" onClick={() => setShowClientsModal(false)}>&times;</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="modal-summary-grid">
+                <div className="modal-stat">
+                  <span>Total Clients</span>
+                  <strong>{todaysTransactions.length}</strong>
+                </div>
+                <div className="modal-stat">
+                  <span>Total Revenue</span>
+                  <strong className="text-success">RWF {totalToday.toLocaleString()}</strong>
+                </div>
+              </div>
+
+              <h3 className="modal-subtitle">Room Utilization</h3>
+              <div className="modal-rooms-list">
+                {Object.keys(todaysTransactions.reduce((acc, tx) => {
+                  if (!acc[tx.room]) acc[tx.room] = { count: 0, short: 0, night: 0 }
+                  acc[tx.room].count++
+                  if (tx.type === 'short_hours') acc[tx.room].short++
+                  else acc[tx.room].night++
+                  return acc
+                }, {})).length > 0 ? (
+                  Object.entries(todaysTransactions.reduce((acc, tx) => {
+                    if (!acc[tx.room]) acc[tx.room] = { count: 0, short: 0, night: 0 }
+                    acc[tx.room].count++
+                    if (tx.type === 'short_hours') acc[tx.room].short++
+                    else acc[tx.room].night++
+                    return acc
+                  }, {})).map(([room, stats]) => (
+                    <div key={room} className="modal-room-item">
+                      <div className="room-item-header">
+                        <h4>{room}</h4>
+                        <span className="room-item-total">{stats.count} times used</span>
+                      </div>
+                      <div className="room-item-stats">
+                        <span className="stat-short">{stats.short} Short Stay</span>
+                        <span className="stat-night">{stats.night} Night Stay</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="empty-state">No rooms used today yet.</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>Close</button>
             </div>
           </div>
         </div>

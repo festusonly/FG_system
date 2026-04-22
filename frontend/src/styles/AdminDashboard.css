@@ -5,40 +5,43 @@
 }
 
 .admin-header {
-  background-color: #064e3b; /* Deep green */
-  padding: 1.5rem 2rem;
+  background-color: #ffffff;
+  padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-left h1 {
   font-size: 1.5rem;
-  color: #f8fafc; /* White text */
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
   font-weight: 600;
 }
 
 .header-left p {
-  color: #94a3b8; /* Light gray text */
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .btn-logout {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
-  border: 1px solid #334155;
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
+  background-color: #ffffff;
+  color: #0d9488;
+  border: 2px solid #0d9488;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: var(--transition);
-  font-weight: 500;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
 .btn-logout:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background-color: #0d9488;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .dashboard-content {
@@ -49,27 +52,27 @@
 
 /* Cash Collection Banner */
 .cash-collection-banner {
-  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); /* Deep green gradient */
-  border-radius: var(--border-radius);
-  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); /* Vibrant Teal */
+  border-radius: 12px;
+  padding: 1.5rem 2rem; /* Increased size */
   margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  border: 1px solid #047857;
-  color: #f8fafc;
+  box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.2);
+  border: none;
+  color: white;
 }
 
 .cash-info h3 {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
-  color: #f8fafc;
+  color: white;
 }
 
 .cash-info p {
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.875rem;
   margin: 0;
 }
@@ -77,37 +80,37 @@
 .cash-action {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .cash-amount {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #10b981; /* Emerald green for cash */
+  font-size: 2.25rem; /* Bigger amount */
+  font-weight: 800;
+  color: white;
 }
 
 .btn-collect {
-  background-color: #10b981;
-  color: white;
+  background-color: white;
+  color: #0d9488;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--border-radius);
+  padding: 0.75rem 1.5rem; /* Bigger button */
+  border-radius: 8px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .btn-collect:hover:not(:disabled) {
-  background-color: #059669;
+  background-color: #f0fdfa;
   transform: translateY(-2px);
-  box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.15);
 }
 
 .btn-collect:disabled {
-  background-color: #475569;
-  color: #94a3b8;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -126,27 +129,32 @@
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
-  border-left: 4px solid var(--border-color);
-}
-
-.metric-card.primary {
-  border-left-color: var(--accent-color);
-}
-
-.metric-card.success {
-  border-left-color: var(--success-color);
-}
-
-.metric-card.warning {
-  border-left-color: var(--warning-color);
-}
-
-.metric-card.danger {
-  border-left-color: var(--danger-color);
 }
 
 .metric-card.info {
-  border-left-color: #8b5cf6;
+  border-left: none;
+}
+
+.btn-details-card {
+  margin-top: 1rem;
+  width: max-content;
+  align-self: center; /* Center in the metric card */
+  padding: 0.6rem 1.5rem;
+  background-color: #0d9488;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+}
+
+.btn-details-card:hover {
+  background-color: #14b8a6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px -1px rgba(13, 148, 136, 0.3);
 }
 
 .breakdown-value {
@@ -340,31 +348,28 @@
 /* Tabs */
 .admin-tabs {
   display: flex;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: var(--border-radius);
-  padding: 0.25rem;
-  gap: 0.25rem;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .tab-btn {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  padding: 0.5rem 1rem;
-  border-radius: calc(var(--border-radius) - 2px);
+  padding: 0.6rem 1.2rem;
+  border: 2px solid #0d9488;
+  background-color: transparent;
+  color: #0d9488;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
-  transition: var(--transition);
-}
-
-.tab-btn:hover {
-  color: #f8fafc;
+  transition: all 0.2s;
 }
 
 .tab-btn.active {
-  background-color: var(--card-bg);
-  color: var(--primary-color);
-  box-shadow: var(--shadow-sm);
+  background-color: #0d9488;
+  color: white;
+}
+
+.tab-btn:hover:not(.active) {
+  background-color: #f0fdfa;
 }
 
 /* History Section */
@@ -386,7 +391,6 @@
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
-  border-left: 4px solid var(--accent-color);
 }
 
 .history-date {
@@ -438,9 +442,21 @@
   transition: var(--transition);
 }
 
-.btn-details:hover {
-  background-color: var(--bg-color);
-  border-color: var(--primary-color);
+.btn-view-small {
+  padding: 0.4rem 0.8rem;
+  background-color: #f0fdfa;
+  color: #0d9488;
+  border: 1px solid #0d9488;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-view-small:hover {
+  background-color: #0d9488;
+  color: white;
 }
 
 /* Modal Styles */
@@ -457,6 +473,28 @@
   align-items: center;
   z-index: 1000;
   padding: 1rem;
+}
+
+.modal-content.modal-large {
+  max-width: 700px;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.modal-total {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-right: auto;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.modal-total strong {
+  font-size: 1.25rem;
+  color: var(--danger-color);
 }
 
 .modal-content {
@@ -497,6 +535,68 @@
 
 .modal-body {
   padding: 1.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.detail-item {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.detail-text {
+  font-size: 1rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  background-color: var(--bg-color);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 3px solid #0d9488;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-modal-close {
+  padding: 0.6rem 1.5rem;
+  background-color: #0d9488;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-modal-close:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 .modal-summary-grid {

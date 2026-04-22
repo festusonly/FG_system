@@ -20,6 +20,8 @@ export default function StaffPortal() {
   const [expenseAmount, setExpenseAmount] = useState('')
   const [expenseDescription, setExpenseDescription] = useState('')
   const [showExpenseForm, setShowExpenseForm] = useState(false)
+  const [showExpenseDetails, setShowExpenseDetails] = useState(false)
+  const [showClientsModal, setShowClientsModal] = useState(false)
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'occupied', 'available'
 
   // Filter out system events from real expenses
@@ -46,7 +48,9 @@ export default function StaffPortal() {
   const netRevenue = totalMoney - totalExpenses
 
   // Filtered rooms
-  const displayedRooms = rooms.filter(r => roomFilter === 'all' || r.status === roomFilter)
+  const displayedRooms = rooms
+    .filter(r => roomFilter === 'all' || r.status === roomFilter)
+    .sort((a, b) => parseInt(a.roomNumber) - parseInt(b.roomNumber))
 
   // Helper: find the active transaction for a room
   const getActiveTransaction = (roomId) =>
@@ -173,17 +177,18 @@ export default function StaffPortal() {
             <p className="stat-value">RWF {netRevenue.toLocaleString()}</p>
           </div>
           <div className="stat-card">
-            <h3>Total Revenue</h3>
-            <p className="stat-value">RWF {totalMoney.toLocaleString()}</p>
-          </div>
-          <div className="stat-card primary-stat" style={{ borderLeftColor: '#10b981' }}>
-            <h3>Cash in Drawer</h3>
-            <p className="stat-value text-success">RWF {cashOnHand.toLocaleString()}</p>
-            <span style={{fontSize: '0.75rem', color: 'var(--text-secondary)'}}>Physical cash since last collection</span>
+            <h3>Total Clients Today</h3>
+            <p className="stat-value">{todaysTransactions.length}</p>
+            <button className="btn-details-card" onClick={() => setShowClientsModal(true)}>
+              View Details
+            </button>
           </div>
           <div className="stat-card">
             <h3>Total Expenses</h3>
             <p className="stat-value">RWF {totalExpenses.toLocaleString()}</p>
+            <button className="btn-details-card" onClick={() => setShowExpenseDetails(true)}>
+              View Details
+            </button>
           </div>
           <div className="stat-card action-stat">
              <button className="btn-expense" onClick={() => setShowExpenseForm(true)}>
@@ -357,6 +362,110 @@ export default function StaffPortal() {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+        {/* Today's Client Usage Modal */}
+        {showClientsModal && (
+          <div className="modal-overlay" onClick={() => setShowClientsModal(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Today's Room Usage Breakdown</h2>
+                <button className="btn-close" onClick={() => setShowClientsModal(false)}>&times;</button>
+              </div>
+              <div className="modal-body">
+                <div className="modal-summary-grid">
+                  <div className="modal-stat">
+                    <span>Total Clients</span>
+                    <strong>{todaysTransactions.length}</strong>
+                  </div>
+                  <div className="modal-stat">
+                    <span>Total Revenue</span>
+                    <strong className="text-success">RWF {totalMoney.toLocaleString()}</strong>
+                  </div>
+                </div>
+                <h3 className="modal-subtitle">Room Utilization</h3>
+                <div className="modal-rooms-list">
+                  {Object.keys(todaysTransactions.reduce((acc, tx) => {
+                    if (!acc[tx.room]) acc[tx.room] = { count: 0, short: 0, night: 0 }
+                    acc[tx.room].count++
+                    if (tx.type === 'short_hours') acc[tx.room].short++
+                    else acc[tx.room].night++
+                    return acc
+                  }, {})).length > 0 ? (
+                    Object.entries(todaysTransactions.reduce((acc, tx) => {
+                      if (!acc[tx.room]) acc[tx.room] = { count: 0, short: 0, night: 0 }
+                      acc[tx.room].count++
+                      if (tx.type === 'short_hours') acc[tx.room].short++
+                      else acc[tx.room].night++
+                      return acc
+                    }, {})).map(([room, stats]) => (
+                      <div key={room} className="modal-room-item">
+                        <div className="room-item-header">
+                          <h4>{room}</h4>
+                          <span className="room-item-total">{stats.count} times used</span>
+                        </div>
+                        <div className="room-item-stats">
+                          <span className="stat-short">{stats.short} Short Stay</span>
+                          <span className="stat-night">{stats.night} Night Stay</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="empty-state">No rooms used today yet.</p>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Today's Expenses List Modal */}
+        {showExpenseDetails && (
+          <div className="modal-overlay" onClick={() => setShowExpenseDetails(false)}>
+            <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Today's Expenses List</h2>
+                <button className="btn-close" onClick={() => setShowExpenseDetails(false)}>&times;</button>
+              </div>
+              <div className="modal-body p-0">
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {todaysExpenses.length > 0 ? (
+                        todaysExpenses.map((exp) => (
+                          <tr key={exp.id}>
+                            <td className="desc-cell">{exp.description}</td>
+                            <td className="amount-cell text-danger">RWF {exp.amount.toLocaleString()}</td>
+                            <td className="time-cell">{new Date(exp.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="empty-state">No expenses recorded today</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <div className="modal-total">
+                  <span>Total:</span>
+                  <strong>RWF {totalExpenses.toLocaleString()}</strong>
+                </div>
+                <button className="btn-modal-close" onClick={() => setShowExpenseDetails(false)}>Close</button>
+              </div>
+            </div>
           </div>
         )}
       </div>
