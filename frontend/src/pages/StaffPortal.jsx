@@ -6,7 +6,7 @@ import '../styles/StaffPortal.css'
 
 export default function StaffPortal() {
   const { user, logout } = useAuth()
-  const { rooms, transactions, expenses, bookRoom, checkoutRoom, reportExpense, loadingData } = useApp()
+  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData } = useApp()
   const navigate = useNavigate()
 
   const [submitting, setSubmitting] = useState(false)
@@ -22,10 +22,23 @@ export default function StaffPortal() {
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'occupied', 'available'
 
+  // Filter out system events from real expenses
+  const realExpenses = expenses.filter(exp => exp.description !== 'SYSTEM_CASH_COLLECTION')
+
+  // Filter for TODAY'S data only
+  const todayString = new Date().toDateString()
+  const todaysTransactions = transactions.filter(tx => new Date(tx.time).toDateString() === todayString)
+  const todaysExpenses = realExpenses.filter(exp => new Date(exp.time).toDateString() === todayString)
+
+  // Cash on Hand: all transactions since the last collection
+  const cashOnHand = transactions
+    .filter(tx => new Date(tx.time) > lastCollectionTime)
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
   // Stats
   const totalRoomsTaken = rooms.filter(r => r.status === 'occupied').length
-  const totalMoney = transactions.reduce((sum, tx) => sum + tx.amount, 0)
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0)
+  const totalMoney = todaysTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+  const totalExpenses = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
   const netRevenue = totalMoney - totalExpenses
 
   // Filtered rooms
@@ -158,6 +171,11 @@ export default function StaffPortal() {
           <div className="stat-card">
             <h3>Total Revenue</h3>
             <p className="stat-value">RWF {totalMoney.toLocaleString()}</p>
+          </div>
+          <div className="stat-card primary-stat" style={{ borderLeftColor: '#10b981' }}>
+            <h3>Cash in Drawer</h3>
+            <p className="stat-value text-success">RWF {cashOnHand.toLocaleString()}</p>
+            <span style={{fontSize: '0.75rem', color: 'var(--text-secondary)'}}>Physical cash since last collection</span>
           </div>
           <div className="stat-card">
             <h3>Total Expenses</h3>

@@ -16,6 +16,10 @@ export function AppProvider({ children }) {
   const [expenses, setExpenses] = useState([])
   const [loadingData, setLoadingData] = useState(true)
   const [dataError, setDataError] = useState(null)
+  const [lastCollectionTime, setLastCollectionTime] = useState(() => {
+    const stored = localStorage.getItem('lastCashCollectionTime')
+    return stored ? new Date(stored) : new Date(0)
+  })
 
   // -----------------------------------------------------------------
   // FETCH INITIAL DATA
@@ -246,15 +250,27 @@ export function AppProvider({ children }) {
     }
   }
 
+  const collectCash = () => {
+    // Store the current collection timestamp in localStorage.
+    // This is instant, requires no database change, and persists across page refreshes.
+    const now = new Date().toISOString()
+    localStorage.setItem('lastCashCollectionTime', now)
+    // Force re-render by updating a dummy state
+    setLastCollectionTime(new Date(now))
+    return { success: true }
+  }
+
   const value = {
     rooms,
     transactions,
     expenses,
     loadingData,
     dataError,
+    lastCollectionTime,
     bookRoom,
     checkoutRoom,
     reportExpense,
+    collectCash,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
