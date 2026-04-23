@@ -10,10 +10,16 @@ export default function KitchenPortal() {
   const { user, logout } = useAuth()
   const { kitchenTransactions, lastKitchenCollectionTime } = useApp()
   const navigate = useNavigate()
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
-  const [servedBy, setServedBy] = useState('')
-  const [type, setType] = useState('order') // 'order' or 'purchase'
+  // Sale States
+  const [saleDesc, setSaleDesc] = useState('')
+  const [saleAmount, setSaleAmount] = useState('')
+  const [saleServedBy, setSaleServedBy] = useState('')
+  
+  // Purchase States
+  const [purcDesc, setPurcDesc] = useState('')
+  const [purcAmount, setPurcAmount] = useState('')
+  const [showPurcForm, setShowPurcForm] = useState(false)
+
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
 
@@ -36,21 +42,23 @@ export default function KitchenPortal() {
     })
     .reduce((sum, t) => sum + t.amount, 0)
 
-  const recentEntries = kitchenTransactions.slice(0, 10)
+  const recentEntries = kitchenTransactions
+    .filter(t => new Date(t.created_at).toDateString() === todayString)
+    .slice(0, 20) // Show up to 20 for today
 
-  const handleSubmit = async (e) => {
+  const handleRecordSale = async (e) => {
     e.preventDefault()
-    if (!description || !amount) return
+    if (!saleDesc || !saleAmount || !saleServedBy) return
     
     setLoading(true)
     const { error } = await supabase
       .from('kitchen_transactions')
       .insert([
         { 
-          description, 
-          amount: parseFloat(amount), 
-          served_by: type === 'order' ? servedBy : null,
-          type, 
+          description: saleDesc, 
+          amount: parseFloat(saleAmount), 
+          served_by: saleServedBy,
+          type: 'order', 
           worker_id: user.id 
         }
       ])
@@ -60,10 +68,39 @@ export default function KitchenPortal() {
     if (error) {
       setMessage({ type: 'error', text: error.message })
     } else {
-      setMessage({ type: 'success', text: type === 'order' ? 'Sale Saved!' : 'Purchase Saved!' })
-      setDescription('')
-      setAmount('')
-      setServedBy('')
+      setMessage({ type: 'success', text: 'Sale Saved Successfully!' })
+      setSaleDesc('')
+      setSaleAmount('')
+      setSaleServedBy('')
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+    }
+  }
+
+  const handleRecordPurchase = async (e) => {
+    e.preventDefault()
+    if (!purcDesc || !purcAmount) return
+    
+    setLoading(true)
+    const { error } = await supabase
+      .from('kitchen_transactions')
+      .insert([
+        { 
+          description: purcDesc, 
+          amount: parseFloat(purcAmount), 
+          type: 'purchase', 
+          worker_id: user.id 
+        }
+      ])
+    
+    setLoading(false)
+
+    if (error) {
+      setMessage({ type: 'error', text: error.message })
+    } else {
+      setMessage({ type: 'success', text: 'Purchase Saved Successfully!' })
+      setPurcDesc('')
+      setPurcAmount('')
+      setShowPurcForm(false) // Close form after saving
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     }
   }
@@ -84,12 +121,12 @@ export default function KitchenPortal() {
       </header>
 
       <main className="portal-main">
-        {/* Main Collection Metrics */}
-        <div className="metrics-section" style={{marginBottom: '1rem'}}>
+        {/* Top Metric Row (4 Cards) */}
+        <div className="metrics-section" style={{marginBottom: '2rem'}}>
           <div className="metric-card success">
             <h3>Sales to Collect</h3>
             <p className="metric-value">RWF {pendingKitchenCash.toLocaleString()}</p>
-            <span className="metric-label">Total sales since last collection</span>
+            <span className="metric-label">Since last collection</span>
           </div>
           <div className="metric-card warning">
             <h3>Purchases to Deduct</h3>
@@ -100,7 +137,7 @@ export default function KitchenPortal() {
                 return t.type === 'purchase' && tTime > collTime
               })
               .reduce((sum, t) => sum + t.amount, 0)).toLocaleString()}</p>
-            <span className="metric-label">Purchases since last collection</span>
+            <span className="metric-label">Since last collection</span>
           </div>
           <div className={`metric-card ${(pendingKitchenCash - kitchenTransactions
               .filter(t => {
@@ -117,86 +154,115 @@ export default function KitchenPortal() {
                 return t.type === 'purchase' && tTime > collTime
               })
               .reduce((sum, t) => sum + t.amount, 0)).toLocaleString()}</p>
-            <span className="metric-label">Net amount to be given to Dad</span>
+            <span className="metric-label">Net for Dad</span>
+          </div>
+
+          {/* 4th Card: Purchase Toggle */}
+          <div className="metric-card purchase-toggle-card" onClick={() => setShowPurcForm(true)} style={{cursor: 'pointer', border: '2px dashed #475569'}}>
+             <h3 style={{color: '#475569'}}>New Purchase</h3>
+             <div className="plus-icon" style={{fontSize: '2rem', margin: '0.5rem 0'}}>+</div>
+             <span className="metric-label">Click to record expense</span>
           </div>
         </div>
 
-        {/* Secondary Daily Summary */}
-        <div className="daily-summary-bar" style={{marginBottom: '2rem', display: 'flex', gap: '2rem', padding: '1rem', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', justifyContent: 'center'}}>
-           <span style={{fontSize: '0.9rem', color: '#64748b'}}>Work Done Today:</span>
-           <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#059669'}}>Today's Sales: RWF {todaysSales.toLocaleString()}</span>
-           <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#475569'}}>Today's Purchases: RWF {todaysPurchases.toLocaleString()}</span>
+        {/* Purchase Modal (Popup for purchases) */}
+        {showPurcForm && (
+          <div className="modal-overlay">
+            <div className="modal-content-pro">
+              <div className="modal-header">
+                <h2>Record Kitchen Purchase</h2>
+                <button className="btn-close" onClick={() => setShowPurcForm(false)}>&times;</button>
+              </div>
+              <form onSubmit={handleRecordPurchase} className="entry-form">
+                <div className="form-group">
+                  <label>What did you buy?</label>
+                  <textarea 
+                    value={purcDesc}
+                    onChange={(e) => setPurcDesc(e.target.value)}
+                    placeholder="Meat, Oil, etc."
+                    required
+                    className="large-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Amount Spent (RWF)</label>
+                  <input 
+                    type="number" 
+                    value={purcAmount}
+                    onChange={(e) => setPurcAmount(e.target.value)}
+                    placeholder="Price"
+                    required
+                    className="large-input"
+                  />
+                </div>
+                {message.text && message.text.includes('Purchase') && (
+                  <div className={`portal-msg-large ${message.type}`}>
+                    {message.text}
+                  </div>
+                )}
+                <button type="submit" className="btn-submit-pro purchase-theme" disabled={loading}>
+                  {loading ? 'Saving...' : 'SAVE PURCHASE'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Middle: Daily Summary Bar */}
+        <div className="daily-summary-bar" style={{marginBottom: '2rem'}}>
+           <span className="summary-label">Work Done Today:</span>
+           <span className="summary-val sale">Today's Sales: RWF {todaysSales.toLocaleString()}</span>
+           <span className="summary-val purc">Today's Purchases: RWF {todaysPurchases.toLocaleString()}</span>
         </div>
 
-        <div className="entry-card">
+        {/* Bottom: Isolated Sale Form */}
+        <div className="entry-card sale-card-pro" style={{maxWidth: '800px', margin: '0 auto 3rem auto'}}>
           <div className="entry-header">
-            <h2>Record a Kitchen Entry</h2>
-            <p className="subtitle">Choose "Sale" for food/drinks sold, or "Purchase" for things you bought.</p>
+            <h2>Record a New Sale</h2>
+            <p className="subtitle">Record food and drinks sold right now.</p>
           </div>
-
-          <form onSubmit={handleSubmit} className="entry-form">
-            <div className="type-toggle-professional">
-              <button 
-                type="button" 
-                className={`toggle-btn-pro ${type === 'order' ? 'active-sale-pro' : ''}`}
-                onClick={() => setType('order')}
-              >
-                RECORD SALE
-              </button>
-              <button 
-                type="button" 
-                className={`toggle-btn-pro ${type === 'purchase' ? 'active-purchase-pro' : ''}`}
-                onClick={() => setType('purchase')}
-              >
-                RECORD PURCHASE
-              </button>
-            </div>
-
+          <form onSubmit={handleRecordSale} className="entry-form">
             <div className="form-group">
-              <label>What was sold or bought?</label>
+              <label>What was sold?</label>
               <textarea 
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={type === 'order' ? "Example: 2 Fish and 5 Beers" : "Example: Meat and Salt"}
+                value={saleDesc}
+                onChange={(e) => setSaleDesc(e.target.value)}
+                placeholder="Example: 2 Fish, 5 Beers"
                 required
                 className="large-input"
               />
             </div>
-
-            <div className="form-group">
-              <label>Total Price (RWF)</label>
-              <input 
-                type="number" 
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="How much?"
-                required
-                className="large-input"
-              />
-            </div>
-
-            {type === 'order' && (
+            <div className="form-group-row">
               <div className="form-group">
-                <label>Which worker served this?</label>
+                <label>Total Price (RWF)</label>
                 <input 
-                  type="text" 
-                  value={servedBy}
-                  onChange={(e) => setServedBy(e.target.value)}
-                  placeholder="Name of the person who took the order"
+                  type="number" 
+                  value={saleAmount}
+                  onChange={(e) => setSaleAmount(e.target.value)}
+                  placeholder="Price"
                   required
                   className="large-input"
                 />
               </div>
-            )}
-
-            {message.text && (
+              <div className="form-group">
+                <label>Served By</label>
+                <input 
+                  type="text" 
+                  value={saleServedBy}
+                  onChange={(e) => setSaleServedBy(e.target.value)}
+                  placeholder="Worker name"
+                  required
+                  className="large-input"
+                />
+              </div>
+            </div>
+            {message.text && message.text.includes('Sale') && (
               <div className={`portal-msg-large ${message.type}`}>
                 {message.text}
               </div>
             )}
-
-            <button type="submit" className="btn-submit-pro" disabled={loading}>
-              {loading ? 'Processing...' : 'SAVE TO SYSTEM'}
+            <button type="submit" className="btn-submit-pro sale-theme" disabled={loading}>
+              {loading ? 'Saving...' : 'SAVE SALE TO SYSTEM'}
             </button>
           </form>
         </div>
