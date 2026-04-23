@@ -25,8 +25,11 @@ export default function StaffPortal() {
   const [showDailyClientsModal, setShowDailyClientsModal] = useState(false)
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'occupied', 'available'
 
-  // Filter out system events from real expenses
-  const realExpenses = expenses.filter(exp => exp.description !== 'SYSTEM_CASH_COLLECTION')
+  // Filter out system events (markers) from real expenses
+  const realExpenses = expenses.filter(exp => 
+    exp.description !== 'SYSTEM_CASH_COLLECTION' && 
+    exp.description !== 'KITCHEN_CASH_COLLECTION'
+  )
 
   // Filter for TODAY'S data only
   const todayString = new Date().toDateString()

@@ -29,8 +29,11 @@ export default function AdminDashboard() {
 
   const todayString = new Date().toDateString()
   
-  // Filter out system events from real expenses
-  const realExpenses = expenses.filter(exp => exp.description !== 'SYSTEM_CASH_COLLECTION')
+  // Filter out system events (markers) from real expenses
+  const realExpenses = expenses.filter(exp => 
+    exp.description !== 'SYSTEM_CASH_COLLECTION' && 
+    exp.description !== 'KITCHEN_CASH_COLLECTION'
+  )
 
   const todaysTransactions = transactions.filter(tx => new Date(tx.time).toDateString() === todayString)
   const todaysExpenses = realExpenses.filter(exp => new Date(exp.time).toDateString() === todayString)
