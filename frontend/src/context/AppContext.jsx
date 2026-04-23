@@ -14,6 +14,7 @@ export function AppProvider({ children }) {
   const [rooms, setRooms] = useState([])
   const [transactions, setTransactions] = useState([])
   const [expenses, setExpenses] = useState([])
+  const [kitchenTransactions, setKitchenTransactions] = useState([])
   const [loadingData, setLoadingData] = useState(true)
   const [dataError, setDataError] = useState(null)
 
@@ -88,6 +89,19 @@ export function AppProvider({ children }) {
     )
   }, [])
 
+  const fetchKitchenTransactions = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('kitchen_transactions')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching kitchen transactions:', error.message)
+      return
+    }
+    setKitchenTransactions(data)
+  }, [])
+
   // Load all data from Supabase when the user is authenticated
   useEffect(() => {
     if (!user) {
@@ -100,12 +114,12 @@ export function AppProvider({ children }) {
 
     const loadAll = async () => {
       setLoadingData(true)
-      await Promise.all([fetchRooms(), fetchTransactions(), fetchExpenses()])
+      await Promise.all([fetchRooms(), fetchTransactions(), fetchExpenses(), fetchKitchenTransactions()])
       setLoadingData(false)
     }
 
     loadAll()
-  }, [user, fetchRooms, fetchTransactions, fetchExpenses])
+  }, [user, fetchRooms, fetchTransactions, fetchExpenses, fetchKitchenTransactions])
 
   // -----------------------------------------------------------------
   // REAL-TIME SUBSCRIPTIONS (WebSocket)
@@ -138,12 +152,21 @@ export function AppProvider({ children }) {
       })
       .subscribe()
 
+    // Subscribe to kitchen transactions
+    const kitchenChannel = supabase
+      .channel('kitchen-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kitchen_transactions' }, () => {
+        fetchKitchenTransactions()
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(roomsChannel)
       supabase.removeChannel(txChannel)
       supabase.removeChannel(expChannel)
+      supabase.removeChannel(kitchenChannel)
     }
-  }, [user, fetchRooms, fetchTransactions, fetchExpenses])
+  }, [user, fetchRooms, fetchTransactions, fetchExpenses, fetchKitchenTransactions])
 
   // -----------------------------------------------------------------
   // ACTIONS
@@ -261,6 +284,15 @@ export function AppProvider({ children }) {
     return new Date(Math.max(...timestamps))
   }, [expenses])
 
+  const lastKitchenCollectionTime = useMemo(() => {
+    const collections = expenses.filter(e => 
+      e.description === 'KITCHEN_CASH_COLLECTION'
+    )
+    if (collections.length === 0) return new Date(0)
+    const timestamps = collections.map(e => new Date(e.time).getTime())
+    return new Date(Math.max(...timestamps))
+  }, [expenses])
+
   const collectCash = async () => {
     if (!user) return { success: false, error: 'Not authenticated' }
     
@@ -282,17 +314,38 @@ export function AppProvider({ children }) {
     }
   }
 
+  const collectKitchenCash = async () => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .insert({
+          worker_id: user.id,
+          amount_rwf: 1,
+          description: 'KITCHEN_CASH_COLLECTION',
+        })
+      if (error) throw error
+      return { success: true }
+    } catch (err) {
+      console.error('Error collecting kitchen cash:', err.message)
+      return { success: false, error: err.message }
+    }
+  }
+
   const value = {
     rooms,
     transactions,
     expenses,
+    kitchenTransactions,
     loadingData,
     dataError,
     lastCollectionTime,
+    lastKitchenCollectionTime,
     bookRoom,
     checkoutRoom,
     reportExpense,
     collectCash,
+    collectKitchenCash,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

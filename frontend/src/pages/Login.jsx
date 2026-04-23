@@ -19,8 +19,10 @@ export default function Login() {
 
     const result = await login(email, password)
     if (result.success) {
-      // Navigate directly to the right dashboard — no race condition
-      navigate(result.role === 'admin' ? '/admin' : '/staff')
+      // Navigate directly to the right dashboard
+      if (result.role === 'admin') navigate('/admin')
+      else if (result.role === 'kitchen') navigate('/kitchen')
+      else navigate('/staff')
     } else {
       setError(result.error || 'Login failed')
     }

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import StaffPortal from './pages/StaffPortal'
+import KitchenPortal from './pages/KitchenPortal'
 import AdminDashboard from './pages/AdminDashboard'
 import './styles/index.css'
 
@@ -27,7 +28,9 @@ function ProtectedRoute({ children, requiredRole = null }) {
   }
 
   if (requiredRole && role !== requiredRole) {
-    return <Navigate to={role === 'admin' ? '/admin' : '/staff'} replace />
+    if (role === 'admin') return <Navigate to="/admin" replace />
+    if (role === 'kitchen') return <Navigate to="/kitchen" replace />
+    return <Navigate to="/staff" replace />
   }
 
   return children
@@ -48,6 +51,16 @@ export default function App() {
         element={
           <ProtectedRoute requiredRole="worker">
             <StaffPortal />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Kitchen portal */}
+      <Route
+        path="/kitchen"
+        element={
+          <ProtectedRoute requiredRole="kitchen">
+            <KitchenPortal />
           </ProtectedRoute>
         }
       />
@@ -86,6 +99,7 @@ function Dashboard() {
   const { role } = useAuth()
 
   if (role === 'admin') return <Navigate to="/admin" replace />
+  if (role === 'kitchen') return <Navigate to="/kitchen" replace />
   if (role === 'worker') return <Navigate to="/staff" replace />
   return <Navigate to="/login" replace />
 }

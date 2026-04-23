@@ -7,11 +7,20 @@ import '../styles/AdminDashboard.css'
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
-  const { rooms, transactions, expenses, lastCollectionTime, collectCash } = useApp()
+  const { 
+    rooms, 
+    transactions, 
+    expenses, 
+    kitchenTransactions, 
+    lastCollectionTime, 
+    lastKitchenCollectionTime,
+    collectCash,
+    collectKitchenCash 
+  } = useApp()
   const navigate = useNavigate()
 
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'available', 'occupied'
-  const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history', 'settings'
+  const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history', 'kitchen', 'settings'
   const [selectedDayDetails, setSelectedDayDetails] = useState(null)
   const [viewingExpense, setViewingExpense] = useState(null)
   const [showExpensesModal, setShowExpensesModal] = useState(false)
@@ -153,6 +162,12 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('history')}
           >
             7-Day History
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'kitchen' ? 'active' : ''}`}
+            onClick={() => setActiveTab('kitchen')}
+          >
+            Kitchen
           </button>
           <button 
             className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
@@ -373,6 +388,12 @@ export default function AdminDashboard() {
               ))}
             </div>
           </div>
+        )}
+        {activeTab === 'kitchen' && (
+          <KitchenReportSection 
+            kitchenTransactions={kitchenTransactions} 
+            lastKitchenCollectionTime={lastKitchenCollectionTime}
+          />
         )}
         {activeTab === 'settings' && <AdminSettingsSection user={user} />}
       </div>
@@ -846,6 +867,165 @@ const StaffManagementList = ({ user }) => {
           </button>
         </form>
       )}
+    </div>
+  )
+}
+
+const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }) => {
+  const { collectKitchenCash } = useApp()
+  const [isCollecting, setIsCollecting] = useState(false)
+
+  // 1. Pending Metrics (Since last collection)
+  const pendingSales = kitchenTransactions
+    .filter(t => t.type === 'order' && new Date(t.created_at).getTime() > lastKitchenCollectionTime.getTime())
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const pendingPurchases = kitchenTransactions
+    .filter(t => t.type === 'purchase' && new Date(t.created_at).getTime() > lastKitchenCollectionTime.getTime())
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const pendingProfit = pendingSales - pendingPurchases
+
+  // 2. History Generation (Last 5 Days)
+  const generateHistory = () => {
+    const days = []
+    for (let i = 0; i < 5; i++) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const dateStr = d.toDateString()
+
+      const daySales = kitchenTransactions
+        .filter(t => t.type === 'order' && new Date(t.created_at).toDateString() === dateStr)
+        .reduce((sum, t) => sum + t.amount, 0)
+
+      const dayPurchases = kitchenTransactions
+        .filter(t => t.type === 'purchase' && new Date(t.created_at).toDateString() === dateStr)
+        .reduce((sum, t) => sum + t.amount, 0)
+
+      days.push({
+        date: i === 0 ? 'Today' : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
+        sales: daySales,
+        purchases: dayPurchases,
+        profit: daySales - dayPurchases
+      })
+    }
+    return days
+  }
+  const history = generateHistory()
+
+  const handleCollect = async () => {
+    if (pendingProfit <= 0) return alert('No profit to collect yet.')
+    if (window.confirm(`Collect RWF ${pendingProfit.toLocaleString()} (Net Profit) from kitchen?`)) {
+      setIsCollecting(true)
+      await collectKitchenCash()
+      setIsCollecting(false)
+    }
+  }
+
+  return (
+    <div className="kitchen-report-section">
+      <div className="cash-collection-banner" style={{marginBottom: '2rem'}}>
+        <div className="cash-info">
+          <h3>Kitchen Profit to Collect</h3>
+          <p>Since: {lastKitchenCollectionTime.getTime() === 0 ? 'Beginning' : lastKitchenCollectionTime.toLocaleString()}</p>
+        </div>
+        <div className="cash-action">
+          <span className="cash-amount">RWF {pendingProfit.toLocaleString()}</span>
+          <button 
+            className="btn-collect" 
+            onClick={handleCollect}
+            disabled={pendingProfit <= 0 || isCollecting}
+          >
+            {isCollecting ? 'Collecting...' : 'Collect Kitchen Profit'}
+          </button>
+        </div>
+      </div>
+
+      <div className="metrics-section">
+        <div className="metric-card success">
+          <h3>Pending Sales</h3>
+          <p className="metric-value">RWF {pendingSales.toLocaleString()}</p>
+          <span className="metric-label">Sales since last collection</span>
+        </div>
+        <div className="metric-card warning">
+          <h3>Pending Purchases</h3>
+          <p className="metric-value">RWF {pendingPurchases.toLocaleString()}</p>
+          <span className="metric-label">Purchases since last collection</span>
+        </div>
+        <div className={`metric-card ${pendingProfit >= 0 ? 'primary' : 'danger'}`}>
+          <h3>Pending Profit (for Dad)</h3>
+          <p className="metric-value">RWF {pendingProfit.toLocaleString()}</p>
+          <span className="metric-label">Net profit since collection</span>
+        </div>
+      </div>
+
+      <div className="panel-section" style={{marginBottom: '2rem'}}>
+        <h2>5-Day Kitchen History</h2>
+        <div className="table-responsive">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Daily Sales</th>
+                <th>Daily Purchases</th>
+                <th>Daily Profit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((h, i) => (
+                <tr key={i}>
+                  <td><strong>{h.date}</strong></td>
+                  <td>RWF {h.sales.toLocaleString()}</td>
+                  <td>RWF {h.purchases.toLocaleString()}</td>
+                  <td className={h.profit >= 0 ? 'text-success' : 'text-danger'} style={{fontWeight: 'bold'}}>
+                    RWF {h.profit.toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="panel-section">
+        <h2>Detailed Kitchen Log</h2>
+        <div className="table-responsive">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Served By</th>
+                <th>Amount</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {kitchenTransactions.length > 0 ? (
+                kitchenTransactions.map(t => (
+                  <tr key={t.id}>
+                    <td>
+                      <span className={`status-badge ${t.type === 'order' ? 'occupied' : 'completed'}`}>
+                        {t.type === 'order' ? 'Sale' : 'Purchase'}
+                      </span>
+                    </td>
+                    <td>{t.description}</td>
+                    <td>{t.served_by || '--'}</td>
+                    <td className={t.type === 'order' ? 'text-success' : 'text-danger'}>
+                      {t.type === 'order' ? '+' : '-'} RWF {t.amount.toLocaleString()}
+                    </td>
+                    <td>{new Date(t.created_at).toLocaleDateString()} {new Date(t.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="empty-state">No kitchen transactions found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }
