@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [viewingExpense, setViewingExpense] = useState(null)
   const [showExpensesModal, setShowExpensesModal] = useState(false)
   const [showClientsModal, setShowClientsModal] = useState(false)
+  const [showDailyClientsModal, setShowDailyClientsModal] = useState(false)
 
   const todayString = new Date().toDateString()
   
@@ -44,13 +45,24 @@ export default function AdminDashboard() {
   const availableRooms = rooms.length - occupiedRooms
 
   const activeTransactions = todaysTransactions.filter(tx => tx.status === 'active')
+  
+  // Clients Since Collection: count of transactions since the last manual collection
+  const shiftTransactions = transactions.filter(tx => {
+    const txTime = new Date(tx.time).getTime()
+    const collTime = lastCollectionTime.getTime()
+    return txTime > collTime
+  })
+  
   const shortStayCount = activeTransactions.filter(tx => tx.type === 'short_hours').length
   const nightStayCount = activeTransactions.filter(tx => tx.type === 'night' || tx.type === 'many_days').length
 
   const displayedRooms = rooms
     .filter(r => roomFilter === 'all' || r.status === roomFilter)
     .sort((a, b) => {
-      // Numerical sort based on roomNumber
+      // Prioritize occupied rooms
+      if (a.status === 'occupied' && b.status !== 'occupied') return -1
+      if (a.status !== 'occupied' && b.status === 'occupied') return 1
+      // Then sort numerically by roomNumber
       return parseInt(a.roomNumber) - parseInt(b.roomNumber)
     })
 
@@ -105,9 +117,20 @@ export default function AdminDashboard() {
     navigate('/login')
   }
 
-  const formatDate = (dateString) => {
+  const formatTime = (dateString) => {
+    if (!dateString) return '--'
     const date = new Date(dateString)
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const getDuration = (start, end) => {
+    if (!start || !end) return ''
+    const diff = new Date(end) - new Date(start)
+    if (diff < 0) return ''
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    if (hours === 0) return `${minutes}m`
+    return `${hours}h ${minutes}m`
   }
 
   return (
@@ -191,6 +214,17 @@ export default function AdminDashboard() {
             <p className="metric-value">{todaysTransactions.length}</p>
             <button 
               className="btn-details-card"
+              onClick={() => setShowDailyClientsModal(true)}
+            >
+              View Details
+            </button>
+          </div>
+
+          <div className="metric-card info">
+            <h3>Clients in Shift</h3>
+            <p className="metric-value">{shiftTransactions.length}</p>
+            <button 
+              className="btn-details-card"
               onClick={() => setShowClientsModal(true)}
             >
               View Details
@@ -246,7 +280,7 @@ export default function AdminDashboard() {
                             {tx.type.replace('_', ' ')}
                           </span>
                         </td>
-                        <td className="time-cell">{formatDate(tx.time)}</td>
+                        <td className="time-cell">{formatTime(tx.time)}</td>
                       </tr>
                     ))
                   ) : (
@@ -355,42 +389,40 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <h3 className="modal-subtitle">Rooms Breakdown</h3>
-              <div className="modal-rooms-list">
-                {(() => {
-                  const breakdown = {}
-                  selectedDayDetails.transactions.forEach(tx => {
-                    const rName = tx.room || 'Unknown'
-                    if (!breakdown[rName]) {
-                      breakdown[rName] = { total: 0, short: 0, night: 0 }
-                    }
-                    breakdown[rName].total++
-                    if (tx.type === 'short_hours') {
-                      breakdown[rName].short++
-                    } else {
-                      breakdown[rName].night++
-                    }
-                  })
-
-                  const sortedRooms = Object.entries(breakdown).sort((a, b) => a[0].localeCompare(b[0]))
-
-                  if (sortedRooms.length === 0) {
-                    return <p className="empty-state" style={{padding: '1rem'}}>No rooms used this day.</p>
-                  }
-
-                  return sortedRooms.map(([roomName, stats]) => (
-                    <div key={roomName} className="modal-room-item">
-                      <div className="room-item-header">
-                        <h4>{roomName}</h4>
-                        <span className="room-item-total">{stats.total} total uses</span>
-                      </div>
-                      <div className="room-item-stats">
-                        <span className="stat-short">{stats.short} Short Stay{stats.short !== 1 && 's'}</span>
-                        <span className="stat-night">{stats.night} Night Stay{stats.night !== 1 && 's'}</span>
-                      </div>
-                    </div>
-                  ))
-                })()}
+              <h3 className="modal-subtitle">Detailed Room Log</h3>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Room</th>
+                      <th>Check-in</th>
+                      <th>Check-out</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedDayDetails.transactions.length > 0 ? (
+                      selectedDayDetails.transactions
+                        .sort((a, b) => {
+                          if (a.status === 'active' && b.status !== 'active') return -1
+                          if (a.status !== 'active' && b.status === 'active') return 1
+                          return new Date(a.time) - new Date(b.time)
+                        })
+                        .map((tx) => (
+                        <tr key={tx.id}>
+                          <td>{tx.room}</td>
+                          <td>{formatTime(tx.time)}</td>
+                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
+                          <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="empty-state">No transactions recorded.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -418,7 +450,7 @@ export default function AdminDashboard() {
               
               <div className="detail-item">
                 <span className="detail-label">Time & Date</span>
-                <span className="detail-value">{formatDate(viewingExpense.time)}</span>
+                <span className="detail-value">{formatTime(viewingExpense.time)}</span>
               </div>
               
               <div className="detail-item">
@@ -458,7 +490,7 @@ export default function AdminDashboard() {
                         <tr key={exp.id}>
                           <td className="desc-cell">{exp.description}</td>
                           <td className="amount-cell text-danger">RWF {exp.amount.toLocaleString()}</td>
-                          <td className="time-cell">{formatDate(exp.time)}</td>
+                          <td className="time-cell">{formatTime(exp.time)}</td>
                         </tr>
                       ))
                     ) : (
@@ -493,7 +525,71 @@ export default function AdminDashboard() {
             <div className="modal-body">
               <div className="modal-summary-grid">
                 <div className="modal-stat">
-                  <span>Total Clients</span>
+                  <span>Total Shift Clients</span>
+                  <strong>{shiftTransactions.length}</strong>
+                </div>
+                <div className="modal-stat">
+                  <span>Cash Since Collection</span>
+                  <strong className="text-success">RWF {cashOnHand.toLocaleString()}</strong>
+                </div>
+              </div>
+
+              <h3 className="modal-subtitle">Shift Room Log</h3>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Room</th>
+                      <th>Check-in</th>
+                      <th>Check-out</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shiftTransactions.length > 0 ? (
+                      shiftTransactions
+                        .sort((a, b) => {
+                          if (a.status === 'active' && b.status !== 'active') return -1
+                          if (a.status !== 'active' && b.status === 'active') return 1
+                          return new Date(a.time) - new Date(b.time)
+                        })
+                        .map((tx) => (
+                        <tr key={tx.id}>
+                          <td>{tx.room}</td>
+                          <td>{formatTime(tx.time)}</td>
+                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
+                          <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="empty-state">No clients in this shift yet.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Today's Full Client Log Modal */}
+      {showDailyClientsModal && (
+        <div className="modal-overlay" onClick={() => setShowDailyClientsModal(false)}>
+          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Today's Full Client Log</h2>
+              <button className="btn-close" onClick={() => setShowDailyClientsModal(false)}>&times;</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="modal-summary-grid">
+                <div className="modal-stat">
+                  <span>Total Today</span>
                   <strong>{todaysTransactions.length}</strong>
                 </div>
                 <div className="modal-stat">
@@ -502,41 +598,45 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <h3 className="modal-subtitle">Room Utilization</h3>
-              <div className="modal-rooms-list">
-                {Object.keys(todaysTransactions.reduce((acc, tx) => {
-                  if (!acc[tx.room]) acc[tx.room] = { count: 0, short: 0, night: 0 }
-                  acc[tx.room].count++
-                  if (tx.type === 'short_hours') acc[tx.room].short++
-                  else acc[tx.room].night++
-                  return acc
-                }, {})).length > 0 ? (
-                  Object.entries(todaysTransactions.reduce((acc, tx) => {
-                    if (!acc[tx.room]) acc[tx.room] = { count: 0, short: 0, night: 0 }
-                    acc[tx.room].count++
-                    if (tx.type === 'short_hours') acc[tx.room].short++
-                    else acc[tx.room].night++
-                    return acc
-                  }, {})).map(([room, stats]) => (
-                    <div key={room} className="modal-room-item">
-                      <div className="room-item-header">
-                        <h4>{room}</h4>
-                        <span className="room-item-total">{stats.count} times used</span>
-                      </div>
-                      <div className="room-item-stats">
-                        <span className="stat-short">{stats.short} Short Stay</span>
-                        <span className="stat-night">{stats.night} Night Stay</span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="empty-state">No rooms used today yet.</p>
-                )}
+              <h3 className="modal-subtitle">Room-by-Room Usage</h3>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Room</th>
+                      <th>In</th>
+                      <th>Out</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {todaysTransactions.length > 0 ? (
+                      todaysTransactions
+                        .sort((a, b) => {
+                          if (a.status === 'active' && b.status !== 'active') return -1
+                          if (a.status !== 'active' && b.status === 'active') return 1
+                          return new Date(a.time) - new Date(b.time)
+                        })
+                        .map((tx) => (
+                        <tr key={tx.id}>
+                          <td>{tx.room}</td>
+                          <td>{formatTime(tx.time)}</td>
+                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
+                          <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="empty-state">No clients today yet.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
             
             <div className="modal-footer">
-              <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>Close</button>
+              <button className="btn-modal-close" onClick={() => setShowDailyClientsModal(false)}>Close</button>
             </div>
           </div>
         </div>

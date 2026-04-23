@@ -22,6 +22,7 @@ export default function StaffPortal() {
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [showExpenseDetails, setShowExpenseDetails] = useState(false)
   const [showClientsModal, setShowClientsModal] = useState(false)
+  const [showDailyClientsModal, setShowDailyClientsModal] = useState(false)
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'occupied', 'available'
 
   // Filter out system events from real expenses
@@ -47,10 +48,23 @@ export default function StaffPortal() {
   const totalExpenses = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
   const netRevenue = totalMoney - totalExpenses
 
+  // Shift Transactions: all transactions since the last collection
+  const shiftTransactions = transactions.filter(tx => {
+    const txTime = new Date(tx.time).getTime()
+    const collTime = lastCollectionTime.getTime()
+    return txTime > collTime
+  })
+
   // Filtered rooms
   const displayedRooms = rooms
     .filter(r => roomFilter === 'all' || r.status === roomFilter)
-    .sort((a, b) => parseInt(a.roomNumber) - parseInt(b.roomNumber))
+    .sort((a, b) => {
+      // Prioritize occupied rooms
+      if (a.status === 'occupied' && b.status !== 'occupied') return -1
+      if (a.status !== 'occupied' && b.status === 'occupied') return 1
+      // Then sort numerically by roomNumber
+      return parseInt(a.roomNumber) - parseInt(b.roomNumber)
+    })
 
   // Helper: find the active transaction for a room
   const getActiveTransaction = (roomId) =>
@@ -92,6 +106,12 @@ export default function StaffPortal() {
     } else {
       setSelectedRoom(null)
     }
+  }
+
+  const formatTime = (dateString) => {
+    if (!dateString) return '--'
+    const date = new Date(dateString)
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
   const handleBookingSubmit = async (e) => {
@@ -179,6 +199,13 @@ export default function StaffPortal() {
           <div className="stat-card">
             <h3>Total Clients Today</h3>
             <p className="stat-value">{todaysTransactions.length}</p>
+            <button className="btn-details-card" onClick={() => setShowDailyClientsModal(true)}>
+              View Details
+            </button>
+          </div>
+          <div className="stat-card">
+            <h3>Clients in Shift</h3>
+            <p className="stat-value">{shiftTransactions.length}</p>
             <button className="btn-details-card" onClick={() => setShowClientsModal(true)}>
               View Details
             </button>
@@ -375,44 +402,48 @@ export default function StaffPortal() {
               <div className="modal-body">
                 <div className="modal-summary-grid">
                   <div className="modal-stat">
-                    <span>Total Clients</span>
-                    <strong>{todaysTransactions.length}</strong>
+                    <span>Total Shift Clients</span>
+                    <strong>{shiftTransactions.length}</strong>
                   </div>
                   <div className="modal-stat">
-                    <span>Total Revenue</span>
-                    <strong className="text-success">RWF {totalMoney.toLocaleString()}</strong>
+                    <span>Cash Since Collection</span>
+                    <strong className="text-success">RWF {cashOnHand.toLocaleString()}</strong>
                   </div>
                 </div>
-                <h3 className="modal-subtitle">Room Utilization</h3>
-                <div className="modal-rooms-list">
-                  {Object.keys(todaysTransactions.reduce((acc, tx) => {
-                    if (!acc[tx.room]) acc[tx.room] = { count: 0, short: 0, night: 0 }
-                    acc[tx.room].count++
-                    if (tx.type === 'short_hours') acc[tx.room].short++
-                    else acc[tx.room].night++
-                    return acc
-                  }, {})).length > 0 ? (
-                    Object.entries(todaysTransactions.reduce((acc, tx) => {
-                      if (!acc[tx.room]) acc[tx.room] = { count: 0, short: 0, night: 0 }
-                      acc[tx.room].count++
-                      if (tx.type === 'short_hours') acc[tx.room].short++
-                      else acc[tx.room].night++
-                      return acc
-                    }, {})).map(([room, stats]) => (
-                      <div key={room} className="modal-room-item">
-                        <div className="room-item-header">
-                          <h4>{room}</h4>
-                          <span className="room-item-total">{stats.count} times used</span>
-                        </div>
-                        <div className="room-item-stats">
-                          <span className="stat-short">{stats.short} Short Stay</span>
-                          <span className="stat-night">{stats.night} Night Stay</span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="empty-state">No rooms used today yet.</p>
-                  )}
+                <h3 className="modal-subtitle">Shift Room Log</h3>
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Room</th>
+                        <th>In</th>
+                        <th>Out</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {shiftTransactions.length > 0 ? (
+                        shiftTransactions
+                          .sort((a, b) => {
+                            if (a.status === 'active' && b.status !== 'active') return -1
+                            if (a.status !== 'active' && b.status === 'active') return 1
+                            return new Date(a.time) - new Date(b.time)
+                          })
+                          .map((tx) => (
+                          <tr key={tx.id}>
+                            <td>{tx.room}</td>
+                            <td>{formatTime(tx.time)}</td>
+                            <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
+                            <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="empty-state">No clients in this shift yet.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
               <div className="modal-footer">
@@ -464,6 +495,67 @@ export default function StaffPortal() {
                   <strong>RWF {totalExpenses.toLocaleString()}</strong>
                 </div>
                 <button className="btn-modal-close" onClick={() => setShowExpenseDetails(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Today's Full Client Log Modal (Staff View) */}
+        {showDailyClientsModal && (
+          <div className="modal-overlay" onClick={() => setShowDailyClientsModal(false)}>
+            <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Today's Full Client Log</h2>
+                <button className="btn-close" onClick={() => setShowDailyClientsModal(false)}>&times;</button>
+              </div>
+              <div className="modal-body">
+                <div className="modal-summary-grid">
+                  <div className="modal-stat">
+                    <span>Total Today</span>
+                    <strong>{todaysTransactions.length}</strong>
+                  </div>
+                  <div className="modal-stat">
+                    <span>Total Revenue</span>
+                    <strong className="text-success">RWF {totalMoney.toLocaleString()}</strong>
+                  </div>
+                </div>
+                <h3 className="modal-subtitle">Room-by-Room Usage</h3>
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Room</th>
+                        <th>In</th>
+                        <th>Out</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {todaysTransactions.length > 0 ? (
+                        todaysTransactions
+                          .sort((a, b) => {
+                            if (a.status === 'active' && b.status !== 'active') return -1
+                            if (a.status !== 'active' && b.status === 'active') return 1
+                            return new Date(a.time) - new Date(b.time)
+                          })
+                          .map((tx) => (
+                          <tr key={tx.id}>
+                            <td>{tx.room}</td>
+                            <td>{formatTime(tx.time)}</td>
+                            <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
+                            <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="empty-state">No clients today yet.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn-modal-close" onClick={() => setShowDailyClientsModal(false)}>Close</button>
               </div>
             </div>
           </div>

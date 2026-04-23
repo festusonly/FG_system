@@ -63,6 +63,7 @@ export function AppProvider({ children }) {
         days: tx.days,
         status: tx.status,
         time: tx.created_at,
+        checkoutTime: tx.check_out_time,
       }))
     )
   }, [])
