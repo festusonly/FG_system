@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { supabase } from '../services/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import { useNavigate } from 'react-router-dom'
@@ -10,7 +11,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
 
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'available', 'occupied'
-  const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history'
+  const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history', 'settings'
   const [selectedDayDetails, setSelectedDayDetails] = useState(null)
   const [viewingExpense, setViewingExpense] = useState(null)
   const [showExpensesModal, setShowExpensesModal] = useState(false)
@@ -153,6 +154,12 @@ export default function AdminDashboard() {
           >
             7-Day History
           </button>
+          <button 
+            className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            Settings
+          </button>
         </div>
         <button onClick={handleLogout} className="btn-logout">
           Logout
@@ -160,7 +167,7 @@ export default function AdminDashboard() {
       </header>
 
       <div className="dashboard-content">
-        {activeTab === 'overview' ? (
+        {activeTab === 'overview' && (
           <>
             {/* Cash Collection Banner */}
             <div className="cash-collection-banner">
@@ -332,7 +339,9 @@ export default function AdminDashboard() {
           </div>
         </div>
           </>
-        ) : (
+        )}
+
+        {activeTab === 'history' && (
           <div className="history-section">
             <h2>7-Day Performance History</h2>
             <div className="history-grid">
@@ -365,6 +374,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+        {activeTab === 'settings' && <AdminSettingsSection user={user} />}
       </div>
 
       {/* Details Modal */}
@@ -640,6 +650,201 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+// Sub-components moved outside to prevent remounting issues
+const AdminSettingsSection = ({ user }) => {
+  const { updatePassword } = useAuth()
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [updating, setUpdating] = useState(false)
+  const [msg, setMsg] = useState({ type: '', text: '' })
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault()
+    if (newPassword !== confirmPassword) {
+      return setMsg({ type: 'error', text: 'Passwords do not match' })
+    }
+    if (newPassword.length < 6) {
+      return setMsg({ type: 'error', text: 'Password must be at least 6 characters' })
+    }
+
+    setUpdating(true)
+    const res = await updatePassword(newPassword)
+    setUpdating(false)
+
+    if (res.success) {
+      setMsg({ type: 'success', text: 'Password updated successfully!' })
+      setNewPassword('')
+      setConfirmPassword('')
+    } else {
+      setMsg({ type: 'error', text: res.error })
+    }
+  }
+
+  return (
+    <div className="settings-section">
+      <div className="settings-card">
+        <h2>Security Settings</h2>
+        <p className="settings-subtitle">Update your administrator password below.</p>
+        
+        <form onSubmit={handlePasswordChange} className="settings-form">
+          <div className="form-group">
+            <label>New Password</label>
+            <div className="password-input-wrapper">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                value={newPassword} 
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                required
+              />
+              <button 
+                type="button" 
+                className="btn-toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Confirm New Password</label>
+            <div className="password-input-wrapper">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                value={confirmPassword} 
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                required
+              />
+            </div>
+          </div>
+          
+          {msg.text && (
+            <div className={`settings-msg ${msg.type}`}>
+              {msg.text}
+            </div>
+          )}
+
+          <button type="submit" className="btn-save-settings" disabled={updating}>
+            {updating ? 'Updating...' : 'Update My Password'}
+          </button>
+        </form>
+      </div>
+
+      <div className="settings-card">
+        <h2>Staff Access Control</h2>
+        <p className="settings-subtitle">Change a worker's password securely from here.</p>
+        
+        <StaffManagementList user={user} />
+      </div>
+    </div>
+  )
+}
+
+const StaffManagementList = ({ user }) => {
+  const [workers, setWorkers] = useState([])
+  const [selectedWorker, setSelectedWorker] = useState(null)
+  const [staffPassword, setStaffPassword] = useState('')
+  const [showStaffPassword, setShowStaffPassword] = useState(false)
+  const [reseting, setReseting] = useState(false)
+  const [staffMsg, setStaffMsg] = useState({ type: '', text: '' })
+
+  useEffect(() => {
+    fetchWorkers()
+  }, [])
+
+  const fetchWorkers = async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, role')
+      .neq('id', user.id)
+    
+    if (!error) {
+      setWorkers(data)
+    }
+  }
+
+  const handleStaffReset = async (e) => {
+    e.preventDefault()
+    if (!selectedWorker) return
+    if (staffPassword.length < 6) {
+      return setStaffMsg({ type: 'error', text: 'Password must be at least 6 characters' })
+    }
+
+    setReseting(true)
+    const { error } = await supabase.rpc('admin_reset_password', {
+      target_user_id: selectedWorker.id,
+      new_password: staffPassword
+    })
+    setReseting(false)
+
+    if (!error) {
+      setStaffMsg({ type: 'success', text: 'Staff password updated successfully!' })
+      setStaffPassword('')
+      setSelectedWorker(null)
+    } else {
+      setStaffMsg({ type: 'error', text: error.message })
+    }
+  }
+
+  return (
+    <div className="staff-management">
+      {workers.length > 0 ? (
+        <div className="worker-grid">
+          {workers.map(w => (
+            <div key={w.id} className={`worker-item ${selectedWorker?.id === w.id ? 'selected' : ''}`} onClick={() => setSelectedWorker(w)}>
+              <div className="worker-icon">👤</div>
+              <div className="worker-info">
+                <strong>Worker Account</strong>
+                <span>ID: {w.id.substring(0, 8)}...</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="empty-state">No other worker accounts found.</p>
+      )}
+
+      {selectedWorker && (
+        <form onSubmit={handleStaffReset} className="settings-form" style={{marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)'}}>
+          <h3>Resetting password for Selected Worker</h3>
+          <div className="form-group">
+            <label>New Password for Staff</label>
+            <div className="password-input-wrapper">
+              <input 
+                type={showStaffPassword ? "text" : "password"} 
+                value={staffPassword} 
+                onChange={(e) => setStaffPassword(e.target.value)}
+                placeholder="Enter new password"
+                required
+              />
+              <button 
+                type="button" 
+                className="btn-toggle-password"
+                onClick={() => setShowStaffPassword(!showStaffPassword)}
+              >
+                {showStaffPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
+          {staffMsg.text && (
+            <div className={`settings-msg ${staffMsg.type}`}>
+              {staffMsg.text}
+            </div>
+          )}
+          <button type="submit" className="btn-save-settings danger" disabled={reseting}>
+            {reseting ? 'Reseting...' : 'Confirm Reset Staff Password'}
+          </button>
+          <button type="button" className="btn-modal-close" onClick={() => setSelectedWorker(null)} style={{marginTop: '0.5rem'}}>
+            Cancel
+          </button>
+        </form>
       )}
     </div>
   )
