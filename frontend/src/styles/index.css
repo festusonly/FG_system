@@ -31,7 +31,8 @@ html, body {
   height: 100%;
   overflow-x: hidden;
   position: relative;
-  overscroll-behavior: none; /* Prevents pull-to-refresh and bounce */
+  overscroll-behavior-x: none; /* Block horizontal sliding */
+  overscroll-behavior-y: auto; /* Enable vertical pull-to-refresh */
 }
 
 body {

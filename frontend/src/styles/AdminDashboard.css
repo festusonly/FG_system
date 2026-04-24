@@ -6,22 +6,22 @@
 
 .admin-header {
   background-color: #ffffff;
-  padding: 1rem 2rem;
-  /* Support for iPhone Notches */
-  padding-top: calc(1rem + env(safe-area-inset-top));
+  padding: 1.5rem 2rem; /* Increased padding */
+  /* Support for iPhone Notches + Extra Breathing Room */
+  padding-top: calc(1.5rem + env(safe-area-inset-top));
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
-  flex-wrap: wrap; /* Allow wrapping on small screens */
+  flex-wrap: wrap; 
   gap: 1rem;
 }
 
 @media (max-width: 768px) {
   .admin-header {
-    padding: 1rem;
-    padding-top: calc(1rem + env(safe-area-inset-top));
+    padding: 1.5rem 1rem;
+    padding-top: calc(1.8rem + env(safe-area-inset-top));
     flex-direction: column;
     align-items: flex-start;
   }

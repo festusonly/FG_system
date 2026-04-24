@@ -146,59 +146,64 @@ export default function AdminDashboard() {
     scrollToSection('room-utilization-section')
   }
 
+  const showLocalNotification = (title, body, tag) => {
+    if (!notificationsEnabled) return;
+
+    try {
+      // Method 1: PWA/Service Worker (Standard for mobile/PWA)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification(title, {
+            body: body,
+            icon: '/icon-512.png',
+            badge: '/icon-512.png',
+            tag: tag,
+            vibrate: [200, 100, 200]
+          });
+        }).catch(() => {
+          // Method 2 Fallback: Browser window (PC)
+          if (typeof window !== 'undefined' && window.Notification && window.Notification.permission === 'granted') {
+            new window.Notification(title, { body, icon: '/icon-512.png' });
+          }
+        });
+      } else if (typeof window !== 'undefined' && window.Notification && window.Notification.permission === 'granted') {
+        // Method 2 Fallback: Browser window (PC)
+        new window.Notification(title, { body, icon: '/icon-512.png' });
+      }
+    } catch (e) {
+      console.error('Notification trigger error:', e);
+    }
+  }
+
   // Real-time Notifications Setup
   useEffect(() => {
     // Setup Realtime Channel
     const channel = supabase.channel('admin_notifications')
       .on('postgres_changes', { event: 'INSERT', table: 'transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
-        try {
-          if (notificationsEnabled && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification(`🏨 ${t('new_room_booking')}`, {
-                body: `${tx.served_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
-                icon: '/icon-512.png',
-                badge: '/icon-512.png',
-                tag: 'room-booking',
-                vibrate: [200, 100, 200]
-              })
-            })
-          }
-        } catch (e) { console.error('Notification error:', e) }
+        showLocalNotification(
+          `🏨 ${t('new_room_booking')}`, 
+          `${tx.served_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`, 
+          'room-booking'
+        )
       })
       .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
-        try {
-          if (notificationsEnabled && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification(`🍳 ${t('new_kitchen_sale')}`, {
-                body: `${tx.served_by || 'Kitchen'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
-                icon: '/icon-512.png',
-                badge: '/icon-512.png',
-                tag: 'kitchen-sale',
-                vibrate: [200, 100, 200]
-              })
-            })
-          }
-        } catch (e) { console.error('Notification error:', e) }
+        showLocalNotification(
+          `🍳 ${t('new_kitchen_sale')}`, 
+          `${tx.served_by || 'Kitchen'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`, 
+          'kitchen-sale'
+        )
       })
       .on('postgres_changes', { event: 'INSERT', table: 'expenses', schema: 'public' }, (payload) => {
         const tx = payload.new
         if (tx.description === 'SYSTEM_CASH_COLLECTION' || tx.description === 'KITCHEN_CASH_COLLECTION') return;
         
-        try {
-          if (notificationsEnabled && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification(`💸 New Expense`, {
-                body: `${tx.recorded_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
-                icon: '/icon-512.png',
-                badge: '/icon-512.png',
-                tag: 'expense-report',
-                vibrate: [200, 100, 200]
-              })
-            })
-          }
-        } catch (e) { console.error('Notification error:', e) }
+        showLocalNotification(
+          `💸 New Expense`, 
+          `${tx.recorded_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`, 
+          'expense-report'
+        )
       })
       .subscribe()
 
