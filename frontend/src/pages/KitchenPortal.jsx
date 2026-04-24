@@ -88,7 +88,8 @@ export default function KitchenPortal() {
           description: purcDesc, 
           amount: parseFloat(purcAmount), 
           type: 'purchase', 
-          worker_id: user.id 
+          worker_id: user.id,
+          served_by: user.email // Add this for notifications
         }
       ])
     

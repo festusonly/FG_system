@@ -181,17 +181,22 @@ export default function AdminDashboard() {
     const channel = supabase.channel('admin_notifications')
       .on('postgres_changes', { event: 'INSERT', table: 'transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
+        const userLabel = tx.served_by ? tx.served_by.split('@')[0] : 'Staff'
+        const amount = tx.amount_rwf || tx.amount || 0;
         showLocalNotification(
-          `🏨 ${t('new_room_booking')}`, 
-          `${tx.served_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`, 
+          `🏨 Room Update: ${tx.description || 'New Stay'}`, 
+          `${userLabel} recorded RWF ${amount.toLocaleString()}. Room is now ${tx.stay_type === 'stay' ? 'Occupied' : 'Updated'}.`, 
           'room-booking'
         )
       })
       .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
+        const userLabel = tx.served_by ? tx.served_by.split('@')[0] : 'Kitchen'
+        const typeLabel = tx.type === 'order' ? 'New Order' : 'New Purchase'
+        const amount = tx.amount || tx.amount_rwf || 0;
         showLocalNotification(
-          `🍳 ${t('new_kitchen_sale')}`, 
-          `${tx.served_by || 'Kitchen'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`, 
+          `🍳 Kitchen: ${typeLabel}`, 
+          `${userLabel} recorded ${tx.description} for RWF ${amount.toLocaleString()}.`, 
           'kitchen-sale'
         )
       })
@@ -199,13 +204,17 @@ export default function AdminDashboard() {
         const tx = payload.new
         if (tx.description === 'SYSTEM_CASH_COLLECTION' || tx.description === 'KITCHEN_CASH_COLLECTION') return;
         
+        const userLabel = (tx.recorded_by || tx.served_by) ? (tx.recorded_by || tx.served_by).split('@')[0] : 'Staff'
+        const amount = tx.amount_rwf || tx.amount || 0;
         showLocalNotification(
-          `💸 New Expense`, 
-          `${tx.recorded_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`, 
+          `💸 New Expense Alert`, 
+          `${userLabel} recorded: ${tx.description} - RWF ${amount.toLocaleString()}.`, 
           'expense-report'
         )
       })
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Realtime Status:', status)
+      })
 
     return () => {
       supabase.removeChannel(channel)
