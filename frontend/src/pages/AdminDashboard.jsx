@@ -25,6 +25,7 @@ export default function AdminDashboard() {
 
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'available', 'occupied'
   const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history', 'kitchen', 'settings'
+  const [notifPermission, setNotifPermission] = useState(Notification.permission)
   const [selectedDayDetails, setSelectedDayDetails] = useState(null)
   const [viewingExpense, setViewingExpense] = useState(null)
   const [showExpensesModal, setShowExpensesModal] = useState(false)
@@ -129,6 +130,41 @@ export default function AdminDashboard() {
     scrollToSection('room-utilization-section')
   }
 
+  // Real-time Notifications Setup
+  useEffect(() => {
+    // Setup Realtime Channel
+    const channel = supabase.channel('admin_notifications')
+      .on('postgres_changes', { event: 'INSERT', table: 'transactions', schema: 'public' }, (payload) => {
+        const tx = payload.new
+        if (Notification.permission === 'granted') {
+          new Notification(t('new_room_booking'), {
+            body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
+            icon: '/icon-512.png'
+          })
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
+        const tx = payload.new
+        if (Notification.permission === 'granted') {
+          new Notification(t('new_kitchen_sale'), {
+            body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
+            icon: '/icon-512.png'
+          })
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [t])
+
+  const requestNotifPermission = () => {
+    Notification.requestPermission().then(permission => {
+      setNotifPermission(permission)
+    })
+  }
+
   const handleLogout = async () => {
     await logout()
     navigate('/login')
@@ -164,6 +200,14 @@ export default function AdminDashboard() {
           <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>{t('settings')}</button>
         </div>
         <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+          {notifPermission !== 'granted' && (
+            <button 
+              onClick={requestNotifPermission}
+              style={{background: '#f59e0b', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer'}}
+            >
+              🔔 {t('allow_notifications')}
+            </button>
+          )}
           <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
              <button 
                onClick={() => changeLanguage('en')}

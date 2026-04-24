@@ -129,7 +129,11 @@ export const translations = {
     no_transactions: 'No transactions found.',
     no_expenses: 'No expenses recorded today.',
     offline_mode: 'Offline Mode',
-    viewing_cached_data: 'You are viewing saved data. Changes will sync when online.'
+    viewing_cached_data: 'You are viewing saved data. Changes will sync when online.',
+    new_activity: 'New Activity',
+    new_room_booking: 'New Room Booking',
+    new_kitchen_sale: 'New Kitchen Sale',
+    allow_notifications: 'Enable Alerts'
   },
   rw: {
     // Header & General
@@ -261,6 +265,10 @@ export const translations = {
     no_transactions: 'Nta makuru y\'ubucuruzi aboneka.',
     no_expenses: 'Nta mafaranga yakoreshejwe uyu munsi.',
     offline_mode: 'Nta Muyoboro (Offline)',
-    viewing_cached_data: 'Urimo kureba ibyabitswe vuba. Bizajya kuri interineti nimugaruka.'
+    viewing_cached_data: 'Urimo kureba ibyabitswe vuba. Bizajya kuri interineti nimugaruka.',
+    new_activity: 'Ibikorwa Bishya',
+    new_room_booking: 'Ubucuruzi bw\'Ibyumba Bushya',
+    new_kitchen_sale: 'Ubucuruzi bw\'Igikoni Bushya',
+    allow_notifications: 'Emera Ubuhanuzi (Alerts)'
   }
 };
