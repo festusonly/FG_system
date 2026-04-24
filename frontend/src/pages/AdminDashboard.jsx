@@ -282,35 +282,6 @@ export default function AdminDashboard() {
           <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>{t('settings')}</button>
         </div>
         <div className="header-right-controls">
-          {/* Bulletproof Notification Toggle */}
-          <div 
-            onClick={toggleNotifications}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              background: (typeof window !== 'undefined' && window.Notification) 
-                ? (notificationsEnabled ? '#0d9488' : '#64748b') 
-                : '#cbd5e1',
-              color: 'white',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              cursor: (typeof window !== 'undefined' && window.Notification) ? 'pointer' : 'not-allowed',
-              fontSize: '0.75rem',
-              fontWeight: 'bold',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-          >
-            <span>
-              {!(typeof window !== 'undefined' && window.Notification) ? '🚫' : (notificationsEnabled ? '🔔' : '🔕')}
-            </span>
-            <span>
-              {!(typeof window !== 'undefined' && window.Notification) 
-                ? 'Alerts Unsupported' 
-                : (notificationsEnabled ? t('notifications_on') : t('notifications_off'))}
-            </span>
-          </div>
           <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
              <button 
                onClick={() => changeLanguage('en')}
@@ -341,27 +312,6 @@ export default function AdminDashboard() {
                }}
              >RW</button>
           </div>
-           {deferredPrompt && !isPWAInstalled && (
-            <button 
-              onClick={installPWA}
-              style={{
-                background: 'linear-gradient(135deg, #0d9488, #0f766e)',
-                color: 'white',
-                border: 'none',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                fontWeight: 'bold',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <span>📲</span> {t('install_app') || 'Install App'}
-            </button>
-          )}
           <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
         </div>
       </header>

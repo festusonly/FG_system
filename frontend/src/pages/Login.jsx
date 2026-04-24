@@ -81,48 +81,7 @@ export default function Login() {
           <p>{t('login_subtitle')}</p>
         </div>
 
-        {!isPWAInstalled && (
-          <div className="pwa-install-section" style={{
-            marginBottom: '2rem',
-            padding: '15px',
-            background: '#f0fdfa',
-            borderRadius: '12px',
-            border: '1px solid #5eead4',
-            textAlign: 'center'
-          }}>
-            {deferredPrompt ? (
-              <button 
-                type="button"
-                onClick={installPWA}
-                style={{
-                  width: '100%',
-                  background: '#0d9488',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  fontWeight: 'bold'
-                }}
-              >
-                📲 Install Flower App
-              </button>
-            ) : (
-              <div style={{color: '#0f766e', fontSize: '0.9rem', fontWeight: '500'}}>
-                {/iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()) ? (
-                  <span>
-                    🍎 To Install on iPhone: Tap the <strong>Share</strong> button ( <span style={{fontSize: '1.2rem'}}>⎋</span> ) then scroll down and tap <strong>"Add to Home Screen"</strong>
-                  </span>
-                ) : (
-                  <span>
-                    💡 To Install: Tap the 3 dots (top right) and select "Add to Home Screen"
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
