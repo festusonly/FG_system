@@ -233,6 +233,12 @@ flower_system/
 - [ ] Deploy to production
 - [ ] User training & documentation
 
+### Phase 5: Advanced Features & Localization (Future)
+- [ ] **Kinyarwanda Support:** Add a language toggle to translate the entire UI for local staff.
+- [ ] **Daily Client Tracking:** Show total clients of the day and specific rooms occupied on both Admin and Staff portals.
+- [ ] **7-Day Rolling History:** A dedicated Admin page showing day-by-day sales, room usage, and expenses for the past week.
+- [ ] **Auto-Deletion Cron Job:** Automatically delete daily history data older than 7 days to maintain database speed and free-tier limits.
+
 ## 💰 Cost Breakdown (Monthly)
 
 | Service | Free Tier | Cost |

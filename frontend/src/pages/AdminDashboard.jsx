@@ -154,9 +154,10 @@ export default function AdminDashboard() {
         const tx = payload.new
         try {
           if (notificationsEnabled && window.Notification && window.Notification.permission === 'granted') {
-            new window.Notification(t('new_room_booking'), {
-              body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
-              icon: '/icon-512.png'
+            new window.Notification(`🏨 ${t('new_room_booking')}`, {
+              body: `${tx.served_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
+              icon: '/icon-512.png',
+              tag: 'room-booking'
             })
           }
         } catch (e) { console.error('Notification error:', e) }
@@ -165,9 +166,25 @@ export default function AdminDashboard() {
         const tx = payload.new
         try {
           if (notificationsEnabled && window.Notification && window.Notification.permission === 'granted') {
-            new window.Notification(t('new_kitchen_sale'), {
-              body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
-              icon: '/icon-512.png'
+            new window.Notification(`🍳 ${t('new_kitchen_sale')}`, {
+              body: `${tx.served_by || 'Kitchen'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
+              icon: '/icon-512.png',
+              tag: 'kitchen-sale'
+            })
+          }
+        } catch (e) { console.error('Notification error:', e) }
+      })
+      .on('postgres_changes', { event: 'INSERT', table: 'expenses', schema: 'public' }, (payload) => {
+        const tx = payload.new
+        // Only notify for real expenses, not system markers
+        if (tx.description === 'SYSTEM_CASH_COLLECTION' || tx.description === 'KITCHEN_CASH_COLLECTION') return;
+        
+        try {
+          if (notificationsEnabled && window.Notification && window.Notification.permission === 'granted') {
+            new window.Notification(`💸 New Expense`, {
+              body: `${tx.recorded_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
+              icon: '/icon-512.png',
+              tag: 'expense-report'
             })
           }
         } catch (e) { console.error('Notification error:', e) }
@@ -834,6 +851,37 @@ const AdminSettingsSection = ({ user }) => {
 
   return (
     <div className="settings-section">
+      <div className="settings-card" style={{marginBottom: '1.5rem'}}>
+        <h2>🔔 {t('allow_notifications')}</h2>
+        <p className="settings-subtitle">Verify if your device can receive live pop-up alerts for sales and bookings.</p>
+        <button 
+          onClick={() => {
+            if (window.Notification) {
+              if (window.Notification.permission === 'granted') {
+                new window.Notification('🔔 Notification Test', {
+                  body: 'If you see this, your live alerts are working perfectly!',
+                  icon: '/icon-512.png'
+                })
+              } else {
+                window.Notification.requestPermission().then(p => {
+                  if (p === 'granted') {
+                    new window.Notification('🔔 Permission Granted!', { body: 'Test notification working.' })
+                  } else {
+                    alert('Notifications are blocked by your browser settings.')
+                  }
+                })
+              }
+            } else {
+              alert('Notifications are not supported on this device/browser.')
+            }
+          }}
+          className="btn-save-settings" 
+          style={{background: '#0d9488', marginTop: '1rem'}}
+        >
+          Test Live Alerts
+        </button>
+      </div>
+
       <div className="settings-card">
         <h2>{t('security_settings')}</h2>
         <p className="settings-subtitle">{t('update_password_subtitle')}</p>
