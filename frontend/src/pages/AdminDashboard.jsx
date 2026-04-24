@@ -907,29 +907,65 @@ const AdminSettingsSection = ({ user }) => {
 
   return (
     <div className="settings-section">
-      <div className="settings-card" style={{marginBottom: '1.5rem'}}>
-        <h2>🔔 {t('allow_notifications')}</h2>
-        <p className="settings-subtitle">Verify if your device can receive live pop-up alerts for sales and bookings.</p>
-        <button 
-          onClick={() => {
-            if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.ready.then(registration => {
-                registration.showNotification('🔔 PWA Notification Test', {
-                  body: 'If you see this, your PWA live alerts are working perfectly!',
-                  icon: '/icon-512.png',
-                  badge: '/icon-512.png',
-                  vibrate: [200, 100, 200]
-                })
-              })
-            } else {
-              alert('PWA notifications are not supported on this browser.')
-            }
-          }}
-          className="btn-save-settings" 
-          style={{background: '#0d9488', marginTop: '1rem'}}
-        >
-          Test PWA Alerts
-        </button>
+      <div className="settings-card" style={{marginBottom: '1.5rem', border: '2px solid #0d9488', background: '#f0fdfa'}}>
+        <h2 style={{color: '#0d9488'}}>🔔 PWA Command Center</h2>
+        <p className="settings-subtitle">Manage notifications for this device. Essential for iOS and locked-phone alerts.</p>
+        
+        <div style={{display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem'}}>
+          {/* Status Indicators */}
+          <div style={{display: 'flex', gap: '10px', fontSize: '0.85rem', fontWeight: '600'}}>
+            <span style={{color: (typeof window !== 'undefined' && window.Notification && Notification.permission === 'granted') ? '#0d9488' : '#e11d48'}}>
+              Permission: {(typeof window !== 'undefined' && window.Notification) ? Notification.permission.toUpperCase() : 'UNSUPPORTED'}
+            </span>
+            <span style={{color: (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) ? '#0d9488' : '#e11d48'}}>
+              Mode: {(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) ? 'APP' : 'BROWSER'}
+            </span>
+          </div>
+
+          <div style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
+            <button 
+              onClick={() => {
+                if ('Notification' in window) {
+                  Notification.requestPermission().then(permission => {
+                    alert(`Notification permission: ${permission}`);
+                    window.location.reload();
+                  });
+                } else {
+                  alert('Notifications not supported.');
+                }
+              }}
+              className="btn-save-settings" 
+              style={{background: '#0d9488', flex: 1, minWidth: '150px'}}
+            >
+              1. Enable Alerts
+            </button>
+
+            <button 
+              onClick={() => {
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.ready.then(registration => {
+                    registration.showNotification('🔔 PWA Alert Test', {
+                      body: 'Success! Your device is ready for live updates.',
+                      icon: '/icon-512.png',
+                      badge: '/icon-512.png',
+                      vibrate: [200, 100, 200]
+                    });
+                  });
+                }
+              }}
+              className="btn-save-settings" 
+              style={{background: '#64748b', flex: 1, minWidth: '150px'}}
+            >
+              2. Test Pop-up
+            </button>
+          </div>
+
+          {/iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()) && !(window.navigator.standalone) && (
+             <p style={{fontSize: '0.75rem', color: '#b91c1c', fontWeight: 'bold', background: '#fee2e2', padding: '8px', borderRadius: '8px'}}>
+               ⚠️ iOS Warning: Notifications ONLY work if you "Add to Home Screen" first!
+             </p>
+          )}
+        </div>
       </div>
 
       <div className="settings-card">

@@ -109,7 +109,15 @@ export default function Login() {
             </button>
           ) : (
             <div style={{color: '#0f766e', fontSize: '0.9rem', fontWeight: '500'}}>
-              💡 To Install: Tap the 3 dots (top right) and select "Add to Home Screen"
+              {/iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()) ? (
+                <span>
+                  🍎 To Install on iPhone: Tap the <strong>Share</strong> button ( <span style={{fontSize: '1.2rem'}}>⎋</span> ) then scroll down and tap <strong>"Add to Home Screen"</strong>
+                </span>
+              ) : (
+                <span>
+                  💡 To Install: Tap the 3 dots (top right) and select "Add to Home Screen"
+                </span>
+              )}
             </div>
           )}
         </div>
