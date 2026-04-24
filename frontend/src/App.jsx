@@ -37,8 +37,24 @@ function ProtectedRoute({ children, requiredRole = null }) {
 }
 
 export default function App() {
-  const { user } = useAuth()
-  // No loading block here — login page shows instantly
+  const { user, loading } = useAuth()
+  
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        minHeight: '100vh', background: '#f8fafc'
+      }}>
+        <div style={{
+          textAlign: 'center', color: '#0d9488', fontWeight: '600'
+        }}>
+          <div className="spinner" style={{width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #0d9488', borderRadius: '50%', margin: '0 auto 1rem auto', animation: 'spin 1s linear infinite'}}></div>
+          Verifying Session...
+        </div>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
 
   return (
     <Routes>
