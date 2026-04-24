@@ -8,7 +8,7 @@ import '../styles/AdminDashboard.css' // Import for metric-card styles
 
 export default function KitchenPortal() {
   const { user, logout } = useAuth()
-  const { kitchenTransactions, lastKitchenCollectionTime } = useApp()
+  const { kitchenTransactions, lastKitchenCollectionTime, t, language, changeLanguage, isOffline } = useApp()
   const navigate = useNavigate()
   // Sale States
   const [saleDesc, setSaleDesc] = useState('')
@@ -68,7 +68,7 @@ export default function KitchenPortal() {
     if (error) {
       setMessage({ type: 'error', text: error.message })
     } else {
-      setMessage({ type: 'success', text: 'Sale Saved Successfully!' })
+      setMessage({ type: 'success', text: t('success_save') })
       setSaleDesc('')
       setSaleAmount('')
       setSaleServedBy('')
@@ -97,7 +97,7 @@ export default function KitchenPortal() {
     if (error) {
       setMessage({ type: 'error', text: error.message })
     } else {
-      setMessage({ type: 'success', text: 'Purchase Saved Successfully!' })
+      setMessage({ type: 'success', text: t('success_save') })
       setPurcDesc('')
       setPurcAmount('')
       setShowPurcForm(false) // Close form after saving
@@ -114,22 +114,63 @@ export default function KitchenPortal() {
     <div className="kitchen-portal">
       <header className="portal-header">
         <div className="header-content">
-          <h1>Kitchen Portal</h1>
+          <h1>{t('kitchen_portal')}</h1>
           <p>Worker: {user?.email}</p>
         </div>
-        <button onClick={handleLogout} className="btn-logout">Logout</button>
+        <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+          <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
+             <button 
+               onClick={() => changeLanguage('en')}
+               style={{
+                 background: language === 'en' ? '#0d9488' : 'transparent', 
+                 color: language === 'en' ? 'white' : '#64748b', 
+                 border: 'none', 
+                 padding: '5px 12px', 
+                 borderRadius: '25px', 
+                 cursor: 'pointer', 
+                 fontWeight: 'bold',
+                 fontSize: '0.85rem',
+                 transition: 'all 0.3s ease'
+               }}
+             >EN</button>
+             <button 
+               onClick={() => changeLanguage('rw')}
+               style={{
+                 background: language === 'rw' ? '#0d9488' : 'transparent', 
+                 color: language === 'rw' ? 'white' : '#64748b', 
+                 border: 'none', 
+                 padding: '5px 12px', 
+                 borderRadius: '25px', 
+                 cursor: 'pointer', 
+                 fontWeight: 'bold',
+                 fontSize: '0.85rem',
+                 transition: 'all 0.3s ease'
+               }}
+             >RW</button>
+          </div>
+          <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
+        </div>
       </header>
 
       <main className="portal-main">
+        {isOffline && (
+          <div className="offline-banner" style={{background: '#fffbeb', color: '#b45309', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', maxWidth: '800px', margin: '0 auto 2rem auto'}}>
+             <span style={{fontSize: '1.5rem'}}>📡</span>
+             <div>
+               <div style={{fontSize: '1rem'}}>{t('offline_mode')}</div>
+               <div style={{fontSize: '0.85rem', fontWeight: 'normal', opacity: 0.9}}>{t('viewing_cached_data')}</div>
+             </div>
+          </div>
+        )}
         {/* Top Metric Row (4 Cards) */}
         <div className="metrics-section" style={{marginBottom: '2rem'}}>
           <div className="metric-card success">
-            <h3>Sales to Collect</h3>
+            <h3>{t('sales_to_collect')}</h3>
             <p className="metric-value">RWF {pendingKitchenCash.toLocaleString()}</p>
-            <span className="metric-label">Since last collection</span>
+            <span className="metric-label">{t('since_last_collection')}</span>
           </div>
           <div className="metric-card warning">
-            <h3>Purchases to Deduct</h3>
+            <h3>{t('purchases_to_deduct')}</h3>
             <p className="metric-value">RWF {(kitchenTransactions
               .filter(t => {
                 const tTime = new Date(t.created_at).getTime()
@@ -137,7 +178,7 @@ export default function KitchenPortal() {
                 return t.type === 'purchase' && tTime > collTime
               })
               .reduce((sum, t) => sum + t.amount, 0)).toLocaleString()}</p>
-            <span className="metric-label">Since last collection</span>
+            <span className="metric-label">{t('since_last_collection')}</span>
           </div>
           <div className={`metric-card ${(pendingKitchenCash - kitchenTransactions
               .filter(t => {
@@ -146,7 +187,7 @@ export default function KitchenPortal() {
                 return t.type === 'purchase' && tTime > collTime
               })
               .reduce((sum, t) => sum + t.amount, 0)) >= 0 ? 'primary' : 'danger'}`}>
-            <h3>Profit for Dad</h3>
+            <h3>{t('profit_for_dad')}</h3>
             <p className="metric-value">RWF {(pendingKitchenCash - kitchenTransactions
               .filter(t => {
                 const tTime = new Date(t.created_at).getTime()
@@ -154,14 +195,14 @@ export default function KitchenPortal() {
                 return t.type === 'purchase' && tTime > collTime
               })
               .reduce((sum, t) => sum + t.amount, 0)).toLocaleString()}</p>
-            <span className="metric-label">Net for Dad</span>
+            <span className="metric-label">{t('since_last_collection')}</span>
           </div>
 
           {/* 4th Card: Purchase Toggle */}
           <div className="metric-card purchase-toggle-card" onClick={() => setShowPurcForm(true)} style={{cursor: 'pointer', border: '2px dashed #475569'}}>
-             <h3 style={{color: '#475569'}}>New Purchase</h3>
+             <h3 style={{color: '#475569'}}>{t('record_purchase')}</h3>
              <div className="plus-icon" style={{fontSize: '2rem', margin: '0.5rem 0'}}>+</div>
-             <span className="metric-label">Click to record expense</span>
+             <span className="metric-label">{t('view_details')}</span>
           </div>
         </div>
 
@@ -170,12 +211,12 @@ export default function KitchenPortal() {
           <div className="modal-overlay">
             <div className="modal-content-pro">
               <div className="modal-header">
-                <h2>Record Kitchen Purchase</h2>
+                <h2>{t('record_purchase')}</h2>
                 <button className="btn-close" onClick={() => setShowPurcForm(false)}>&times;</button>
               </div>
               <form onSubmit={handleRecordPurchase} className="entry-form">
                 <div className="form-group">
-                  <label>What did you buy?</label>
+                  <label>{t('what_bought')}</label>
                   <textarea 
                     value={purcDesc}
                     onChange={(e) => setPurcDesc(e.target.value)}
@@ -185,7 +226,7 @@ export default function KitchenPortal() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Amount Spent (RWF)</label>
+                  <label>{t('price_rwf')}</label>
                   <input 
                     type="number" 
                     value={purcAmount}
@@ -201,7 +242,7 @@ export default function KitchenPortal() {
                   </div>
                 )}
                 <button type="submit" className="btn-submit-pro purchase-theme" disabled={loading}>
-                  {loading ? 'Saving...' : 'SAVE PURCHASE'}
+                  {loading ? t('loading') : t('save_purchase')}
                 </button>
               </form>
             </div>
@@ -210,20 +251,20 @@ export default function KitchenPortal() {
 
         {/* Middle: Daily Summary Bar */}
         <div className="daily-summary-bar" style={{marginBottom: '2rem'}}>
-           <span className="summary-label">Work Done Today:</span>
-           <span className="summary-val sale">Today's Sales: RWF {todaysSales.toLocaleString()}</span>
-           <span className="summary-val purc">Today's Purchases: RWF {todaysPurchases.toLocaleString()}</span>
+           <span className="summary-label">{t('work_done_today')}:</span>
+           <span className="summary-val sale">{t('daily_sales')}: RWF {todaysSales.toLocaleString()}</span>
+           <span className="summary-val purc">{t('daily_purchases')}: RWF {todaysPurchases.toLocaleString()}</span>
         </div>
 
         {/* Bottom: Isolated Sale Form */}
         <div className="entry-card sale-card-pro" style={{maxWidth: '800px', margin: '0 auto 3rem auto'}}>
           <div className="entry-header">
-            <h2>Record a New Sale</h2>
-            <p className="subtitle">Record food and drinks sold right now.</p>
+            <h2>{t('record_sale')}</h2>
+            <p className="subtitle">{t('money_in')}</p>
           </div>
           <form onSubmit={handleRecordSale} className="entry-form">
             <div className="form-group">
-              <label>What was sold?</label>
+              <label>{t('what_sold')}</label>
               <textarea 
                 value={saleDesc}
                 onChange={(e) => setSaleDesc(e.target.value)}
@@ -234,7 +275,7 @@ export default function KitchenPortal() {
             </div>
             <div className="form-group-row">
               <div className="form-group">
-                <label>Total Price (RWF)</label>
+                <label>{t('price_rwf')}</label>
                 <input 
                   type="number" 
                   value={saleAmount}
@@ -245,7 +286,7 @@ export default function KitchenPortal() {
                 />
               </div>
               <div className="form-group">
-                <label>Served By</label>
+                <label>{t('served_by')}</label>
                 <input 
                   type="text" 
                   value={saleServedBy}
@@ -262,7 +303,7 @@ export default function KitchenPortal() {
               </div>
             )}
             <button type="submit" className="btn-submit-pro sale-theme" disabled={loading}>
-              {loading ? 'Saving...' : 'SAVE SALE TO SYSTEM'}
+              {loading ? t('loading') : t('save_sale')}
             </button>
           </form>
         </div>
@@ -270,8 +311,8 @@ export default function KitchenPortal() {
         <div className="recent-entries-split">
           <div className="entries-column">
             <div className="entries-header">
-              <h2>Recent Sales</h2>
-              <p>Money coming into the kitchen.</p>
+              <h2>{t('recent_sales')}</h2>
+              <p>{t('money_in')}</p>
             </div>
             <div className="entries-list">
               {recentEntries.filter(e => e.type === 'order').length > 0 ? (
@@ -285,7 +326,7 @@ export default function KitchenPortal() {
                       </div>
                       <span className="entry-desc-modern">{entry.description}</span>
                       <div className="entry-sub-info">
-                        {entry.served_by && <span className="entry-served-by">Served by: <strong>{entry.served_by}</strong></span>}
+                        {entry.served_by && <span className="entry-served-by">{t('served_by')}: <strong>{entry.served_by}</strong></span>}
                       </div>
                     </div>
                     <div className="entry-price-info">
@@ -301,8 +342,8 @@ export default function KitchenPortal() {
 
           <div className="entries-column">
             <div className="entries-header">
-              <h2>Recent Purchases</h2>
-              <p>Money spent on supplies.</p>
+              <h2>{t('recent_purchases')}</h2>
+              <p>{t('money_out')}</p>
             </div>
             <div className="entries-list">
               {recentEntries.filter(e => e.type === 'purchase').length > 0 ? (
@@ -322,7 +363,7 @@ export default function KitchenPortal() {
                   </div>
                 ))
               ) : (
-                <p className="empty-state">No purchases recorded yet.</p>
+                <p className="empty-state">{t('no_transactions')}</p>
               )}
             </div>
           </div>

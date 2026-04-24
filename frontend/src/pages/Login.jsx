@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 import '../styles/Login.css'
 
 export default function Login() {
@@ -10,6 +11,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { t, language, changeLanguage } = useApp()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -34,13 +36,45 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Flower Guesthouse</h1>
-          <p>Payment Management System</p>
+          <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0', width: 'fit-content', margin: '0 auto 1.5rem auto'}}>
+             <button 
+               type="button"
+               onClick={() => changeLanguage('en')}
+               style={{
+                 background: language === 'en' ? '#0d9488' : 'transparent', 
+                 color: language === 'en' ? 'white' : '#64748b', 
+                 border: 'none', 
+                 padding: '5px 15px', 
+                 borderRadius: '25px', 
+                 cursor: 'pointer', 
+                 fontWeight: 'bold',
+                 fontSize: '0.85rem',
+                 transition: 'all 0.3s ease'
+               }}
+             >EN</button>
+             <button 
+               type="button"
+               onClick={() => changeLanguage('rw')}
+               style={{
+                 background: language === 'rw' ? '#0d9488' : 'transparent', 
+                 color: language === 'rw' ? 'white' : '#64748b', 
+                 border: 'none', 
+                 padding: '5px 15px', 
+                 borderRadius: '25px', 
+                 cursor: 'pointer', 
+                 fontWeight: 'bold',
+                 fontSize: '0.85rem',
+                 transition: 'all 0.3s ease'
+               }}
+             >RW</button>
+          </div>
+          <h1>{t('welcome_back')}</h1>
+          <p>{t('login_subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">{t('email_label')}</label>
             <input
               id="email"
               type="text"
@@ -53,7 +87,7 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('password_label')}</label>
             <div className="password-input-wrapper">
               <input
                 id="password"
@@ -82,7 +116,7 @@ export default function Login() {
             className="btn-login"
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? t('loading') : t('login_btn')}
           </button>
         </form>
 

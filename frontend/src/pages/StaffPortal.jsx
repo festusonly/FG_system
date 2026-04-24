@@ -6,7 +6,7 @@ import '../styles/StaffPortal.css'
 
 export default function StaffPortal() {
   const { user, logout } = useAuth()
-  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData } = useApp()
+  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline } = useApp()
   const navigate = useNavigate()
 
   const [submitting, setSubmitting] = useState(false)
@@ -157,15 +157,54 @@ export default function StaffPortal() {
     <div className="staff-portal">
       <header className="staff-header">
         <div className="header-left">
-          <h1>Worker Portal</h1>
+          <h1>{t('staff_portal')}</h1>
           <p>Welcome, {user?.email}</p>
         </div>
-        <button onClick={handleLogout} className="btn-logout">
-          Logout
-        </button>
+        <div className="header-actions" style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+          <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
+             <button 
+               onClick={() => changeLanguage('en')}
+               style={{
+                 background: language === 'en' ? '#0d9488' : 'transparent', 
+                 color: language === 'en' ? 'white' : '#64748b', 
+                 border: 'none', 
+                 padding: '5px 12px', 
+                 borderRadius: '25px', 
+                 cursor: 'pointer', 
+                 fontWeight: 'bold',
+                 fontSize: '0.85rem',
+                 transition: 'all 0.3s ease'
+               }}
+             >EN</button>
+             <button 
+               onClick={() => changeLanguage('rw')}
+               style={{
+                 background: language === 'rw' ? '#0d9488' : 'transparent', 
+                 color: language === 'rw' ? 'white' : '#64748b', 
+                 border: 'none', 
+                 padding: '5px 12px', 
+                 borderRadius: '25px', 
+                 cursor: 'pointer', 
+                 fontWeight: 'bold',
+                 fontSize: '0.85rem',
+                 transition: 'all 0.3s ease'
+               }}
+             >RW</button>
+          </div>
+          <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
+        </div>
       </header>
 
       <div className="staff-content">
+        {isOffline && (
+          <div className="offline-banner" style={{background: '#fffbeb', color: '#b45309', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'}}>
+             <span style={{fontSize: '1.5rem'}}>📡</span>
+             <div>
+               <div style={{fontSize: '1rem'}}>{t('offline_mode')}</div>
+               <div style={{fontSize: '0.85rem', fontWeight: 'normal', opacity: 0.9}}>{t('viewing_cached_data')}</div>
+             </div>
+          </div>
+        )}
         {/* Global action error */}
         {actionError && (
           <div className="action-error-banner">
@@ -185,44 +224,44 @@ export default function StaffPortal() {
             className={`stat-card clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
             onClick={() => handleFilterCard('occupied')}
           >
-            <h3>Occupied Rooms</h3>
+            <h3>{t('occupied')}</h3>
             <p className="stat-value">{totalRoomsTaken}</p>
           </div>
           <div 
             className={`stat-card clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
             onClick={() => handleFilterCard('available')}
           >
-            <h3>Remaining Rooms</h3>
+            <h3>{t('available')}</h3>
             <p className="stat-value">{rooms.length - totalRoomsTaken}</p>
           </div>
           <div className="stat-card primary-stat">
-            <h3>Net Revenue</h3>
+            <h3>{t('net_revenue')}</h3>
             <p className="stat-value">RWF {netRevenue.toLocaleString()}</p>
           </div>
           <div className="stat-card">
-            <h3>Total Clients Today</h3>
+            <h3>{t('total_clients')}</h3>
             <p className="stat-value">{todaysTransactions.length}</p>
             <button className="btn-details-card" onClick={() => setShowDailyClientsModal(true)}>
-              View Details
+              {t('view_details')}
             </button>
           </div>
           <div className="stat-card">
-            <h3>Clients in Shift</h3>
+            <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
             <p className="stat-value">{shiftTransactions.length}</p>
             <button className="btn-details-card" onClick={() => setShowClientsModal(true)}>
-              View Details
+              {t('view_details')}
             </button>
           </div>
           <div className="stat-card">
-            <h3>Total Expenses</h3>
+            <h3>{t('total_expenses')}</h3>
             <p className="stat-value">RWF {totalExpenses.toLocaleString()}</p>
             <button className="btn-details-card" onClick={() => setShowExpenseDetails(true)}>
-              View Details
+              {t('view_details')}
             </button>
           </div>
           <div className="stat-card action-stat">
              <button className="btn-expense" onClick={() => setShowExpenseForm(true)}>
-               Report Expense
+               {t('record_expense')}
              </button>
           </div>
         </div>
@@ -231,9 +270,9 @@ export default function StaffPortal() {
         {showExpenseForm && (
           <div className="modal-overlay">
             <form className="modal-form" onSubmit={handleExpenseSubmit}>
-              <h3>Report an Expense</h3>
+              <h3>{t('record_expense')}</h3>
               <div className="form-group">
-                <label htmlFor="expenseAmount">Amount (RWF)</label>
+                <label htmlFor="expenseAmount">{t('expense_amount')}</label>
                 <input
                   id="expenseAmount"
                   type="number"
@@ -245,7 +284,7 @@ export default function StaffPortal() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="expenseDescription">Description</label>
+                <label htmlFor="expenseDescription">{t('expense_description')}</label>
                 <textarea
                   id="expenseDescription"
                   value={expenseDescription}
@@ -257,14 +296,14 @@ export default function StaffPortal() {
               </div>
               <div className="form-actions">
                 <button type="submit" className="btn-submit" disabled={submitting}>
-                  {submitting ? 'Submitting...' : 'Submit Expense'}
+                  {submitting ? t('loading') : t('save_expense')}
                 </button>
                 <button
                   type="button"
                   className="btn-cancel"
                   onClick={() => setShowExpenseForm(false)}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
               </div>
             </form>
@@ -273,7 +312,7 @@ export default function StaffPortal() {
 
         {/* Room Selection */}
         <div className="rooms-section" id="rooms-section">
-          <h2>Select a Room {roomFilter !== 'all' && `(${roomFilter})`}</h2>
+          <h2>{t('rooms_overview')} {roomFilter !== 'all' && `(${t(roomFilter) || roomFilter})`}</h2>
           <div className="rooms-grid">
             {displayedRooms.map((room) => (
               <button
@@ -283,7 +322,7 @@ export default function StaffPortal() {
               >
                 <span className="room-name">{room.name}</span>
                 <span className="room-status-label">
-                  {room.status === 'occupied' ? 'Occupied' : 'Available'}
+                  {room.status === 'occupied' ? t('occupied') : t('available')}
                 </span>
               </button>
             ))}
@@ -295,12 +334,12 @@ export default function StaffPortal() {
           const activeTx = getActiveTransaction(selectedRoom.id)
           return (
             <div className="room-details-panel" id="checkout-panel">
-              <h3>{selectedRoom.name} - Occupied</h3>
+              <h3>{selectedRoom.name} - {t('occupied')}</h3>
               {activeTx ? (
                 <>
-                  <p><strong>Stay Type:</strong> {activeTx.type.replace(/_/g, ' ')}</p>
-                  {activeTx.days && <p><strong>Days:</strong> {activeTx.days}</p>}
-                  <p><strong>Amount Paid:</strong> RWF {activeTx.amount.toLocaleString()}</p>
+                  <p><strong>{t('type')}:</strong> {t(activeTx.type) || activeTx.type.replace(/_/g, ' ')}</p>
+                  {activeTx.days && <p><strong>{t('number_of_days')}:</strong> {activeTx.days}</p>}
+                  <p><strong>{t('amount_paid')}:</strong> RWF {activeTx.amount.toLocaleString()}</p>
                 </>
               ) : (
                 <p>No active booking found.</p>
@@ -310,7 +349,7 @@ export default function StaffPortal() {
                 onClick={() => handleCheckout(selectedRoom.id)}
                 disabled={submitting}
               >
-                {submitting ? 'Checking out...' : 'Check Out & Clear Room'}
+                {submitting ? t('loading') : t('check_out')}
               </button>
             </div>
           )
@@ -320,38 +359,38 @@ export default function StaffPortal() {
         {showForm && selectedRoom && selectedRoom.status === 'available' && (
           <div className="modal-overlay">
             <form className="modal-form" onSubmit={handleBookingSubmit}>
-              <h3>Book {selectedRoom.name}</h3>
+              <h3>{t('record_new_booking')} - {selectedRoom.name}</h3>
 
               <div className="form-group">
-                <label>Stay Duration</label>
+                <label>{t('select_stay_type')}</label>
                 <div className="toggle-buttons">
                   <button
                     type="button"
                     className={`toggle-btn ${stayType === 'short_hours' ? 'active' : ''}`}
                     onClick={() => setStayType('short_hours')}
                   >
-                    Short Hours
+                    {t('short_stay')}
                   </button>
                   <button
                     type="button"
                     className={`toggle-btn ${stayType === 'night' ? 'active' : ''}`}
                     onClick={() => setStayType('night')}
                   >
-                    Night
+                    {t('night_stay')}
                   </button>
                   <button
                     type="button"
                     className={`toggle-btn ${stayType === 'many_days' ? 'active' : ''}`}
                     onClick={() => setStayType('many_days')}
                   >
-                    Many Days
+                    {t('number_of_days')}
                   </button>
                 </div>
               </div>
 
               {stayType === 'many_days' && (
                 <div className="form-group">
-                  <label htmlFor="days">Number of Days</label>
+                  <label htmlFor="days">{t('number_of_days')}</label>
                   <input
                     id="days"
                     type="number"
@@ -364,7 +403,7 @@ export default function StaffPortal() {
               )}
 
               <div className="form-group">
-                <label htmlFor="amount">Amount Collected (RWF)</label>
+                <label htmlFor="amount">{t('total_amount_rwf')}</label>
                 <input
                   id="amount"
                   type="number"
@@ -378,7 +417,7 @@ export default function StaffPortal() {
 
               <div className="form-actions">
                 <button type="submit" className="btn-submit" disabled={submitting}>
-                  {submitting ? 'Saving...' : 'Confirm Booking'}
+                  {submitting ? t('loading') : t('book_room_btn')}
                 </button>
                 <button
                   type="button"
@@ -399,29 +438,29 @@ export default function StaffPortal() {
           <div className="modal-overlay" onClick={() => setShowClientsModal(false)}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>Today's Room Usage Breakdown</h2>
+                <h2>{t('work_done_today')}</h2>
                 <button className="btn-close" onClick={() => setShowClientsModal(false)}>&times;</button>
               </div>
               <div className="modal-body">
                 <div className="modal-summary-grid">
                   <div className="modal-stat">
-                    <span>Total Shift Clients</span>
+                    <span>{t('clients_in_shift') || 'Clients in Shift'}</span>
                     <strong>{shiftTransactions.length}</strong>
                   </div>
                   <div className="modal-stat">
-                    <span>Cash Since Collection</span>
+                    <span>{t('cash_in_drawer')}</span>
                     <strong className="text-success">RWF {cashOnHand.toLocaleString()}</strong>
                   </div>
                 </div>
-                <h3 className="modal-subtitle">Shift Room Log</h3>
+                <h3 className="modal-subtitle">{t('detailed_log')}</h3>
                 <div className="table-responsive">
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Room</th>
-                        <th>In</th>
-                        <th>Out</th>
-                        <th>Amount</th>
+                        <th>{t('room')}</th>
+                        <th>{t('check_in')}</th>
+                        <th>{t('check_out')}</th>
+                        <th>{t('amount')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -450,7 +489,7 @@ export default function StaffPortal() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>Close</button>
+                <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>{t('close')}</button>
               </div>
             </div>
           </div>
@@ -461,7 +500,7 @@ export default function StaffPortal() {
           <div className="modal-overlay" onClick={() => setShowExpenseDetails(false)}>
             <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>Today's Expenses List</h2>
+                <h2>{t('total_expenses')}</h2>
                 <button className="btn-close" onClick={() => setShowExpenseDetails(false)}>&times;</button>
               </div>
               <div className="modal-body p-0">
@@ -469,9 +508,9 @@ export default function StaffPortal() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Time</th>
+                        <th>{t('expense_description')}</th>
+                        <th>{t('amount')}</th>
+                        <th>{t('time')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -485,7 +524,7 @@ export default function StaffPortal() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="3" className="empty-state">No expenses recorded today</td>
+                          <td colSpan="3" className="empty-state">{t('no_expenses')}</td>
                         </tr>
                       )}
                     </tbody>
@@ -494,10 +533,10 @@ export default function StaffPortal() {
               </div>
               <div className="modal-footer">
                 <div className="modal-total">
-                  <span>Total:</span>
+                  <span>{t('confirm')}:</span>
                   <strong>RWF {totalExpenses.toLocaleString()}</strong>
                 </div>
-                <button className="btn-modal-close" onClick={() => setShowExpenseDetails(false)}>Close</button>
+                <button className="btn-modal-close" onClick={() => setShowExpenseDetails(false)}>{t('close')}</button>
               </div>
             </div>
           </div>
@@ -507,29 +546,29 @@ export default function StaffPortal() {
           <div className="modal-overlay" onClick={() => setShowDailyClientsModal(false)}>
             <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>Today's Full Client Log</h2>
+                <h2>{t('work_done_today')}</h2>
                 <button className="btn-close" onClick={() => setShowDailyClientsModal(false)}>&times;</button>
               </div>
               <div className="modal-body">
                 <div className="modal-summary-grid">
                   <div className="modal-stat">
-                    <span>Total Today</span>
+                    <span>{t('total_clients')}</span>
                     <strong>{todaysTransactions.length}</strong>
                   </div>
                   <div className="modal-stat">
-                    <span>Total Revenue</span>
+                    <span>{t('net_revenue')}</span>
                     <strong className="text-success">RWF {totalMoney.toLocaleString()}</strong>
                   </div>
                 </div>
-                <h3 className="modal-subtitle">Room-by-Room Usage</h3>
+                <h3 className="modal-subtitle">{t('room_utilization')}</h3>
                 <div className="table-responsive">
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Room</th>
-                        <th>In</th>
-                        <th>Out</th>
-                        <th>Amount</th>
+                        <th>{t('room')}</th>
+                        <th>{t('check_in')}</th>
+                        <th>{t('check_out')}</th>
+                        <th>{t('amount')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -550,7 +589,7 @@ export default function StaffPortal() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="4" className="empty-state">No clients today yet.</td>
+                          <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
                         </tr>
                       )}
                     </tbody>
@@ -558,7 +597,7 @@ export default function StaffPortal() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button className="btn-modal-close" onClick={() => setShowDailyClientsModal(false)}>Close</button>
+                <button className="btn-modal-close" onClick={() => setShowDailyClientsModal(false)}>{t('close')}</button>
               </div>
             </div>
           </div>

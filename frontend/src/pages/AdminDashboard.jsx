@@ -14,8 +14,12 @@ export default function AdminDashboard() {
     kitchenTransactions, 
     lastCollectionTime, 
     lastKitchenCollectionTime,
-    collectCash,
-    collectKitchenCash 
+    collectCash, 
+    collectKitchenCash,
+    t,
+    language,
+    changeLanguage,
+    isOffline
   } = useApp()
   const navigate = useNavigate()
 
@@ -150,47 +154,66 @@ export default function AdminDashboard() {
     <div className="admin-dashboard">
       <header className="admin-header">
         <div className="header-left">
-          <h1>Admin Dashboard</h1>
+          <h1>{t('admin_dashboard')}</h1>
           <p>Owner: {user?.email}</p>
         </div>
         <div className="admin-tabs">
-          <button 
-            className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Live Overview
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveTab('history')}
-          >
-            7-Day History
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'kitchen' ? 'active' : ''}`}
-            onClick={() => setActiveTab('kitchen')}
-          >
-            Kitchen
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            Settings
-          </button>
+          <button className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>{t('overview')}</button>
+          <button className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>{t('history')}</button>
+          <button className={`tab-btn ${activeTab === 'kitchen' ? 'active' : ''}`} onClick={() => setActiveTab('kitchen')}>{t('kitchen')}</button>
+          <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>{t('settings')}</button>
         </div>
-        <button onClick={handleLogout} className="btn-logout">
-          Logout
-        </button>
+        <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+          <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
+             <button 
+               onClick={() => changeLanguage('en')}
+               style={{
+                 background: language === 'en' ? '#0d9488' : 'transparent', 
+                 color: language === 'en' ? 'white' : '#64748b', 
+                 border: 'none', 
+                 padding: '5px 12px', 
+                 borderRadius: '25px', 
+                 cursor: 'pointer', 
+                 fontWeight: 'bold',
+                 fontSize: '0.85rem',
+                 transition: 'all 0.3s ease'
+               }}
+             >EN</button>
+             <button 
+               onClick={() => changeLanguage('rw')}
+               style={{
+                 background: language === 'rw' ? '#0d9488' : 'transparent', 
+                 color: language === 'rw' ? 'white' : '#64748b', 
+                 border: 'none', 
+                 padding: '5px 12px', 
+                 borderRadius: '25px', 
+                 cursor: 'pointer', 
+                 fontWeight: 'bold',
+                 fontSize: '0.85rem',
+                 transition: 'all 0.3s ease'
+               }}
+             >RW</button>
+          </div>
+          <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
+        </div>
       </header>
 
       <div className="dashboard-content">
+        {isOffline && (
+          <div className="offline-banner" style={{background: '#fffbeb', color: '#b45309', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'}}>
+             <span style={{fontSize: '1.5rem'}}>📡</span>
+             <div>
+               <div style={{fontSize: '1rem'}}>{t('offline_mode')}</div>
+               <div style={{fontSize: '0.85rem', fontWeight: 'normal', opacity: 0.9}}>{t('viewing_cached_data')}</div>
+             </div>
+          </div>
+        )}
         {activeTab === 'overview' && (
           <>
             {/* Cash Collection Banner */}
             <div className="cash-collection-banner">
               <div className="cash-info">
-                <h3>Pending Cash on Hand</h3>
+                <h3>{t('cash_in_drawer')}</h3>
                 <p>Collected since: {lastCollectionTime.getTime() === 0 ? 'Beginning' : lastCollectionTime.toLocaleString([], {weekday: 'short', hour: '2-digit', minute: '2-digit'})}</p>
               </div>
               <div className="cash-action">
@@ -200,7 +223,7 @@ export default function AdminDashboard() {
                   onClick={handleCollectCash}
                   disabled={cashOnHand === 0}
                 >
-                  Collect Cash
+                  {t('collect_cash')}
                 </button>
               </div>
             </div>
@@ -211,7 +234,7 @@ export default function AdminDashboard() {
             className="metric-card primary clickable"
             onClick={() => scrollToSection('transactions-section')}
           >
-            <h3>Net Revenue</h3>
+            <h3>{t('net_revenue')}</h3>
             <p className="metric-value">RWF {netRevenue.toLocaleString()}</p>
             <span className="metric-label">Total Cash - Expenses</span>
           </div>
@@ -220,60 +243,60 @@ export default function AdminDashboard() {
             className={`metric-card success clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
             onClick={() => handleRoomFilter('available')}
           >
-            <h3>Available Rooms</h3>
+            <h3>{t('available')}</h3>
             <p className="metric-value">{availableRooms}</p>
-            <span className="metric-label">Ready for booking</span>
+            <span className="metric-label">{t('ready_for_booking') || 'Ready for booking'}</span>
           </div>
 
           <div 
             className={`metric-card warning clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
             onClick={() => handleRoomFilter('occupied')}
           >
-            <h3>Occupied Rooms</h3>
+            <h3>{t('occupied')}</h3>
             <p className="metric-value">{occupiedRooms}</p>
-            <span className="metric-label">Currently in use</span>
+            <span className="metric-label">{t('currently_in_use') || 'Currently in use'}</span>
           </div>
 
           <div className="metric-card info">
-            <h3>Total Clients Today</h3>
+            <h3>{t('total_clients')}</h3>
             <p className="metric-value">{todaysTransactions.length}</p>
             <button 
               className="btn-details-card"
               onClick={() => setShowDailyClientsModal(true)}
             >
-              View Details
+              {t('view_details')}
             </button>
           </div>
 
           <div className="metric-card info">
-            <h3>Clients in Shift</h3>
+            <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
             <p className="metric-value">{shiftTransactions.length}</p>
             <button 
               className="btn-details-card"
               onClick={() => setShowClientsModal(true)}
             >
-              View Details
+              {t('view_details')}
             </button>
           </div>
 
           <div className="metric-card primary">
-            <h3>Stay Breakdown</h3>
+            <h3>{t('stay_breakdown')}</h3>
             <p className="metric-value breakdown-value">
-              <span className="short-stay">{shortStayCount} Short</span>
+              <span className="short-stay">{shortStayCount} {t('short_stay')}</span>
               <span className="divider">/</span>
-              <span className="night-stay">{nightStayCount} Night</span>
+              <span className="night-stay">{nightStayCount} {t('night_stay')}</span>
             </p>
-            <span className="metric-label">Active bookings</span>
+            <span className="metric-label">{t('active_bookings')}</span>
           </div>
 
           <div className="metric-card danger">
-            <h3>Total Expenses</h3>
+            <h3>{t('total_expenses')}</h3>
             <p className="metric-value">RWF {totalExpenses.toLocaleString()}</p>
             <button 
               className="btn-details-card"
               onClick={() => setShowExpensesModal(true)}
             >
-              View Details
+              {t('view_details')}
             </button>
           </div>
         </div>
@@ -281,15 +304,15 @@ export default function AdminDashboard() {
         <div className="dashboard-grid">
           {/* Recent Transactions (Moved to main column) */}
           <div className="panel-section" id="transactions-section">
-            <h2>Recent Transactions</h2>
+            <h2>{t('recent_transactions')}</h2>
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Room</th>
-                    <th>Amount</th>
-                    <th>Type</th>
-                    <th>Time</th>
+                    <th>{t('room')}</th>
+                    <th>{t('amount')}</th>
+                    <th>{t('type')}</th>
+                    <th>{t('time')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -311,7 +334,7 @@ export default function AdminDashboard() {
                   ) : (
                     <tr>
                       <td colSpan="4" className="empty-state">
-                        No transactions today
+                        {t('no_transactions')}
                       </td>
                     </tr>
                   )}
@@ -323,14 +346,14 @@ export default function AdminDashboard() {
           <div className="right-panels">
             {/* Room Usage Table (Moved to right panels) */}
             <div className="panel-section" id="room-utilization-section">
-              <h2>Room Utilization {roomFilter !== 'all' && `(${roomFilter})`}</h2>
+              <h2>{t('room_utilization')} {roomFilter !== 'all' && `(${t(roomFilter) || roomFilter})`}</h2>
               <div className="table-responsive">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Room</th>
-                      <th>Status</th>
-                      <th>Usage Count</th>
+                      <th>{t('room')}</th>
+                      <th>{t('status')}</th>
+                      <th>{t('usage_count')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -341,10 +364,10 @@ export default function AdminDashboard() {
                           <td className="room-cell">{room.name}</td>
                           <td>
                             <span className={`status-badge ${room.status}`}>
-                              {room.status === 'occupied' ? 'Occupied' : 'Available'}
+                              {room.status === 'occupied' ? t('occupied') : t('available')}
                             </span>
                           </td>
-                          <td className="count-cell">{todayUsage} times today</td>
+                          <td className="count-cell">{todayUsage} {t('times_today')}</td>
                         </tr>
                       )
                     })}
@@ -361,31 +384,31 @@ export default function AdminDashboard() {
 
         {activeTab === 'history' && (
           <div className="history-section">
-            <h2>7-Day Performance History</h2>
+            <h2>{t('performance_7day')}</h2>
             <div className="history-grid">
               {historyData.map((day) => (
                 <div key={day.date} className="history-card">
                   <div className="history-date">
-                    <h3>{day.displayDate}</h3>
-                    <span className="history-bookings">{day.bookings} bookings</span>
+                    <h3>{t(day.displayDate.toLowerCase()) || day.displayDate}</h3>
+                    <span className="history-bookings">{day.bookings} {t('bookings')}</span>
                   </div>
                   <div className="history-metrics">
                     <div className="history-metric text-success">
-                      <span>Revenue</span>
+                      <span>{t('revenue')}</span>
                       <strong>RWF {day.revenue.toLocaleString()}</strong>
                     </div>
                     <div className="history-metric text-danger">
-                      <span>Expenses</span>
+                      <span>{t('expenses')}</span>
                       <strong>RWF {day.expense.toLocaleString()}</strong>
                     </div>
                     <div className={`history-metric ${day.net >= 0 ? 'text-primary' : 'text-danger'}`}>
-                      <span>Net Profit</span>
+                      <span>{t('net_profit')}</span>
                       <strong>RWF {day.net.toLocaleString()}</strong>
                     </div>
                   </div>
                   
                   <button className="btn-details" onClick={() => setSelectedDayDetails(day)}>
-                    View Details
+                    {t('view_details')}
                   </button>
                 </div>
               ))}
@@ -406,32 +429,32 @@ export default function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setSelectedDayDetails(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{selectedDayDetails.displayDate} - Details</h2>
+              <h2>{t(selectedDayDetails.displayDate.toLowerCase()) || selectedDayDetails.displayDate} - {t('detailed_log')}</h2>
               <button className="modal-close" onClick={() => setSelectedDayDetails(null)}>&times;</button>
             </div>
             <div className="modal-body">
               <div className="modal-summary-grid">
                 <div className="modal-stat">
-                  <span>Total Bookings</span>
+                  <span>{t('bookings')}</span>
                   <strong>{selectedDayDetails.bookings}</strong>
                 </div>
                 <div className="modal-stat">
-                  <span>Net Profit</span>
+                  <span>{t('net_profit')}</span>
                   <strong className={selectedDayDetails.net >= 0 ? 'text-primary' : 'text-danger'}>
                     RWF {selectedDayDetails.net.toLocaleString()}
                   </strong>
                 </div>
               </div>
 
-              <h3 className="modal-subtitle">Detailed Room Log</h3>
+              <h3 className="modal-subtitle">{t('detailed_log')}</h3>
               <div className="table-responsive">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Room</th>
-                      <th>Check-in</th>
-                      <th>Check-out</th>
-                      <th>Amount</th>
+                      <th>{t('room')}</th>
+                      <th>{t('check_in')}</th>
+                      <th>{t('check_out')}</th>
+                      <th>{t('amount')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -446,18 +469,21 @@ export default function AdminDashboard() {
                         <tr key={tx.id}>
                           <td>{tx.room}</td>
                           <td>{formatTime(tx.time)}</td>
-                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
+                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied')}</span>}</td>
                           <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="empty-state">No transactions recorded.</td>
+                        <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
+            </div>
+            <div className="modal-footer">
+               <button className="btn-modal-close" onClick={() => setSelectedDayDetails(null)}>{t('close')}</button>
             </div>
           </div>
         </div>
@@ -467,34 +493,34 @@ export default function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setViewingExpense(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Expense Details</h2>
+              <h2>{t('total_expenses')}</h2>
               <button className="btn-close" onClick={() => setViewingExpense(null)}>&times;</button>
             </div>
             
             <div className="modal-body">
               <div className="detail-item">
-                <span className="detail-label">Amount</span>
+                <span className="detail-label">{t('amount')}</span>
                 <span className="detail-value text-danger">RWF {viewingExpense.amount.toLocaleString()}</span>
               </div>
               
               <div className="detail-item">
-                <span className="detail-label">Description</span>
+                <span className="detail-label">{t('expense_description')}</span>
                 <p className="detail-text">{viewingExpense.description}</p>
               </div>
               
               <div className="detail-item">
-                <span className="detail-label">Time & Date</span>
+                <span className="detail-label">{t('time')}</span>
                 <span className="detail-value">{formatTime(viewingExpense.time)}</span>
               </div>
               
               <div className="detail-item">
-                <span className="detail-label">Recorded By</span>
+                <span className="detail-label">{t('served_by')}</span>
                 <span className="detail-value">{viewingExpense.workers?.name || 'Unknown'}</span>
               </div>
             </div>
             
             <div className="modal-footer">
-              <button className="btn-modal-close" onClick={() => setViewingExpense(null)}>Close</button>
+              <button className="btn-modal-close" onClick={() => setViewingExpense(null)}>{t('close')}</button>
             </div>
           </div>
         </div>
@@ -504,7 +530,7 @@ export default function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setShowExpensesModal(false)}>
           <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Today's Expenses List</h2>
+              <h2>{t('total_expenses')}</h2>
               <button className="btn-close" onClick={() => setShowExpensesModal(false)}>&times;</button>
             </div>
             
@@ -513,9 +539,9 @@ export default function AdminDashboard() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Description</th>
-                      <th>Amount</th>
-                      <th>Time</th>
+                      <th>{t('expense_description')}</th>
+                      <th>{t('amount')}</th>
+                      <th>{t('time')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -529,7 +555,7 @@ export default function AdminDashboard() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="3" className="empty-state">No expenses recorded today</td>
+                        <td colSpan="3" className="empty-state">{t('no_expenses')}</td>
                       </tr>
                     )}
                   </tbody>
@@ -539,10 +565,10 @@ export default function AdminDashboard() {
             
             <div className="modal-footer">
               <div className="modal-total">
-                <span>Total:</span>
+                <span>{t('confirm')}:</span>
                 <strong>RWF {totalExpenses.toLocaleString()}</strong>
               </div>
-              <button className="btn-modal-close" onClick={() => setShowExpensesModal(false)}>Close</button>
+              <button className="btn-modal-close" onClick={() => setShowExpensesModal(false)}>{t('close')}</button>
             </div>
           </div>
         </div>
@@ -623,24 +649,24 @@ export default function AdminDashboard() {
             <div className="modal-body">
               <div className="modal-summary-grid">
                 <div className="modal-stat">
-                  <span>Total Today</span>
+                  <span>{t('total_clients')}</span>
                   <strong>{todaysTransactions.length}</strong>
                 </div>
                 <div className="modal-stat">
-                  <span>Total Revenue</span>
+                  <span>{t('net_revenue')}</span>
                   <strong className="text-success">RWF {totalToday.toLocaleString()}</strong>
                 </div>
               </div>
 
-              <h3 className="modal-subtitle">Room-by-Room Usage</h3>
+              <h3 className="modal-subtitle">{t('room_utilization')}</h3>
               <div className="table-responsive">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Room</th>
+                      <th>{t('room')}</th>
                       <th>In</th>
                       <th>Out</th>
-                      <th>Amount</th>
+                      <th>{t('amount')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -670,7 +696,7 @@ export default function AdminDashboard() {
             </div>
             
             <div className="modal-footer">
-              <button className="btn-modal-close" onClick={() => setShowDailyClientsModal(false)}>Close</button>
+              <button className="btn-modal-close" onClick={() => setShowDailyClientsModal(false)}>{t('close')}</button>
             </div>
           </div>
         </div>
@@ -682,6 +708,7 @@ export default function AdminDashboard() {
 // Sub-components moved outside to prevent remounting issues
 const AdminSettingsSection = ({ user }) => {
   const { updatePassword } = useAuth()
+  const { t } = useApp()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -713,12 +740,12 @@ const AdminSettingsSection = ({ user }) => {
   return (
     <div className="settings-section">
       <div className="settings-card">
-        <h2>Security Settings</h2>
-        <p className="settings-subtitle">Update your administrator password below.</p>
+        <h2>{t('security_settings')}</h2>
+        <p className="settings-subtitle">{t('update_password_subtitle')}</p>
         
         <form onSubmit={handlePasswordChange} className="settings-form">
           <div className="form-group">
-            <label>New Password</label>
+            <label>{t('new_password')}</label>
             <div className="password-input-wrapper">
               <input 
                 type={showPassword ? "text" : "password"} 
@@ -732,12 +759,12 @@ const AdminSettingsSection = ({ user }) => {
                 className="btn-toggle-password"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {showPassword ? t('close').toLowerCase() : 'Show'}
               </button>
             </div>
           </div>
           <div className="form-group">
-            <label>Confirm New Password</label>
+            <label>{t('confirm_password')}</label>
             <div className="password-input-wrapper">
               <input 
                 type={showPassword ? "text" : "password"} 
@@ -756,14 +783,14 @@ const AdminSettingsSection = ({ user }) => {
           )}
 
           <button type="submit" className="btn-save-settings" disabled={updating}>
-            {updating ? 'Updating...' : 'Update My Password'}
+            {updating ? t('loading') : t('update_password_btn')}
           </button>
         </form>
       </div>
 
       <div className="settings-card">
-        <h2>Staff Access Control</h2>
-        <p className="settings-subtitle">Change a worker's password securely from here.</p>
+        <h2>{t('staff_access')}</h2>
+        <p className="settings-subtitle">{t('staff_access_subtitle')}</p>
         
         <StaffManagementList user={user} />
       </div>
@@ -772,6 +799,7 @@ const AdminSettingsSection = ({ user }) => {
 }
 
 const StaffManagementList = ({ user }) => {
+  const { t } = useApp()
   const [workers, setWorkers] = useState([])
   const [selectedWorker, setSelectedWorker] = useState(null)
   const [staffPassword, setStaffPassword] = useState('')
@@ -825,21 +853,21 @@ const StaffManagementList = ({ user }) => {
             <div key={w.id} className={`worker-item ${selectedWorker?.id === w.id ? 'selected' : ''}`} onClick={() => setSelectedWorker(w)}>
               <div className="worker-icon">👤</div>
               <div className="worker-info">
-                <strong>Worker Account</strong>
+                <strong>{t('worker_hint').split(':')[0]}</strong>
                 <span>ID: {w.id.substring(0, 8)}...</span>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="empty-state">No other worker accounts found.</p>
+        <p className="empty-state">{t('no_transactions')}</p>
       )}
 
       {selectedWorker && (
         <form onSubmit={handleStaffReset} className="settings-form" style={{marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)'}}>
-          <h3>Resetting password for Selected Worker</h3>
+          <h3>{t('reset_staff_password')}</h3>
           <div className="form-group">
-            <label>New Password for Staff</label>
+            <label>{t('new_password')}</label>
             <div className="password-input-wrapper">
               <input 
                 type={showStaffPassword ? "text" : "password"} 
@@ -863,10 +891,10 @@ const StaffManagementList = ({ user }) => {
             </div>
           )}
           <button type="submit" className="btn-save-settings danger" disabled={reseting}>
-            {reseting ? 'Reseting...' : 'Confirm Reset Staff Password'}
+            {reseting ? t('loading') : t('reset_staff_password')}
           </button>
           <button type="button" className="btn-modal-close" onClick={() => setSelectedWorker(null)} style={{marginTop: '0.5rem'}}>
-            Cancel
+            {t('cancel')}
           </button>
         </form>
       )}
@@ -875,17 +903,17 @@ const StaffManagementList = ({ user }) => {
 }
 
 const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }) => {
-  const { collectKitchenCash } = useApp()
+  const { collectKitchenCash, t } = useApp()
   const [isCollecting, setIsCollecting] = useState(false)
 
   // 1. Pending Metrics (Since last collection)
-  const pendingSales = kitchenTransactions
-    .filter(t => t.type === 'order' && new Date(t.created_at).getTime() > lastKitchenCollectionTime.getTime())
-    .reduce((sum, t) => sum + t.amount, 0)
+  const pendingSales = (kitchenTransactions || [])
+    .filter(tx => tx.type === 'order' && new Date(tx.created_at).getTime() > lastKitchenCollectionTime.getTime())
+    .reduce((sum, tx) => sum + tx.amount, 0)
 
-  const pendingPurchases = kitchenTransactions
-    .filter(t => t.type === 'purchase' && new Date(t.created_at).getTime() > lastKitchenCollectionTime.getTime())
-    .reduce((sum, t) => sum + t.amount, 0)
+  const pendingPurchases = (kitchenTransactions || [])
+    .filter(tx => tx.type === 'purchase' && new Date(tx.created_at).getTime() > lastKitchenCollectionTime.getTime())
+    .reduce((sum, tx) => sum + tx.amount, 0)
 
   const pendingProfit = pendingSales - pendingPurchases
 
@@ -897,13 +925,13 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
       d.setDate(d.getDate() - i)
       const dateStr = d.toDateString()
 
-      const daySales = kitchenTransactions
-        .filter(t => t.type === 'order' && new Date(t.created_at).toDateString() === dateStr)
-        .reduce((sum, t) => sum + t.amount, 0)
+      const daySales = (kitchenTransactions || [])
+        .filter(tx => tx.type === 'order' && new Date(tx.created_at).toDateString() === dateStr)
+        .reduce((sum, tx) => sum + tx.amount, 0)
 
-      const dayPurchases = kitchenTransactions
-        .filter(t => t.type === 'purchase' && new Date(t.created_at).toDateString() === dateStr)
-        .reduce((sum, t) => sum + t.amount, 0)
+      const dayPurchases = (kitchenTransactions || [])
+        .filter(tx => tx.type === 'purchase' && new Date(tx.created_at).toDateString() === dateStr)
+        .reduce((sum, tx) => sum + tx.amount, 0)
 
       days.push({
         date: i === 0 ? 'Today' : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
@@ -929,8 +957,8 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
     <div className="kitchen-report-section">
       <div className="cash-collection-banner" style={{marginBottom: '2rem'}}>
         <div className="cash-info">
-          <h3>Kitchen Profit to Collect</h3>
-          <p>Since: {lastKitchenCollectionTime.getTime() === 0 ? 'Beginning' : lastKitchenCollectionTime.toLocaleString()}</p>
+          <h3>{t('profit_for_dad')}</h3>
+          <p>{t('since_last_collection')}: {lastKitchenCollectionTime.getTime() === 0 ? t('none') : lastKitchenCollectionTime.toLocaleString()}</p>
         </div>
         <div className="cash-action">
           <span className="cash-amount">RWF {pendingProfit.toLocaleString()}</span>
@@ -946,32 +974,32 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
 
       <div className="metrics-section">
         <div className="metric-card success">
-          <h3>Pending Sales</h3>
+          <h3>{t('sales_to_collect')}</h3>
           <p className="metric-value">RWF {pendingSales.toLocaleString()}</p>
           <span className="metric-label">Sales since last collection</span>
         </div>
         <div className="metric-card warning">
-          <h3>Pending Purchases</h3>
+          <h3>{t('purchases_to_deduct')}</h3>
           <p className="metric-value">RWF {pendingPurchases.toLocaleString()}</p>
           <span className="metric-label">Purchases since last collection</span>
         </div>
         <div className={`metric-card ${pendingProfit >= 0 ? 'primary' : 'danger'}`}>
-          <h3>Pending Profit (for Dad)</h3>
+          <h3>{t('profit_for_dad')}</h3>
           <p className="metric-value">RWF {pendingProfit.toLocaleString()}</p>
           <span className="metric-label">Net profit since collection</span>
         </div>
       </div>
 
       <div className="panel-section" style={{marginBottom: '2rem'}}>
-        <h2>5-Day Kitchen History</h2>
+        <h2>{t('performance_5day_kitchen')}</h2>
         <div className="table-responsive">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Day</th>
-                <th>Daily Sales</th>
-                <th>Daily Purchases</th>
-                <th>Daily Profit</th>
+                <th>{t('day')}</th>
+                <th>{t('daily_sales')}</th>
+                <th>{t('daily_purchases')}</th>
+                <th>{t('daily_profit')}</th>
               </tr>
             </thead>
             <tbody>
@@ -991,38 +1019,38 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
       </div>
 
       <div className="panel-section">
-        <h2>Detailed Kitchen Log</h2>
+        <h2>{t('detailed_log')}</h2>
         <div className="table-responsive">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Served By</th>
-                <th>Amount</th>
-                <th>Time</th>
+                <th>{t('type')}</th>
+                <th>{t('expense_description')}</th>
+                <th>{t('served_by')}</th>
+                <th>{t('amount')}</th>
+                <th>{t('time')}</th>
               </tr>
             </thead>
             <tbody>
-              {kitchenTransactions.length > 0 ? (
-                kitchenTransactions.map(t => (
-                  <tr key={t.id}>
+              {(kitchenTransactions || []).length > 0 ? (
+                (kitchenTransactions || []).map(tx => (
+                  <tr key={tx.id}>
                     <td>
-                      <span className={`status-badge ${t.type === 'order' ? 'occupied' : 'completed'}`}>
-                        {t.type === 'order' ? 'Sale' : 'Purchase'}
+                      <span className={`status-badge ${tx.type === 'order' ? 'occupied' : 'completed'}`}>
+                        {tx.type === 'order' ? t('record_sale') : t('record_purchase')}
                       </span>
                     </td>
-                    <td>{t.description}</td>
-                    <td>{t.served_by || '--'}</td>
-                    <td className={t.type === 'order' ? 'text-success' : 'text-danger'}>
-                      {t.type === 'order' ? '+' : '-'} RWF {t.amount.toLocaleString()}
+                    <td>{tx.description}</td>
+                    <td>{tx.served_by || '--'}</td>
+                    <td className={tx.type === 'order' ? 'text-success' : 'text-danger'}>
+                      {tx.type === 'order' ? '+' : '-'} RWF {tx.amount.toLocaleString()}
                     </td>
-                    <td>{new Date(t.created_at).toLocaleDateString()} {new Date(t.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td>{new Date(tx.created_at).toLocaleDateString()} {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="empty-state">No kitchen transactions found.</td>
+                  <td colSpan="5" className="empty-state">{t('no_transactions')}</td>
                 </tr>
               )}
             </tbody>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { useAuth } from './AuthContext'
+import { translations } from '../utils/translations'
 
 const AppContext = createContext()
 
@@ -11,11 +12,47 @@ export function useApp() {
 export function AppProvider({ children }) {
   const { user } = useAuth()
 
-  const [rooms, setRooms] = useState([])
-  const [transactions, setTransactions] = useState([])
-  const [expenses, setExpenses] = useState([])
-  const [kitchenTransactions, setKitchenTransactions] = useState([])
+  const [rooms, setRooms] = useState(JSON.parse(localStorage.getItem('cache_rooms') || '[]'))
+  const [transactions, setTransactions] = useState(JSON.parse(localStorage.getItem('cache_transactions') || '[]'))
+  const [expenses, setExpenses] = useState(JSON.parse(localStorage.getItem('cache_expenses') || '[]'))
+  const [kitchenTransactions, setKitchenTransactions] = useState(JSON.parse(localStorage.getItem('cache_kitchenTransactions') || '[]'))
   const [loadingData, setLoadingData] = useState(true)
+  const [language, setLanguage] = useState(localStorage.getItem('appLanguage') || 'en')
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
+
+  // Cache updates
+  useEffect(() => {
+    if (rooms.length > 0) localStorage.setItem('cache_rooms', JSON.stringify(rooms))
+  }, [rooms])
+  useEffect(() => {
+    if (transactions.length > 0) localStorage.setItem('cache_transactions', JSON.stringify(transactions))
+  }, [transactions])
+  useEffect(() => {
+    if (expenses.length > 0) localStorage.setItem('cache_expenses', JSON.stringify(expenses))
+  }, [expenses])
+  useEffect(() => {
+    if (kitchenTransactions.length > 0) localStorage.setItem('cache_kitchenTransactions', JSON.stringify(kitchenTransactions))
+  }, [kitchenTransactions])
+
+  // Monitor online status
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
+  // Translation helper
+  const t = (key) => translations[language][key] || key
+
+  const changeLanguage = (lang) => {
+    setLanguage(lang)
+    localStorage.setItem('appLanguage', lang)
+  }
   const [dataError, setDataError] = useState(null)
 
   // -----------------------------------------------------------------
@@ -346,6 +383,10 @@ export function AppProvider({ children }) {
     reportExpense,
     collectCash,
     collectKitchenCash,
+    t,
+    language,
+    changeLanguage,
+    isOffline
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
