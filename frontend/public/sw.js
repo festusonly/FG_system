@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flower-guesthouse-v2';
+const CACHE_NAME = 'flower-guesthouse-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
