@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flower-guesthouse-v5';
+const CACHE_NAME = 'flower-guesthouse-v7';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -28,6 +28,42 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => self.clients.claim())
+  );
+});
+
+// Push Event: Handle incoming push messages
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'New Activity';
+  const options = {
+    body: data.body || 'Something happened!',
+    icon: '/icon-512.png',
+    badge: '/icon-512.png',
+    vibrate: [200, 100, 200],
+    data: { url: data.url || '/' }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// Notification Click Event: Open app when notification is clicked
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      if (clientList.length > 0) {
+        let client = clientList[0];
+        for (let i = 0; i < clientList.length; i++) {
+          if (clientList[i].focused) {
+            client = clientList[i];
+          }
+        }
+        return client.focus();
+      }
+      return clients.openWindow('/');
+    })
   );
 });
 

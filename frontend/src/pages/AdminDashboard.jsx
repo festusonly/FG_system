@@ -153,11 +153,15 @@ export default function AdminDashboard() {
       .on('postgres_changes', { event: 'INSERT', table: 'transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
         try {
-          if (notificationsEnabled && window.Notification && window.Notification.permission === 'granted') {
-            new window.Notification(`🏨 ${t('new_room_booking')}`, {
-              body: `${tx.served_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
-              icon: '/icon-512.png',
-              tag: 'room-booking'
+          if (notificationsEnabled && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification(`🏨 ${t('new_room_booking')}`, {
+                body: `${tx.served_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
+                icon: '/icon-512.png',
+                badge: '/icon-512.png',
+                tag: 'room-booking',
+                vibrate: [200, 100, 200]
+              })
             })
           }
         } catch (e) { console.error('Notification error:', e) }
@@ -165,26 +169,33 @@ export default function AdminDashboard() {
       .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
         try {
-          if (notificationsEnabled && window.Notification && window.Notification.permission === 'granted') {
-            new window.Notification(`🍳 ${t('new_kitchen_sale')}`, {
-              body: `${tx.served_by || 'Kitchen'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
-              icon: '/icon-512.png',
-              tag: 'kitchen-sale'
+          if (notificationsEnabled && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification(`🍳 ${t('new_kitchen_sale')}`, {
+                body: `${tx.served_by || 'Kitchen'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
+                icon: '/icon-512.png',
+                badge: '/icon-512.png',
+                tag: 'kitchen-sale',
+                vibrate: [200, 100, 200]
+              })
             })
           }
         } catch (e) { console.error('Notification error:', e) }
       })
       .on('postgres_changes', { event: 'INSERT', table: 'expenses', schema: 'public' }, (payload) => {
         const tx = payload.new
-        // Only notify for real expenses, not system markers
         if (tx.description === 'SYSTEM_CASH_COLLECTION' || tx.description === 'KITCHEN_CASH_COLLECTION') return;
         
         try {
-          if (notificationsEnabled && window.Notification && window.Notification.permission === 'granted') {
-            new window.Notification(`💸 New Expense`, {
-              body: `${tx.recorded_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
-              icon: '/icon-512.png',
-              tag: 'expense-report'
+          if (notificationsEnabled && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification(`💸 New Expense`, {
+                body: `${tx.recorded_by || 'Staff'}: ${tx.description} - RWF ${tx.amount.toLocaleString()}`,
+                icon: '/icon-512.png',
+                badge: '/icon-512.png',
+                tag: 'expense-report',
+                vibrate: [200, 100, 200]
+              })
             })
           }
         } catch (e) { console.error('Notification error:', e) }
@@ -246,7 +257,7 @@ export default function AdminDashboard() {
           <button className={`tab-btn ${activeTab === 'kitchen' ? 'active' : ''}`} onClick={() => setActiveTab('kitchen')}>{t('kitchen')}</button>
           <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>{t('settings')}</button>
         </div>
-        <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+        <div className="header-right-controls">
           {/* Bulletproof Notification Toggle */}
           <div 
             onClick={toggleNotifications}
@@ -856,29 +867,23 @@ const AdminSettingsSection = ({ user }) => {
         <p className="settings-subtitle">Verify if your device can receive live pop-up alerts for sales and bookings.</p>
         <button 
           onClick={() => {
-            if (window.Notification) {
-              if (window.Notification.permission === 'granted') {
-                new window.Notification('🔔 Notification Test', {
-                  body: 'If you see this, your live alerts are working perfectly!',
-                  icon: '/icon-512.png'
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification('🔔 PWA Notification Test', {
+                  body: 'If you see this, your PWA live alerts are working perfectly!',
+                  icon: '/icon-512.png',
+                  badge: '/icon-512.png',
+                  vibrate: [200, 100, 200]
                 })
-              } else {
-                window.Notification.requestPermission().then(p => {
-                  if (p === 'granted') {
-                    new window.Notification('🔔 Permission Granted!', { body: 'Test notification working.' })
-                  } else {
-                    alert('Notifications are blocked by your browser settings.')
-                  }
-                })
-              }
+              })
             } else {
-              alert('Notifications are not supported on this device/browser.')
+              alert('PWA notifications are not supported on this browser.')
             }
           }}
           className="btn-save-settings" 
           style={{background: '#0d9488', marginTop: '1rem'}}
         >
-          Test Live Alerts
+          Test PWA Alerts
         </button>
       </div>
 
