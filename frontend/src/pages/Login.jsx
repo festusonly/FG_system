@@ -11,7 +11,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login, user, role, loading: authLoading } = useAuth()
-  const { t, language, changeLanguage } = useApp()
+  const { t, language, changeLanguage, deferredPrompt, installPWA, isPWAInstalled } = useApp()
   const navigate = useNavigate()
 
   // Persistent Login Check: If already logged in, go to dashboard
@@ -79,6 +79,39 @@ export default function Login() {
           </div>
           <h1>{t('welcome_back')}</h1>
           <p>{t('login_subtitle')}</p>
+        </div>
+
+        <div className="pwa-install-section" style={{
+          marginBottom: '2rem',
+          padding: '15px',
+          background: '#f0fdfa',
+          borderRadius: '12px',
+          border: '1px solid #5eead4',
+          textAlign: 'center'
+        }}>
+          {deferredPrompt ? (
+            <button 
+              type="button"
+              onClick={installPWA}
+              style={{
+                width: '100%',
+                background: '#0d9488',
+                color: 'white',
+                border: 'none',
+                padding: '12px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              📲 Install Flower App
+            </button>
+          ) : (
+            <div style={{color: '#0f766e', fontSize: '0.9rem', fontWeight: '500'}}>
+              💡 To Install: Tap the 3 dots (top right) and select "Add to Home Screen"
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">

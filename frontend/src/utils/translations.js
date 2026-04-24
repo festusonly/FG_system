@@ -136,7 +136,8 @@ export const translations = {
     allow_notifications: 'Enable Alerts',
     notifications_on: 'Alerts On',
     notifications_off: 'Alerts Off',
-    install_app: 'Install App'
+    install_app: 'Install App',
+    install_hint: 'To install: Tap Chrome menu (3 dots) then "Add to Home Screen"'
   },
   rw: {
     // Header & General
@@ -275,6 +276,7 @@ export const translations = {
     allow_notifications: 'Emera Ubuhanuzi (Alerts)',
     notifications_on: 'Alerts Akora',
     notifications_off: 'Alerts Ofu',
-    install_app: 'Shyiramo App'
+    install_app: 'Shyiramo App',
+    install_hint: 'Gushyiramo App: Kanda utubulungushwa 3 muri Chrome hanyuma ukande "Add to Home Screen"'
   }
 };
