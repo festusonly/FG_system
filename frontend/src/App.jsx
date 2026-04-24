@@ -86,7 +86,8 @@ export default function App() {
       />
 
       {/* Root: go to login, not dashboard (avoids blocking) */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* Root: Check if logged in, otherwise go to login */}
+      <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
 
       {/* 404 fallback */}
       <Route path="*" element={<Navigate to="/login" replace />} />

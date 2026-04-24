@@ -10,9 +10,18 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, user, role, loading: authLoading } = useAuth()
   const { t, language, changeLanguage } = useApp()
   const navigate = useNavigate()
+
+  // Persistent Login Check: If already logged in, go to dashboard
+  React.useEffect(() => {
+    if (!authLoading && user) {
+      if (role === 'admin') navigate('/admin', { replace: true })
+      else if (role === 'kitchen') navigate('/kitchen', { replace: true })
+      else navigate('/staff', { replace: true })
+    }
+  }, [user, role, authLoading, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

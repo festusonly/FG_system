@@ -41,10 +41,9 @@ export function AuthProvider({ children }) {
     // 2. Listen for auth state changes (login / logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // DO NOT await anything here — it blocks signInWithPassword from resolving
         if (session?.user) {
+          setLoading(true) // Ensure we wait for role
           setUser(session.user)
-          // Fire-and-forget: fetch role in background, does not block login
           fetchUserRole(session.user.id)
         } else {
           setUser(null)
