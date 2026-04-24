@@ -179,15 +179,24 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Setup Realtime Channel
     const channel = supabase.channel('admin_notifications')
-      .on('postgres_changes', { event: 'INSERT', table: 'transactions', schema: 'public' }, (payload) => {
+      .on('postgres_changes', { event: '*', table: 'transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
         const userLabel = tx.served_by ? tx.served_by.split('@')[0] : 'Staff'
         const amount = tx.amount_rwf || tx.amount || 0;
-        showLocalNotification(
-          `🏨 Room Update: ${tx.description || 'New Stay'}`, 
-          `${userLabel} recorded RWF ${amount.toLocaleString()}. Room is now ${tx.stay_type === 'stay' ? 'Occupied' : 'Updated'}.`, 
-          'room-booking'
-        )
+        
+        if (payload.eventType === 'INSERT') {
+          showLocalNotification(
+            `🏨 New Occupation: ${tx.description || 'Room Stay'}`, 
+            `${userLabel} recorded RWF ${amount.toLocaleString()}. Room is now Occupied.`, 
+            'room-booking'
+          )
+        } else if (payload.eventType === 'UPDATE' && tx.status === 'completed') {
+          showLocalNotification(
+            `🗝️ Check-out: ${tx.description || 'Room Stay'}`, 
+            `${userLabel} finalized check-out. Room is now Available.`, 
+            'room-checkout'
+          )
+        }
       })
       .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
@@ -212,9 +221,7 @@ export default function AdminDashboard() {
           'expense-report'
         )
       })
-      .subscribe((status) => {
-        console.log('Realtime Status:', status)
-      })
+      .subscribe()
 
     return () => {
       supabase.removeChannel(channel)

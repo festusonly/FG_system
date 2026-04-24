@@ -213,13 +213,12 @@ export function AppProvider({ children }) {
     if (!user) return { success: false, error: 'Not authenticated' }
 
     try {
-      // 1. Insert the transaction into Supabase
+      // 1. Insert the transaction into Supabase (Refreshed)
       const { error: txError } = await supabase
         .from('transactions')
         .insert({
           room_id: roomId,
           worker_id: user.id,
-          served_by: user.email, // Add this for notifications
           amount_rwf: parseFloat(bookingDetails.amount),
           stay_type: bookingDetails.stayType,
           days: bookingDetails.days ? parseInt(bookingDetails.days) : null,
@@ -295,7 +294,6 @@ export function AppProvider({ children }) {
         .from('expenses')
         .insert({
           worker_id: user.id,
-          recorded_by: user.email, // Use recorded_by for expenses
           amount_rwf: parseFloat(amount),
           description: description.trim(),
         })
