@@ -25,12 +25,23 @@ export default function AdminDashboard() {
 
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'available', 'occupied'
   const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history', 'kitchen', 'settings'
-  const [notifPermission, setNotifPermission] = useState(
-    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
-  )
-  const [notificationsEnabled, setNotificationsEnabled] = useState(
-    localStorage.getItem('admin_notifications_enabled') === 'true'
-  )
+  
+  // Safe Notification State
+  const [notifPermission, setNotifPermission] = useState(() => {
+    try {
+      return (typeof window !== 'undefined' && window.Notification) ? window.Notification.permission : 'denied'
+    } catch (e) {
+      return 'denied'
+    }
+  })
+
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('admin_notifications_enabled') === 'true'
+    } catch (e) {
+      return false
+    }
+  })
   const [selectedDayDetails, setSelectedDayDetails] = useState(null)
   const [viewingExpense, setViewingExpense] = useState(null)
   const [showExpensesModal, setShowExpensesModal] = useState(false)
@@ -141,38 +152,46 @@ export default function AdminDashboard() {
     const channel = supabase.channel('admin_notifications')
       .on('postgres_changes', { event: 'INSERT', table: 'transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
-        if (notificationsEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          new Notification(t('new_room_booking'), {
-            body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
-            icon: '/icon-512.png'
-          })
-        }
+        try {
+          if (notificationsEnabled && window.Notification && window.Notification.permission === 'granted') {
+            new window.Notification(t('new_room_booking'), {
+              body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
+              icon: '/icon-512.png'
+            })
+          }
+        } catch (e) { console.error('Notification error:', e) }
       })
       .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
-        if (notificationsEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          new Notification(t('new_kitchen_sale'), {
-            body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
-            icon: '/icon-512.png'
-          })
-        }
+        try {
+          if (notificationsEnabled && window.Notification && window.Notification.permission === 'granted') {
+            new window.Notification(t('new_kitchen_sale'), {
+              body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
+              icon: '/icon-512.png'
+            })
+          }
+        } catch (e) { console.error('Notification error:', e) }
       })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [t])
+  }, [t, notificationsEnabled])
 
   const toggleNotifications = () => {
-    const newState = !notificationsEnabled
-    setNotificationsEnabled(newState)
-    localStorage.setItem('admin_notifications_enabled', newState)
+    try {
+      const newState = !notificationsEnabled
+      setNotificationsEnabled(newState)
+      localStorage.setItem('admin_notifications_enabled', newState)
 
-    if (newState && typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission().then(permission => {
-        setNotifPermission(permission)
-      })
+      if (newState && window.Notification && window.Notification.permission === 'default') {
+        window.Notification.requestPermission().then(permission => {
+          setNotifPermission(permission)
+        })
+      }
+    } catch (e) {
+      console.error('Toggle error:', e)
     }
   }
 
@@ -211,27 +230,35 @@ export default function AdminDashboard() {
           <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>{t('settings')}</button>
         </div>
         <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-          {typeof Notification !== 'undefined' && (
-            <div 
-              onClick={toggleNotifications}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: notificationsEnabled ? '#0d9488' : '#64748b',
-                color: 'white',
-                padding: '5px 12px',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                fontWeight: 'bold',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              <span>{notificationsEnabled ? '🔔' : '🔕'}</span>
-              <span>{notificationsEnabled ? t('notifications_on') : t('notifications_off')}</span>
-            </div>
-          )}
+          {/* Bulletproof Notification Toggle */}
+          <div 
+            onClick={toggleNotifications}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: (typeof window !== 'undefined' && window.Notification) 
+                ? (notificationsEnabled ? '#0d9488' : '#64748b') 
+                : '#cbd5e1',
+              color: 'white',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              cursor: (typeof window !== 'undefined' && window.Notification) ? 'pointer' : 'not-allowed',
+              fontSize: '0.75rem',
+              fontWeight: 'bold',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+          >
+            <span>
+              {!(typeof window !== 'undefined' && window.Notification) ? '🚫' : (notificationsEnabled ? '🔔' : '🔕')}
+            </span>
+            <span>
+              {!(typeof window !== 'undefined' && window.Notification) 
+                ? 'Alerts Unsupported' 
+                : (notificationsEnabled ? t('notifications_on') : t('notifications_off'))}
+            </span>
+          </div>
           <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
              <button 
                onClick={() => changeLanguage('en')}
