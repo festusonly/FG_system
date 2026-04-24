@@ -551,14 +551,26 @@ export default function AdminDashboard() {
               <button className="modal-close" onClick={() => setSelectedDayDetails(null)}>&times;</button>
             </div>
             <div className="modal-body">
-              <div className="modal-summary-grid">
-                <div className="modal-stat">
-                  <span>{t('bookings')}</span>
-                  <strong>{selectedDayDetails.bookings}</strong>
+              <div className="modal-summary-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px', marginBottom: '25px'}}>
+                <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
+                  <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('total_clients')}</span>
+                  <strong style={{fontSize: '1.25rem', color: '#1e293b'}}>{selectedDayDetails.bookings}</strong>
                 </div>
-                <div className="modal-stat">
-                  <span>{t('net_profit')}</span>
-                  <strong className={selectedDayDetails.net >= 0 ? 'text-primary' : 'text-danger'}>
+                <div className="modal-stat" style={{background: '#f0f9ff', padding: '15px', borderRadius: '10px', border: '1px solid #e0f2fe'}}>
+                  <span style={{fontSize: '0.75rem', color: '#0369a1', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('night_stay')} (Barara)</span>
+                  <strong style={{fontSize: '1.25rem', color: '#0c4a6e'}}>
+                    {selectedDayDetails.transactions.filter(tx => tx.type === 'night' || tx.type === 'many_days').length}
+                  </strong>
+                </div>
+                <div className="modal-stat" style={{background: '#f0fdfa', padding: '15px', borderRadius: '10px', border: '1px solid #ccfbf1'}}>
+                  <span style={{fontSize: '0.75rem', color: '#0f766e', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('short_stay')} (Bataha)</span>
+                  <strong style={{fontSize: '1.25rem', color: '#134e4a'}}>
+                    {selectedDayDetails.transactions.filter(tx => tx.type === 'short_hours').length}
+                  </strong>
+                </div>
+                <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
+                  <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('net_profit')}</span>
+                  <strong className={selectedDayDetails.net >= 0 ? 'text-primary' : 'text-danger'} style={{fontSize: '1.25rem'}}>
                     RWF {selectedDayDetails.net.toLocaleString()}
                   </strong>
                 </div>
@@ -701,14 +713,26 @@ export default function AdminDashboard() {
             </div>
             
             <div className="modal-body">
-              <div className="modal-summary-grid">
-                <div className="modal-stat">
-                  <span>Total Shift Clients</span>
-                  <strong>{shiftTransactions.length}</strong>
+              <div className="modal-summary-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px', marginBottom: '25px'}}>
+                <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
+                  <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('total_clients')}</span>
+                  <strong style={{fontSize: '1.25rem', color: '#1e293b'}}>{shiftTransactions.length}</strong>
                 </div>
-                <div className="modal-stat">
-                  <span>Cash Since Collection</span>
-                  <strong className="text-success">RWF {cashOnHand.toLocaleString()}</strong>
+                <div className="modal-stat" style={{background: '#f0f9ff', padding: '15px', borderRadius: '10px', border: '1px solid #e0f2fe'}}>
+                  <span style={{fontSize: '0.75rem', color: '#0369a1', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('night_stay')} (Barara)</span>
+                  <strong style={{fontSize: '1.25rem', color: '#0c4a6e'}}>
+                    {shiftTransactions.filter(tx => tx.type === 'night' || tx.type === 'many_days').length}
+                  </strong>
+                </div>
+                <div className="modal-stat" style={{background: '#f0fdfa', padding: '15px', borderRadius: '10px', border: '1px solid #ccfbf1'}}>
+                  <span style={{fontSize: '0.75rem', color: '#0f766e', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('short_stay')} (Bataha)</span>
+                  <strong style={{fontSize: '1.25rem', color: '#134e4a'}}>
+                    {shiftTransactions.filter(tx => tx.type === 'short_hours').length}
+                  </strong>
+                </div>
+                <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
+                  <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>Cash Since Collection</span>
+                  <strong className="text-success" style={{fontSize: '1.25rem'}}>RWF {cashOnHand.toLocaleString()}</strong>
                 </div>
               </div>
 
@@ -765,14 +789,26 @@ export default function AdminDashboard() {
             </div>
             
             <div className="modal-body">
-              <div className="modal-summary-grid">
-                <div className="modal-stat">
-                  <span>{t('total_clients')}</span>
-                  <strong>{todaysTransactions.length}</strong>
+              <div className="modal-summary-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px', marginBottom: '25px'}}>
+                <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
+                  <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('total_clients')}</span>
+                  <strong style={{fontSize: '1.25rem', color: '#1e293b'}}>{todaysTransactions.length}</strong>
                 </div>
-                <div className="modal-stat">
-                  <span>{t('net_revenue')}</span>
-                  <strong className="text-success">RWF {totalToday.toLocaleString()}</strong>
+                <div className="modal-stat" style={{background: '#f0f9ff', padding: '15px', borderRadius: '10px', border: '1px solid #e0f2fe'}}>
+                  <span style={{fontSize: '0.75rem', color: '#0369a1', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('night_stay')} (Barara)</span>
+                  <strong style={{fontSize: '1.25rem', color: '#0c4a6e'}}>
+                    {todaysTransactions.filter(tx => tx.type === 'night' || tx.type === 'many_days').length}
+                  </strong>
+                </div>
+                <div className="modal-stat" style={{background: '#f0fdfa', padding: '15px', borderRadius: '10px', border: '1px solid #ccfbf1'}}>
+                  <span style={{fontSize: '0.75rem', color: '#0f766e', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('short_stay')} (Bataha)</span>
+                  <strong style={{fontSize: '1.25rem', color: '#134e4a'}}>
+                    {todaysTransactions.filter(tx => tx.type === 'short_hours').length}
+                  </strong>
+                </div>
+                <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
+                  <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('net_revenue')}</span>
+                  <strong className="text-success" style={{fontSize: '1.25rem'}}>RWF {totalToday.toLocaleString()}</strong>
                 </div>
               </div>
 
