@@ -241,6 +241,17 @@ export default function StaffPortal() {
 
         {/* Dashboard Stats */}
         <div className="dashboard-stats">
+          <div className="stat-card">
+            <h3>{t('total_clients')}</h3>
+            <p className="stat-value">{todaysTransactions.length}</p>
+            <button className="btn-details-card" onClick={() => setShowDailyClientsModal(true)}>
+              {t('view_details')}
+            </button>
+          </div>
+          <div className="stat-card">
+            <h3>{t('net_revenue')}</h3>
+            <p className="stat-value">RWF {netRevenue.toLocaleString()}</p>
+          </div>
           <div 
             className={`stat-card clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
             onClick={() => handleFilterCard('occupied')}
@@ -254,17 +265,6 @@ export default function StaffPortal() {
           >
             <h3>{t('available')}</h3>
             <p className="stat-value">{rooms.length - totalRoomsTaken}</p>
-          </div>
-          <div className="stat-card primary-stat">
-            <h3>{t('net_revenue')}</h3>
-            <p className="stat-value">RWF {netRevenue.toLocaleString()}</p>
-          </div>
-          <div className="stat-card">
-            <h3>{t('total_clients')}</h3>
-            <p className="stat-value">{todaysTransactions.length}</p>
-            <button className="btn-details-card" onClick={() => setShowDailyClientsModal(true)}>
-              {t('view_details')}
-            </button>
           </div>
           <div className="stat-card">
             <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>

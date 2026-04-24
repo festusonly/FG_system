@@ -50,6 +50,7 @@ export default function AdminDashboard() {
   const [showExpensesModal, setShowExpensesModal] = useState(false)
   const [showClientsModal, setShowClientsModal] = useState(false)
   const [showDailyClientsModal, setShowDailyClientsModal] = useState(false)
+  const [showOccupiedModal, setShowOccupiedModal] = useState(false)
 
   const todayString = new Date().toDateString()
   
@@ -348,33 +349,6 @@ export default function AdminDashboard() {
 
             {/* Live Metrics */}
         <div className="metrics-section">
-          <div 
-            className="metric-card primary clickable"
-            onClick={() => scrollToSection('transactions-section')}
-          >
-            <h3>{t('net_revenue')}</h3>
-            <p className="metric-value">RWF {netRevenue.toLocaleString()}</p>
-            <span className="metric-label">Total Cash - Expenses</span>
-          </div>
-
-          <div 
-            className={`metric-card success clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
-            onClick={() => handleRoomFilter('available')}
-          >
-            <h3>{t('available')}</h3>
-            <p className="metric-value">{availableRooms}</p>
-            <span className="metric-label">{t('ready_for_booking') || 'Ready for booking'}</span>
-          </div>
-
-          <div 
-            className={`metric-card warning clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
-            onClick={() => handleRoomFilter('occupied')}
-          >
-            <h3>{t('occupied')}</h3>
-            <p className="metric-value">{occupiedRooms}</p>
-            <span className="metric-label">{t('currently_in_use') || 'Currently in use'}</span>
-          </div>
-
           <div className="metric-card info">
             <h3>{t('total_clients')}</h3>
             <p className="metric-value">{todaysTransactions.length}</p>
@@ -384,6 +358,38 @@ export default function AdminDashboard() {
             >
               {t('view_details')}
             </button>
+          </div>
+
+          <div className="metric-card primary">
+            <h3>{t('net_revenue')}</h3>
+            <p className="metric-value">RWF {netRevenue.toLocaleString()}</p>
+            <span className="metric-label">Total Cash - Expenses</span>
+          </div>
+
+          <div 
+            className={`metric-card warning clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
+            onClick={() => handleRoomFilter('occupied')}
+          >
+            <h3>{t('occupied')}</h3>
+            <p className="metric-value">{occupiedRooms}</p>
+            <button 
+              className="btn-details-card"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowOccupiedModal(true);
+              }}
+            >
+              {t('view_details')}
+            </button>
+          </div>
+
+          <div 
+            className={`metric-card success clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
+            onClick={() => handleRoomFilter('available')}
+          >
+            <h3>{t('available')}</h3>
+            <p className="metric-value">{availableRooms}</p>
+            <span className="metric-label">{t('ready_for_booking') || 'Ready for booking'}</span>
           </div>
 
           <div className="metric-card info">
@@ -525,7 +531,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   
-                  <button className="btn-details" onClick={() => setSelectedDayDetails(day)}>
+                  <button className="btn-details-card" onClick={() => setSelectedDayDetails(day)}>
                     {t('view_details')}
                   </button>
                 </div>
@@ -779,6 +785,67 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      {/* Occupied Details Modal */}
+      {showOccupiedModal && (
+        <div className="modal-overlay" onClick={() => setShowOccupiedModal(false)}>
+          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{t('occupied')} - {t('detailed_log')}</h2>
+              <button className="btn-close" onClick={() => setShowOccupiedModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-summary-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px', marginBottom: '25px'}}>
+                <div className="modal-stat" style={{background: '#f0f9ff', padding: '15px', borderRadius: '10px', border: '1px solid #e0f2fe'}}>
+                  <span style={{fontSize: '0.75rem', color: '#0369a1', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('night_stay')} (Barara)</span>
+                  <strong style={{fontSize: '1.25rem', color: '#0c4a6e'}}>{nightStayCount}</strong>
+                </div>
+                <div className="modal-stat" style={{background: '#f0fdfa', padding: '15px', borderRadius: '10px', border: '1px solid #ccfbf1'}}>
+                  <span style={{fontSize: '0.75rem', color: '#0f766e', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('short_stay')} (Bataha)</span>
+                  <strong style={{fontSize: '1.25rem', color: '#134e4a'}}>{shortStayCount}</strong>
+                </div>
+              </div>
+
+              <h3 className="modal-subtitle">{t('active_bookings')}</h3>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{t('room')}</th>
+                      <th>{t('type')}</th>
+                      <th>{t('since')}</th>
+                      <th>{t('amount')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeTransactions.length > 0 ? (
+                      activeTransactions.map((tx) => (
+                        <tr key={tx.id}>
+                          <td><strong>{tx.room}</strong></td>
+                          <td>
+                            <span className={`status-badge ${tx.type === 'short_hours' ? 'available' : 'occupied'}`} style={{fontSize: '0.7rem'}}>
+                              {tx.type === 'short_hours' ? t('short_stay') : t('night_stay')}
+                            </span>
+                          </td>
+                          <td style={{color: '#64748b', fontSize: '0.85rem'}}>{formatTime(tx.time)}</td>
+                          <td className="text-success" style={{fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-modal-close" onClick={() => setShowOccupiedModal(false)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Today's Full Client Log Modal */}
       {showDailyClientsModal && (
         <div className="modal-overlay" onClick={() => setShowDailyClientsModal(false)}>
@@ -1257,7 +1324,9 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
               }}
             >
               <div style={{fontWeight: 'bold', color: '#1e293b', fontSize: '1rem'}}>{day.dateLabel}</div>
-              <div style={{fontSize: '0.75rem', color: '#64748b', marginTop: '5px'}}>{t('view_details')}</div>
+              <button className="btn-details-card" style={{marginTop: '10px', fontSize: '0.7rem', padding: '4px 10px'}}>
+                {t('view_details')}
+              </button>
             </div>
           ))}
         </div>

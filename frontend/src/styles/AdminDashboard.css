@@ -1048,3 +1048,23 @@
 .history-scroll-x::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+.btn-details-card {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #f0fdfa;
+  border: 1px solid #0d9488;
+  color: #0d9488;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.btn-details-card:hover {
+  background-color: #0d9488;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+}
