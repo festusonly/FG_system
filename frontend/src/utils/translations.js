@@ -135,7 +135,8 @@ export const translations = {
     new_kitchen_sale: 'New Kitchen Sale',
     allow_notifications: 'Enable Alerts',
     notifications_on: 'Alerts On',
-    notifications_off: 'Alerts Off'
+    notifications_off: 'Alerts Off',
+    install_app: 'Install App'
   },
   rw: {
     // Header & General
@@ -273,6 +274,7 @@ export const translations = {
     new_kitchen_sale: 'Ubucuruzi bw\'Igikoni Bushya',
     allow_notifications: 'Emera Ubuhanuzi (Alerts)',
     notifications_on: 'Alerts Akora',
-    notifications_off: 'Alerts Ofu'
+    notifications_off: 'Alerts Ofu',
+    install_app: 'Shyiramo App'
   }
 };

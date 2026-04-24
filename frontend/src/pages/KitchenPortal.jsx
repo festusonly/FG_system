@@ -8,7 +8,7 @@ import '../styles/AdminDashboard.css' // Import for metric-card styles
 
 export default function KitchenPortal() {
   const { user, logout } = useAuth()
-  const { kitchenTransactions, lastKitchenCollectionTime, t, language, changeLanguage, isOffline } = useApp()
+  const { kitchenTransactions, lastKitchenCollectionTime, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled } = useApp()
   const navigate = useNavigate()
   // Sale States
   const [saleDesc, setSaleDesc] = useState('')
@@ -149,6 +149,27 @@ export default function KitchenPortal() {
                }}
              >RW</button>
           </div>
+           {deferredPrompt && !isPWAInstalled && (
+            <button 
+              onClick={installPWA}
+              style={{
+                background: 'linear-gradient(135deg, #0d9488, #0f766e)',
+                color: 'white',
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span>📲</span> {t('install_app') || 'Install App'}
+            </button>
+          )}
           <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
         </div>
       </header>

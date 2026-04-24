@@ -6,7 +6,7 @@ import '../styles/StaffPortal.css'
 
 export default function StaffPortal() {
   const { user, logout } = useAuth()
-  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline } = useApp()
+  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled } = useApp()
   const navigate = useNavigate()
 
   const [submitting, setSubmitting] = useState(false)
@@ -191,6 +191,27 @@ export default function StaffPortal() {
                }}
              >RW</button>
           </div>
+           {deferredPrompt && !isPWAInstalled && (
+            <button 
+              onClick={installPWA}
+              style={{
+                background: 'linear-gradient(135deg, #0d9488, #0f766e)',
+                color: 'white',
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span>📲</span> {t('install_app') || 'Install App'}
+            </button>
+          )}
           <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
         </div>
       </header>

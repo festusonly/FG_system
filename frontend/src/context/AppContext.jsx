@@ -19,6 +19,8 @@ export function AppProvider({ children }) {
   const [loadingData, setLoadingData] = useState(true)
   const [language, setLanguage] = useState(localStorage.getItem('appLanguage') || 'en')
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+  const [isPWAInstalled, setIsPWAInstalled] = useState(false)
 
   // Cache updates
   useEffect(() => {
@@ -40,11 +42,41 @@ export function AppProvider({ children }) {
     const handleOffline = () => setIsOffline(true)
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
+
+    // PWA Install Logic
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null)
+      setIsPWAInstalled(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    // Check if already in standalone mode
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+      setIsPWAInstalled(true)
+    }
+
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
+
+  const installPWA = async () => {
+    if (!deferredPrompt) return
+    deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null)
+    }
+  }
 
   // Translation helper
   const t = (key) => translations[language][key] || key
@@ -386,7 +418,10 @@ export function AppProvider({ children }) {
     t,
     language,
     changeLanguage,
-    isOffline
+    isOffline,
+    deferredPrompt,
+    installPWA,
+    isPWAInstalled
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
