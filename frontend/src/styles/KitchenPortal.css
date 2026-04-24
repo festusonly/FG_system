@@ -179,6 +179,22 @@
   margin-bottom: 2rem;
 }
 
+/* Kitchen History Cards */
+.history-day-card {
+  border: 1.5px solid #0d9488 !important;
+  transition: all 0.3s ease !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.history-day-card:hover {
+  background-color: #f0fdfa !important;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.15) !important;
+}
+
 /* Modal Styles - Premium Look */
 .modal-overlay {
   position: fixed;

@@ -25,14 +25,55 @@ export default function KitchenPortal() {
 
   const todayString = new Date().toDateString()
   
-  // Metrics Calculations
-  const todaysSales = kitchenTransactions
-    .filter(t => t.type === 'order' && new Date(t.created_at).toDateString() === todayString)
-    .reduce((sum, t) => sum + t.amount, 0)
+  const [selectedDateHistory, setSelectedDateHistory] = useState(null)
 
-  const todaysPurchases = kitchenTransactions
-    .filter(t => t.type === 'purchase' && new Date(t.created_at).toDateString() === todayString)
-    .reduce((sum, t) => sum + t.amount, 0)
+  // 1. Auto-Delete logic (Keep database lean)
+  React.useEffect(() => {
+    const cleanupOldData = async () => {
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      
+      const { error } = await supabase
+        .from('kitchen_transactions')
+        .delete()
+        .lt('created_at', sevenDaysAgo.toISOString())
+      
+      if (error) console.error('Cleanup error:', error)
+    }
+    cleanupOldData()
+  }, [])
+
+  // 2. Generate 7-Day History Summary
+  const generateKitchenHistory = () => {
+    const days = []
+    for (let i = 0; i < 7; i++) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const dateStr = d.toDateString()
+
+      const dayTransactions = (kitchenTransactions || []).filter(tx => 
+        new Date(tx.created_at).toDateString() === dateStr
+      )
+
+      const sales = dayTransactions
+        .filter(tx => tx.type === 'order')
+        .reduce((sum, tx) => sum + tx.amount, 0)
+
+      const purchases = dayTransactions
+        .filter(tx => tx.type === 'purchase')
+        .reduce((sum, tx) => sum + tx.amount, 0)
+
+      days.push({
+        date: d,
+        dateLabel: i === 0 ? t('today') : i === 1 ? t('yesterday') : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
+        sales,
+        purchases,
+        transactions: dayTransactions
+      })
+    }
+    return days
+  }
+  const historyData = generateKitchenHistory()
 
   const pendingKitchenCash = kitchenTransactions
     .filter(t => {
@@ -271,13 +312,6 @@ export default function KitchenPortal() {
           </div>
         )}
 
-        {/* Middle: Daily Summary Bar */}
-        <div className="daily-summary-bar" style={{marginBottom: '2rem'}}>
-           <span className="summary-label">{t('work_done_today')}:</span>
-           <span className="summary-val sale">{t('daily_sales')}: RWF {todaysSales.toLocaleString()}</span>
-           <span className="summary-val purc">{t('daily_purchases')}: RWF {todaysPurchases.toLocaleString()}</span>
-        </div>
-
         {/* Bottom: Isolated Sale Form */}
         <div className="entry-card sale-card-pro" style={{maxWidth: '800px', margin: '0 auto 3rem auto'}}>
           <div className="entry-header">
@@ -330,6 +364,189 @@ export default function KitchenPortal() {
           </form>
         </div>
 
+        {/* 7-Day Kitchen History Section - DATE ONLY - MOVED HERE */}
+        <div className="kitchen-card-modern" style={{marginBottom: '3rem', maxWidth: '800px', margin: '0 auto 3rem auto'}}>
+          <div className="card-header-modern">
+            <span className="card-icon">📅</span>
+            <div>
+              <h2>{t('kitchen_history')}</h2>
+              <p>{t('view_daily_details')}</p>
+            </div>
+          </div>
+          
+          <div className="history-scroll-x" style={{display: 'flex', gap: '12px', overflowX: 'auto', padding: '10px 0'}}>
+            {historyData.map((day, idx) => (
+              <div 
+                key={idx} 
+                className="history-day-card" 
+                onClick={() => setSelectedDateHistory(day)}
+                style={{
+                  minWidth: '110px',
+                  background: 'white',
+                  padding: '15px 10px',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                  cursor: 'pointer',
+                  textAlign: 'center'
+                }}
+              >
+                <div style={{fontWeight: 'bold', color: '#1e293b', fontSize: '0.9rem'}}>{day.dateLabel}</div>
+                <div style={{fontSize: '0.7rem', color: '#64748b', marginTop: '4px'}}>{t('view_details')}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* History Detail Modal - CLEAN ROOM STYLE */}
+        {selectedDateHistory && (
+          <div className="modal-overlay">
+            <div className="modal-content-large" style={{
+              maxHeight: '85vh', 
+              overflowY: 'auto', 
+              borderRadius: '12px', 
+              background: '#ffffff',
+              padding: '0'
+            }}>
+              <div className="modal-header" style={{
+                padding: '20px 24px', 
+                borderBottom: '1px solid #f1f5f9',
+                background: '#ffffff',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <h2 style={{fontSize: '1.25rem', fontWeight: '800', color: '#1e293b'}}>{selectedDateHistory.dateLabel} - {t('detailed_log')}</h2>
+                <button className="btn-close-circle" onClick={() => setSelectedDateHistory(null)} style={{background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: '#0d9488', fontWeight: 'bold'}}>×</button>
+              </div>
+
+              <div style={{padding: '24px'}}>
+                <div style={{display: 'flex', gap: '15px', marginBottom: '25px'}}>
+                  <div style={{flex: 1, background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #f1f5f9'}}>
+                    <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_sales')}</span>
+                    <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginTop: '8px'}}>RWF {selectedDateHistory.sales.toLocaleString()}</div>
+                  </div>
+                  <div style={{flex: 1, background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #f1f5f9'}}>
+                    <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_purchases')}</span>
+                    <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginTop: '8px'}}>RWF {selectedDateHistory.purchases.toLocaleString()}</div>
+                  </div>
+                </div>
+
+                <h3 style={{fontSize: '0.85rem', color: '#0d9488', textTransform: 'uppercase', fontWeight: '700', marginBottom: '15px', marginTop: '10px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                  <span style={{background: '#ccfbf1', padding: '4px 8px', borderRadius: '6px'}}>💰</span> {t('sales_details')}
+                </h3>
+                <div className="table-responsive" style={{marginBottom: '30px'}}>
+                  <table className="data-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                    <thead>
+                      <tr style={{background: '#f0fdfa'}}>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('expense_description')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('served_by')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('time')}</th>
+                        <th style={{padding: '12px', textAlign: 'right', fontSize: '0.75rem', color: '#0f766e'}}>{t('amount')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedDateHistory.transactions.filter(tx => tx.type === 'order').length > 0 ? (
+                        selectedDateHistory.transactions.filter(tx => tx.type === 'order').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
+                          <tr key={tx.id} style={{borderBottom: '1px solid #f1f5f9'}}>
+                            <td style={{
+                              padding: '12px', 
+                              fontWeight: '500', 
+                              color: '#1e293b', 
+                              fontSize: '0.9rem',
+                              whiteSpace: 'pre-line',
+                              wordBreak: 'break-word',
+                              minWidth: '200px',
+                              lineHeight: '1.4'
+                            }}>
+                              {tx.description}
+                            </td>
+                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                              {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                            </td>
+                            <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#0d9488', fontSize: '0.95rem'}}>
+                              RWF {tx.amount.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" style={{textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: '0.85rem'}}>{t('no_history')}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3 style={{fontSize: '0.85rem', color: '#e11d48', textTransform: 'uppercase', fontWeight: '700', marginBottom: '15px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                  <span style={{background: '#fff1f2', padding: '4px 8px', borderRadius: '6px'}}>🛒</span> {t('purchases_details')}
+                </h3>
+                <div className="table-responsive">
+                  <table className="data-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                    <thead>
+                      <tr style={{background: '#fff1f2'}}>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('expense_description')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('served_by')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('time')}</th>
+                        <th style={{padding: '12px', textAlign: 'right', fontSize: '0.75rem', color: '#9f1239'}}>{t('amount')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedDateHistory.transactions.filter(tx => tx.type === 'purchase').length > 0 ? (
+                        selectedDateHistory.transactions.filter(tx => tx.type === 'purchase').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
+                          <tr key={tx.id} style={{borderBottom: '1px solid #f1f5f9'}}>
+                            <td style={{
+                              padding: '12px', 
+                              fontWeight: '500', 
+                              color: '#1e293b', 
+                              fontSize: '0.9rem',
+                              whiteSpace: 'pre-line',
+                              wordBreak: 'break-word',
+                              minWidth: '200px',
+                              lineHeight: '1.4'
+                            }}>
+                              {tx.description}
+                            </td>
+                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                              {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                            </td>
+                            <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#e11d48', fontSize: '0.95rem'}}>
+                              - RWF {tx.amount.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" style={{textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: '0.85rem'}}>{t('no_history')}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                <button 
+                  className="btn-modal-close" 
+                  onClick={() => setSelectedDateHistory(null)} 
+                  style={{
+                    marginTop: '30px', 
+                    width: '100%', 
+                    padding: '14px', 
+                    borderRadius: '10px', 
+                    background: '#0d9488', 
+                    border: 'none', 
+                    fontWeight: '700', 
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 6px -1px rgba(13, 148, 136, 0.2)'
+                  }}
+                >{t('close')}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="recent-entries-split">
           <div className="entries-column">
             <div className="entries-header">
@@ -346,7 +563,7 @@ export default function KitchenPortal() {
                           {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <span className="entry-desc-modern">{entry.description}</span>
+                      <span className="entry-desc-modern" style={{whiteSpace: 'pre-line', display: 'block', lineHeight: '1.4'}}>{entry.description}</span>
                       <div className="entry-sub-info">
                         {entry.served_by && <span className="entry-served-by">{t('served_by')}: <strong>{entry.served_by}</strong></span>}
                       </div>
@@ -377,7 +594,7 @@ export default function KitchenPortal() {
                           {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <span className="entry-desc-modern">{entry.description}</span>
+                      <span className="entry-desc-modern" style={{whiteSpace: 'pre-line', display: 'block', lineHeight: '1.4'}}>{entry.description}</span>
                     </div>
                     <div className="entry-price-info">
                       <span className="entry-amount-modern">- RWF {entry.amount.toLocaleString()}</span>

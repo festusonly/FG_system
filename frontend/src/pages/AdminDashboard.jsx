@@ -482,7 +482,7 @@ export default function AdminDashboard() {
                           <td className="room-cell">{room.name}</td>
                           <td>
                             <span className={`status-badge ${room.status}`}>
-                              {room.status === 'occupied' ? t('occupied') : t('available')}
+                              {room.status === 'occupied' ? t('utilization_active') : t('utilization_available')}
                             </span>
                           </td>
                           <td className="count-cell">{todayUsage} {t('times_today')}</td>
@@ -587,7 +587,7 @@ export default function AdminDashboard() {
                         <tr key={tx.id}>
                           <td>{tx.room}</td>
                           <td>{formatTime(tx.time)}</td>
-                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied')}</span>}</td>
+                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied_short')}</span>}</td>
                           <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
                         </tr>
                       ))
@@ -666,7 +666,7 @@ export default function AdminDashboard() {
                     {todaysExpenses.length > 0 ? (
                       todaysExpenses.map((exp) => (
                         <tr key={exp.id}>
-                          <td className="desc-cell">{exp.description}</td>
+                          <td className="desc-cell"><span className="entry-desc-modern" style={{whiteSpace: 'pre-line', display: 'block', lineHeight: '1.4'}}>{exp.description}</span></td>
                           <td className="amount-cell text-danger">RWF {exp.amount.toLocaleString()}</td>
                           <td className="time-cell">{formatTime(exp.time)}</td>
                         </tr>
@@ -993,7 +993,7 @@ const StaffManagementList = ({ user }) => {
   const fetchWorkers = async () => {
     const { data, error } = await supabase
       .from('users')
-      .select('id, role')
+      .select('id, role, email')
       .neq('id', user.id)
     
     if (!error) {
@@ -1032,8 +1032,19 @@ const StaffManagementList = ({ user }) => {
             <div key={w.id} className={`worker-item ${selectedWorker?.id === w.id ? 'selected' : ''}`} onClick={() => setSelectedWorker(w)}>
               <div className="worker-icon">👤</div>
               <div className="worker-info">
-                <strong>{t('worker_hint').split(':')[0]}</strong>
-                <span>ID: {w.id.substring(0, 8)}...</span>
+                <strong>{w.email}</strong>
+                <span className={`role-badge ${w.role}`} style={{
+                  fontSize: '0.75rem',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  background: w.role === 'kitchen' ? '#f0fdf4' : '#eff6ff',
+                  color: w.role === 'kitchen' ? '#166534' : '#1e40af',
+                  fontWeight: '600',
+                  marginTop: '4px',
+                  display: 'inline-block'
+                }}>
+                  {w.role === 'kitchen' ? t('kitchen_worker') : t('rooms_worker')}
+                </span>
               </div>
             </div>
           ))}
@@ -1084,6 +1095,20 @@ const StaffManagementList = ({ user }) => {
 const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }) => {
   const { collectKitchenCash, t } = useApp()
   const [isCollecting, setIsCollecting] = useState(false)
+  const [selectedDateHistory, setSelectedDateHistory] = useState(null)
+
+  // Auto-Delete logic (Keep database lean)
+  React.useEffect(() => {
+    const cleanupOldData = async () => {
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      await supabase
+        .from('kitchen_transactions')
+        .delete()
+        .lt('created_at', sevenDaysAgo.toISOString())
+    }
+    cleanupOldData()
+  }, [])
 
   // 1. Pending Metrics (Since last collection)
   const pendingSales = (kitchenTransactions || [])
@@ -1096,32 +1121,37 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
 
   const pendingProfit = pendingSales - pendingPurchases
 
-  // 2. History Generation (Last 5 Days)
-  const generateHistory = () => {
+  // Generate 7-Day History Summary
+  const generateKitchenHistory = () => {
     const days = []
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       const d = new Date()
       d.setDate(d.getDate() - i)
       const dateStr = d.toDateString()
 
-      const daySales = (kitchenTransactions || [])
-        .filter(tx => tx.type === 'order' && new Date(tx.created_at).toDateString() === dateStr)
+      const dayTransactions = (kitchenTransactions || []).filter(tx => 
+        new Date(tx.created_at).toDateString() === dateStr
+      )
+
+      const sales = dayTransactions
+        .filter(tx => tx.type === 'order')
         .reduce((sum, tx) => sum + tx.amount, 0)
 
-      const dayPurchases = (kitchenTransactions || [])
-        .filter(tx => tx.type === 'purchase' && new Date(tx.created_at).toDateString() === dateStr)
+      const purchases = dayTransactions
+        .filter(tx => tx.type === 'purchase')
         .reduce((sum, tx) => sum + tx.amount, 0)
 
       days.push({
-        date: i === 0 ? 'Today' : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
-        sales: daySales,
-        purchases: dayPurchases,
-        profit: daySales - dayPurchases
+        date: d,
+        dateLabel: i === 0 ? t('today') : i === 1 ? t('yesterday') : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
+        sales,
+        purchases,
+        transactions: dayTransactions
       })
     }
     return days
   }
-  const history = generateHistory()
+  const historyData = generateKitchenHistory()
 
   const handleCollect = async () => {
     if (pendingProfit <= 0) return alert('No profit to collect yet.')
@@ -1146,12 +1176,12 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
             onClick={handleCollect}
             disabled={pendingProfit <= 0 || isCollecting}
           >
-            {isCollecting ? 'Collecting...' : 'Collect Kitchen Profit'}
+            {isCollecting ? t('loading') : 'Collect Kitchen Profit'}
           </button>
         </div>
       </div>
 
-      <div className="metrics-section">
+      <div className="metrics-section" style={{marginBottom: '2rem'}}>
         <div className="metric-card success">
           <h3>{t('sales_to_collect')}</h3>
           <p className="metric-value">RWF {pendingSales.toLocaleString()}</p>
@@ -1169,36 +1199,189 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
         </div>
       </div>
 
+      {/* 7-Day Kitchen History Section - DATE ONLY */}
       <div className="panel-section" style={{marginBottom: '2rem'}}>
-        <h2>{t('performance_5day_kitchen')}</h2>
-        <div className="table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>{t('day')}</th>
-                <th>{t('daily_sales')}</th>
-                <th>{t('daily_purchases')}</th>
-                <th>{t('daily_profit')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((h, i) => (
-                <tr key={i}>
-                  <td><strong>{h.date}</strong></td>
-                  <td>RWF {h.sales.toLocaleString()}</td>
-                  <td>RWF {h.purchases.toLocaleString()}</td>
-                  <td className={h.profit >= 0 ? 'text-success' : 'text-danger'} style={{fontWeight: 'bold'}}>
-                    RWF {h.profit.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h2>📅 {t('kitchen_history')}</h2>
+        <p className="section-subtitle">{t('view_daily_details')}</p>
+        
+        <div className="history-scroll-x" style={{display: 'flex', gap: '12px', overflowX: 'auto', padding: '15px 0'}}>
+          {historyData.map((day, idx) => (
+            <div 
+              key={idx} 
+              className="history-day-card" 
+              onClick={() => setSelectedDateHistory(day)}
+              style={{
+                minWidth: '120px',
+                background: 'white',
+                padding: '20px 15px',
+                borderRadius: '16px',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                cursor: 'pointer',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{fontWeight: 'bold', color: '#1e293b', fontSize: '1rem'}}>{day.dateLabel}</div>
+              <div style={{fontSize: '0.75rem', color: '#64748b', marginTop: '5px'}}>{t('view_details')}</div>
+            </div>
+          ))}
         </div>
       </div>
 
+      {/* History Detail Modal - CLEAN ROOM STYLE */}
+      {selectedDateHistory && (
+        <div className="modal-overlay">
+          <div className="modal-content-large" style={{
+            maxHeight: '85vh', 
+            overflowY: 'auto', 
+            borderRadius: '12px', 
+            background: '#ffffff',
+            padding: '0'
+          }}>
+            <div className="modal-header" style={{
+              padding: '20px 24px', 
+              borderBottom: '1px solid #f1f5f9',
+              background: '#ffffff',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <h2 style={{fontSize: '1.25rem', fontWeight: '800', color: '#1e293b'}}>{selectedDateHistory.dateLabel} - {t('detailed_log')}</h2>
+              <button className="btn-close-circle" onClick={() => setSelectedDateHistory(null)} style={{background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: '#0d9488', fontWeight: 'bold'}}>×</button>
+            </div>
+
+            <div style={{padding: '24px'}}>
+              <div style={{display: 'flex', gap: '15px', marginBottom: '25px'}}>
+                <div style={{flex: 1, background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #f1f5f9'}}>
+                  <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_sales')}</span>
+                  <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginTop: '8px'}}>RWF {selectedDateHistory.sales.toLocaleString()}</div>
+                </div>
+                <div style={{flex: 1, background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #f1f5f9'}}>
+                  <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_purchases')}</span>
+                  <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginTop: '8px'}}>RWF {selectedDateHistory.purchases.toLocaleString()}</div>
+                </div>
+              </div>
+
+              <h3 style={{fontSize: '0.85rem', color: '#0d9488', textTransform: 'uppercase', fontWeight: '700', marginBottom: '15px', marginTop: '10px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <span style={{background: '#ccfbf1', padding: '4px 8px', borderRadius: '6px'}}>💰</span> {t('sales_details')}
+              </h3>
+              <div className="table-responsive" style={{marginBottom: '30px'}}>
+                <table className="data-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                  <thead>
+                    <tr style={{background: '#f0fdfa'}}>
+                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('expense_description')}</th>
+                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('served_by')}</th>
+                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('time')}</th>
+                      <th style={{padding: '12px', textAlign: 'right', fontSize: '0.75rem', color: '#0f766e'}}>{t('amount')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedDateHistory.transactions.filter(tx => tx.type === 'order').length > 0 ? (
+                      selectedDateHistory.transactions.filter(tx => tx.type === 'order').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
+                        <tr key={tx.id} style={{borderBottom: '1px solid #f1f5f9'}}>
+                          <td style={{
+                            padding: '12px', 
+                            fontWeight: '500', 
+                            color: '#1e293b', 
+                            fontSize: '0.9rem',
+                            whiteSpace: 'pre-line',
+                            wordBreak: 'break-word',
+                            minWidth: '200px',
+                            lineHeight: '1.4'
+                          }}>
+                            {tx.description}
+                          </td>
+                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                            {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                          </td>
+                          <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#0d9488', fontSize: '0.95rem'}}>
+                            RWF {tx.amount.toLocaleString()}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" style={{textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: '0.85rem'}}>{t('no_history')}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <h3 style={{fontSize: '0.85rem', color: '#e11d48', textTransform: 'uppercase', fontWeight: '700', marginBottom: '15px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <span style={{background: '#fff1f2', padding: '4px 8px', borderRadius: '6px'}}>🛒</span> {t('purchases_details')}
+              </h3>
+              <div className="table-responsive">
+                <table className="data-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                  <thead>
+                    <tr style={{background: '#fff1f2'}}>
+                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('expense_description')}</th>
+                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('served_by')}</th>
+                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('time')}</th>
+                      <th style={{padding: '12px', textAlign: 'right', fontSize: '0.75rem', color: '#9f1239'}}>{t('amount')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedDateHistory.transactions.filter(tx => tx.type === 'purchase').length > 0 ? (
+                      selectedDateHistory.transactions.filter(tx => tx.type === 'purchase').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
+                        <tr key={tx.id} style={{borderBottom: '1px solid #f1f5f9'}}>
+                          <td style={{
+                            padding: '12px', 
+                            fontWeight: '500', 
+                            color: '#1e293b', 
+                            fontSize: '0.9rem',
+                            whiteSpace: 'pre-line',
+                            wordBreak: 'break-word',
+                            minWidth: '200px',
+                            lineHeight: '1.4'
+                          }}>
+                            {tx.description}
+                          </td>
+                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                            {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                          </td>
+                          <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#e11d48', fontSize: '0.95rem'}}>
+                            - RWF {tx.amount.toLocaleString()}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" style={{textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: '0.85rem'}}>{t('no_history')}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              
+              <button 
+                className="btn-modal-close" 
+                onClick={() => setSelectedDateHistory(null)} 
+                style={{
+                  marginTop: '30px', 
+                  width: '100%', 
+                  padding: '14px', 
+                  borderRadius: '10px', 
+                  background: '#0d9488', 
+                  border: 'none', 
+                  fontWeight: '700', 
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 6px -1px rgba(13, 148, 136, 0.2)'
+                }}
+              >{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="panel-section">
-        <h2>{t('detailed_log')}</h2>
+        <h2 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          {t('recent_activities')}
+          <span style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>(Today's Top 5)</span>
+        </h2>
         <div className="table-responsive">
           <table className="data-table">
             <thead>
@@ -1212,21 +1395,33 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
             </thead>
             <tbody>
               {(kitchenTransactions || []).length > 0 ? (
-                (kitchenTransactions || []).map(tx => (
-                  <tr key={tx.id}>
-                    <td>
-                      <span className={`status-badge ${tx.type === 'order' ? 'occupied' : 'completed'}`}>
-                        {tx.type === 'order' ? t('record_sale') : t('record_purchase')}
-                      </span>
-                    </td>
-                    <td>{tx.description}</td>
-                    <td>{tx.served_by || '--'}</td>
-                    <td className={tx.type === 'order' ? 'text-success' : 'text-danger'}>
-                      {tx.type === 'order' ? '+' : '-'} RWF {tx.amount.toLocaleString()}
-                    </td>
-                    <td>{new Date(tx.created_at).toLocaleDateString()} {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                  </tr>
-                ))
+                (kitchenTransactions || [])
+                  .filter(tx => new Date(tx.created_at).toDateString() === new Date().toDateString())
+                  .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+                  .slice(0, 5)
+                  .map(tx => (
+                    <tr key={tx.id}>
+                      <td>
+                        <span className={`status-badge ${tx.type === 'order' ? 'occupied' : 'completed'}`} style={{fontSize: '0.7rem'}}>
+                          {tx.type === 'order' ? t('record_sale') : t('record_purchase')}
+                        </span>
+                      </td>
+                      <td style={{
+                        fontWeight: '500',
+                        whiteSpace: 'pre-line',
+                        wordBreak: 'break-word',
+                        lineHeight: '1.4',
+                        padding: '12px 1.5rem'
+                      }}>{tx.description}</td>
+                      <td style={{color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                      <td className={tx.type === 'order' ? 'text-success' : 'text-danger'} style={{fontWeight: 'bold'}}>
+                        {tx.type === 'order' ? '+' : '-'} RWF {tx.amount.toLocaleString()}
+                      </td>
+                      <td style={{color: '#64748b', fontSize: '0.85rem'}}>
+                        {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </td>
+                    </tr>
+                  ))
               ) : (
                 <tr>
                   <td colSpan="5" className="empty-state">{t('no_transactions')}</td>

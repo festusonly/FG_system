@@ -1015,3 +1015,36 @@
 .btn-toggle-password:hover {
   color: var(--primary-dark);
 }
+/* Kitchen History Cards */
+.history-day-card {
+  border: 1.5px solid #0d9488 !important;
+  transition: all 0.3s ease !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.history-day-card:hover {
+  background-color: #f0fdfa !important;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.15) !important;
+}
+
+.history-scroll-x::-webkit-scrollbar {
+  height: 6px;
+}
+
+.history-scroll-x::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.history-scroll-x::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.history-scroll-x::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

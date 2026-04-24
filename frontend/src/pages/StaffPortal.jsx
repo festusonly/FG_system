@@ -343,7 +343,7 @@ export default function StaffPortal() {
               >
                 <span className="room-name">{room.name}</span>
                 <span className="room-status-label">
-                  {room.status === 'occupied' ? t('occupied') : t('available')}
+                  {room.status === 'occupied' ? t('kirimo_umuntu') : t('kirimo_ubusa')}
                 </span>
               </button>
             ))}
@@ -355,11 +355,12 @@ export default function StaffPortal() {
           const activeTx = getActiveTransaction(selectedRoom.id)
           return (
             <div className="room-details-panel" id="checkout-panel">
-              <h3>{selectedRoom.name} - {t('occupied')}</h3>
+              <h3>{selectedRoom.name} - {t('kirimo_umuntu')}</h3>
               {activeTx ? (
                 <>
                   <p><strong>{t('type')}:</strong> {t(activeTx.type) || activeTx.type.replace(/_/g, ' ')}</p>
                   {activeTx.days && <p><strong>{t('number_of_days')}:</strong> {activeTx.days}</p>}
+                  <p><strong>{t('since')}:</strong> {formatTime(activeTx.time)}</p>
                   <p><strong>{t('amount_paid')}:</strong> RWF {activeTx.amount.toLocaleString()}</p>
                 </>
               ) : (
