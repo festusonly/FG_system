@@ -25,7 +25,12 @@ export default function AdminDashboard() {
 
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'available', 'occupied'
   const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history', 'kitchen', 'settings'
-  const [notifPermission, setNotifPermission] = useState(Notification.permission)
+  const [notifPermission, setNotifPermission] = useState(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  )
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    localStorage.getItem('admin_notifications_enabled') === 'true'
+  )
   const [selectedDayDetails, setSelectedDayDetails] = useState(null)
   const [viewingExpense, setViewingExpense] = useState(null)
   const [showExpensesModal, setShowExpensesModal] = useState(false)
@@ -136,7 +141,7 @@ export default function AdminDashboard() {
     const channel = supabase.channel('admin_notifications')
       .on('postgres_changes', { event: 'INSERT', table: 'transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
-        if (Notification.permission === 'granted') {
+        if (notificationsEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           new Notification(t('new_room_booking'), {
             body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
             icon: '/icon-512.png'
@@ -145,7 +150,7 @@ export default function AdminDashboard() {
       })
       .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
         const tx = payload.new
-        if (Notification.permission === 'granted') {
+        if (notificationsEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           new Notification(t('new_kitchen_sale'), {
             body: `${tx.description}: RWF ${tx.amount.toLocaleString()}`,
             icon: '/icon-512.png'
@@ -159,10 +164,16 @@ export default function AdminDashboard() {
     }
   }, [t])
 
-  const requestNotifPermission = () => {
-    Notification.requestPermission().then(permission => {
-      setNotifPermission(permission)
-    })
+  const toggleNotifications = () => {
+    const newState = !notificationsEnabled
+    setNotificationsEnabled(newState)
+    localStorage.setItem('admin_notifications_enabled', newState)
+
+    if (newState && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission().then(permission => {
+        setNotifPermission(permission)
+      })
+    }
   }
 
   const handleLogout = async () => {
@@ -200,13 +211,26 @@ export default function AdminDashboard() {
           <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>{t('settings')}</button>
         </div>
         <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-          {notifPermission !== 'granted' && (
-            <button 
-              onClick={requestNotifPermission}
-              style={{background: '#f59e0b', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer'}}
+          {typeof Notification !== 'undefined' && (
+            <div 
+              onClick={toggleNotifications}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: notificationsEnabled ? '#0d9488' : '#64748b',
+                color: 'white',
+                padding: '5px 12px',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
             >
-              🔔 {t('allow_notifications')}
-            </button>
+              <span>{notificationsEnabled ? '🔔' : '🔕'}</span>
+              <span>{notificationsEnabled ? t('notifications_on') : t('notifications_off')}</span>
+            </div>
           )}
           <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
              <button 

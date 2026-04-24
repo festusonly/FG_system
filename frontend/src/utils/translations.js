@@ -133,7 +133,9 @@ export const translations = {
     new_activity: 'New Activity',
     new_room_booking: 'New Room Booking',
     new_kitchen_sale: 'New Kitchen Sale',
-    allow_notifications: 'Enable Alerts'
+    allow_notifications: 'Enable Alerts',
+    notifications_on: 'Alerts On',
+    notifications_off: 'Alerts Off'
   },
   rw: {
     // Header & General
@@ -269,6 +271,8 @@ export const translations = {
     new_activity: 'Ibikorwa Bishya',
     new_room_booking: 'Ubucuruzi bw\'Ibyumba Bushya',
     new_kitchen_sale: 'Ubucuruzi bw\'Igikoni Bushya',
-    allow_notifications: 'Emera Ubuhanuzi (Alerts)'
+    allow_notifications: 'Emera Ubuhanuzi (Alerts)',
+    notifications_on: 'Alerts Akora',
+    notifications_off: 'Alerts Ofu'
   }
 };
