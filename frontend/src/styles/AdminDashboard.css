@@ -1050,21 +1050,22 @@
 }
 .btn-details-card {
   margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: #f0fdfa;
-  border: 1px solid #0d9488;
-  color: #0d9488;
-  border-radius: 20px;
+  padding: 0.6rem 1.2rem;
+  background-color: #0d9488;
+  border: none;
+  color: white;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   width: fit-content;
+  box-shadow: 0 2px 4px rgba(13, 148, 136, 0.2);
 }
 
 .btn-details-card:hover {
-  background-color: #0d9488;
-  color: white;
+  background-color: #0f766e;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 4px 8px rgba(13, 148, 136, 0.3);
 }
+
