@@ -438,10 +438,10 @@ export default function KitchenPortal() {
                   <table className="data-table" style={{width: '100%', borderCollapse: 'collapse'}}>
                     <thead>
                       <tr style={{background: '#f0fdfa'}}>
-                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('expense_description')}</th>
-                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('served_by')}</th>
-                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('time')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('order')}</th>
                         <th style={{padding: '12px', textAlign: 'right', fontSize: '0.75rem', color: '#0f766e'}}>{t('amount')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('time')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('served_by')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -460,13 +460,13 @@ export default function KitchenPortal() {
                             }}>
                               {tx.description}
                             </td>
-                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
-                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
-                              {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-                            </td>
                             <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#0d9488', fontSize: '0.95rem'}}>
                               RWF {tx.amount.toLocaleString()}
                             </td>
+                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                              {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                            </td>
+                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
                           </tr>
                         ))
                       ) : (
@@ -485,10 +485,10 @@ export default function KitchenPortal() {
                   <table className="data-table" style={{width: '100%', borderCollapse: 'collapse'}}>
                     <thead>
                       <tr style={{background: '#fff1f2'}}>
-                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('expense_description')}</th>
-                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('served_by')}</th>
-                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('time')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('order')}</th>
                         <th style={{padding: '12px', textAlign: 'right', fontSize: '0.75rem', color: '#9f1239'}}>{t('amount')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('time')}</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('served_by')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -507,13 +507,13 @@ export default function KitchenPortal() {
                             }}>
                               {tx.description}
                             </td>
-                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
-                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
-                              {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-                            </td>
                             <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#e11d48', fontSize: '0.95rem'}}>
                               - RWF {tx.amount.toLocaleString()}
                             </td>
+                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                              {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                            </td>
+                            <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
                           </tr>
                         ))
                       ) : (
@@ -553,29 +553,33 @@ export default function KitchenPortal() {
               <h2>{t('recent_sales')}</h2>
               <p>{t('money_in')}</p>
             </div>
-            <div className="entries-list">
-              {recentEntries.filter(e => e.type === 'order').length > 0 ? (
-                recentEntries.filter(e => e.type === 'order').map(entry => (
-                  <div key={entry.id} className="entry-item-modern order">
-                    <div className="entry-main-info">
-                      <div className="entry-top">
-                        <span className="entry-time-modern">
-                          {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <span className="entry-desc-modern" style={{whiteSpace: 'pre-line', display: 'block', lineHeight: '1.4'}}>{entry.description}</span>
-                      <div className="entry-sub-info">
-                        {entry.served_by && <span className="entry-served-by">{t('served_by')}: <strong>{entry.served_by}</strong></span>}
-                      </div>
-                    </div>
-                    <div className="entry-price-info">
-                      <span className="entry-amount-modern">+ RWF {entry.amount.toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="empty-state">No sales recorded yet.</p>
-              )}
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>{t('order')}</th>
+                    <th>{t('amount')}</th>
+                    <th>{t('time')}</th>
+                    <th>{t('served_by')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentEntries.filter(e => e.type === 'order').length > 0 ? (
+                    recentEntries.filter(e => e.type === 'order').map(entry => (
+                      <tr key={entry.id}>
+                        <td style={{fontWeight: '500'}}>{entry.description}</td>
+                        <td className="text-success" style={{fontWeight: 'bold'}}>+ RWF {entry.amount.toLocaleString()}</td>
+                        <td style={{color: '#64748b', fontSize: '0.85rem'}}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td style={{color: '#64748b', fontSize: '0.85rem'}}>{entry.served_by || '--'}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="empty-state">No sales recorded yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -584,26 +588,31 @@ export default function KitchenPortal() {
               <h2>{t('recent_purchases')}</h2>
               <p>{t('money_out')}</p>
             </div>
-            <div className="entries-list">
-              {recentEntries.filter(e => e.type === 'purchase').length > 0 ? (
-                recentEntries.filter(e => e.type === 'purchase').map(entry => (
-                  <div key={entry.id} className="entry-item-modern purchase">
-                    <div className="entry-main-info">
-                      <div className="entry-top">
-                        <span className="entry-time-modern">
-                          {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <span className="entry-desc-modern" style={{whiteSpace: 'pre-line', display: 'block', lineHeight: '1.4'}}>{entry.description}</span>
-                    </div>
-                    <div className="entry-price-info">
-                      <span className="entry-amount-modern">- RWF {entry.amount.toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="empty-state">{t('no_transactions')}</p>
-              )}
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>{t('order')}</th>
+                    <th>{t('amount')}</th>
+                    <th>{t('time')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentEntries.filter(e => e.type === 'purchase').length > 0 ? (
+                    recentEntries.filter(e => e.type === 'purchase').map(entry => (
+                      <tr key={entry.id}>
+                        <td style={{fontWeight: '500'}}>{entry.description}</td>
+                        <td className="text-danger" style={{fontWeight: 'bold'}}>- RWF {entry.amount.toLocaleString()}</td>
+                        <td style={{color: '#64748b', fontSize: '0.85rem'}}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" className="empty-state">{t('no_transactions')}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

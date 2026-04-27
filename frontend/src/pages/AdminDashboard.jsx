@@ -51,6 +51,14 @@ export default function AdminDashboard() {
   const [showClientsModal, setShowClientsModal] = useState(false)
   const [showDailyClientsModal, setShowDailyClientsModal] = useState(false)
   const [showOccupiedModal, setShowOccupiedModal] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(false)
+
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return t('good_morning') || 'Good morning'
+    if (hour < 18) return t('good_afternoon') || 'Good afternoon'
+    return t('good_evening') || 'Good evening'
+  }
 
   const todayString = new Date().toDateString()
   
@@ -270,54 +278,95 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="admin-dashboard">
-      <header className="admin-header">
-        <div className="header-left">
-          <h1>{t('admin_dashboard')}</h1>
-          <p>Owner: {user?.email}</p>
-        </div>
-        <div className="admin-tabs">
-          <button className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>{t('overview')}</button>
-          <button className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>{t('history')}</button>
-          <button className={`tab-btn ${activeTab === 'kitchen' ? 'active' : ''}`} onClick={() => setActiveTab('kitchen')}>{t('kitchen')}</button>
-          <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>{t('settings')}</button>
-        </div>
-        <div className="header-right-controls">
-          <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
-             <button 
-               onClick={() => changeLanguage('en')}
-               style={{
-                 background: language === 'en' ? '#0d9488' : 'transparent', 
-                 color: language === 'en' ? 'white' : '#64748b', 
-                 border: 'none', 
-                 padding: '5px 12px', 
-                 borderRadius: '25px', 
-                 cursor: 'pointer', 
-                 fontWeight: 'bold',
-                 fontSize: '0.85rem',
-                 transition: 'all 0.3s ease'
-               }}
-             >EN</button>
-             <button 
-               onClick={() => changeLanguage('rw')}
-               style={{
-                 background: language === 'rw' ? '#0d9488' : 'transparent', 
-                 color: language === 'rw' ? 'white' : '#64748b', 
-                 border: 'none', 
-                 padding: '5px 12px', 
-                 borderRadius: '25px', 
-                 cursor: 'pointer', 
-                 fontWeight: 'bold',
-                 fontSize: '0.85rem',
-                 transition: 'all 0.3s ease'
-               }}
-             >RW</button>
+    <div className={`admin-dashboard ${showSidebar ? 'sidebar-open' : ''}`}>
+      {/* Sidebar Overlay */}
+      {showSidebar && <div className="sidebar-overlay" onClick={() => setShowSidebar(false)} />}
+      
+      {/* Sidebar */}
+      <aside className={`admin-sidebar ${showSidebar ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="avatar-large">{user?.email?.[0]?.toUpperCase()}</div>
+          <div className="sidebar-user-info">
+            <strong>Admin</strong>
+            <span>{user?.email}</span>
           </div>
-          <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
+          <button className="btn-close-sidebar" onClick={() => setShowSidebar(false)}>&times;</button>
+        </div>
+        
+        <nav className="sidebar-nav">
+          <button 
+            className={`sidebar-link ${activeTab === 'overview' ? 'active' : ''}`} 
+            onClick={() => { setActiveTab('overview'); setShowSidebar(false); }}
+          >
+            <span>🏠</span> {t('overview')}
+          </button>
+          <button 
+            className={`sidebar-link ${activeTab === 'kitchen' ? 'active' : ''}`} 
+            onClick={() => { setActiveTab('kitchen'); setShowSidebar(false); }}
+          >
+            <span>🍳</span> {t('kitchen')}
+          </button>
+          <button 
+            className={`sidebar-link ${activeTab === 'history' ? 'active' : ''}`} 
+            onClick={() => { setActiveTab('history'); setShowSidebar(false); }}
+          >
+            <span>📊</span> {t('history')}
+          </button>
+          
+          <div className="sidebar-divider"></div>
+          
+          <button 
+            className={`sidebar-link ${activeTab === 'settings' ? 'active' : ''}`} 
+            onClick={() => { setActiveTab('settings'); setShowSidebar(false); }}
+          >
+            <span>⚙️</span> {t('settings')}
+          </button>
+          
+          <div className="sidebar-divider"></div>
+          
+          <div className="sidebar-footer">
+            <div className="language-selector-sidebar">
+              <span className="lang-label">{t('language')}:</span>
+              <div className="lang-btns">
+                <button className={language === 'en' ? 'active' : ''} onClick={() => changeLanguage('en')}>EN</button>
+                <button className={language === 'rw' ? 'active' : ''} onClick={() => changeLanguage('rw')}>RW</button>
+              </div>
+            </div>
+            <button onClick={logout} className="btn-logout-sidebar">
+              <span>🚪</span> {t('logout')}
+            </button>
+          </div>
+        </nav>
+      </aside>
+
+      <header className="admin-header-new">
+        <button className="btn-avatar" onClick={() => setShowSidebar(true)}>
+          {user?.email?.[0]?.toUpperCase() || 'A'}
+        </button>
+        <h1 className="header-title">{t(activeTab) || 'Home'}</h1>
+        <div className="header-right">
+          <div className="language-switch-header">
+            <button 
+              className={`lang-btn ${language === 'en' ? 'active' : ''}`}
+              onClick={() => changeLanguage('en')}
+            >
+              EN
+            </button>
+            <span className="lang-divider">|</span>
+            <button 
+              className={`lang-btn ${language === 'rw' ? 'active' : ''}`}
+              onClick={() => changeLanguage('rw')}
+            >
+              RW
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="dashboard-content">
+      <div className="dashboard-content compact">
+        <div className="greeting-section-compact">
+          <h2>{getGreeting()}, <span>{user?.email?.split('@')[0]}</span></h2>
+        </div>
         {isOffline && (
           <div className="offline-banner" style={{background: '#fffbeb', color: '#b45309', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'}}>
              <span style={{fontSize: '1.5rem'}}>📡</span>
@@ -403,7 +452,7 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          <div className="metric-card primary">
+          <div className="metric-card info">
             <h3>{t('stay_breakdown')}</h3>
             <p className="metric-value breakdown-value">
               <span className="short-stay">{shortStayCount} {t('short_stay')}</span>
@@ -430,7 +479,7 @@ export default function AdminDashboard() {
           <div className="panel-section" id="transactions-section">
             <h2>{t('recent_transactions')}</h2>
             <div className="table-responsive">
-              <table className="data-table">
+              <table className="data-table-simple">
                 <thead>
                   <tr>
                     <th>{t('room')}</th>
@@ -472,7 +521,7 @@ export default function AdminDashboard() {
             <div className="panel-section" id="room-utilization-section">
               <h2>{t('room_utilization')} {roomFilter !== 'all' && `(${t(roomFilter) || roomFilter})`}</h2>
               <div className="table-responsive">
-                <table className="data-table">
+                <table className="data-table-simple">
                   <thead>
                     <tr>
                       <th>{t('room')}</th>
@@ -714,7 +763,7 @@ export default function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setShowClientsModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Today's Room Usage Breakdown</h2>
+              <h2>{t('shift_usage_breakdown') || 'Today\'s Room Usage Breakdown'}</h2>
               <button className="btn-close" onClick={() => setShowClientsModal(false)}>&times;</button>
             </div>
             
@@ -737,20 +786,20 @@ export default function AdminDashboard() {
                   </strong>
                 </div>
                 <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
-                  <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>Cash Since Collection</span>
+                  <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('cash_since_collection') || 'Cash Since Collection'}</span>
                   <strong className="text-success" style={{fontSize: '1.25rem'}}>RWF {cashOnHand.toLocaleString()}</strong>
                 </div>
               </div>
 
-              <h3 className="modal-subtitle">Shift Room Log</h3>
+              <h3 className="modal-subtitle">{t('shift_room_log') || 'Shift Room Log'}</h3>
               <div className="table-responsive">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Room</th>
-                      <th>Check-in</th>
-                      <th>Check-out</th>
-                      <th>Amount</th>
+                      <th>{t('room')}</th>
+                      <th>{t('check_in')}</th>
+                      <th>{t('check_out')}</th>
+                      <th>{t('amount')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -765,13 +814,13 @@ export default function AdminDashboard() {
                         <tr key={tx.id}>
                           <td>{tx.room}</td>
                           <td>{formatTime(tx.time)}</td>
-                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
+                          <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied_short')}</span>}</td>
                           <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="empty-state">No clients in this shift yet.</td>
+                        <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
                       </tr>
                     )}
                   </tbody>
@@ -845,6 +894,31 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Bottom Navigation for Mobile */}
+      <nav className="mobile-bottom-nav">
+        <button 
+          className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('overview')}
+        >
+          <span className="nav-icon">{activeTab === 'overview' ? '🏠' : '🏠'}</span>
+          <span className="nav-label">{t('overview')}</span>
+        </button>
+        <button 
+          className={`nav-item ${activeTab === 'kitchen' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('kitchen')}
+        >
+          <span className="nav-icon">🍳</span>
+          <span className="nav-label">{t('kitchen')}</span>
+        </button>
+        <button 
+          className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('history')}
+        >
+          <span className="nav-icon">📊</span>
+          <span className="nav-label">{t('history')}</span>
+        </button>
+      </nav>
 
       {/* Today's Full Client Log Modal */}
       {showDailyClientsModal && (
@@ -1356,11 +1430,11 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
 
             <div style={{padding: '24px'}}>
               <div style={{display: 'flex', gap: '15px', marginBottom: '25px'}}>
-                <div style={{flex: 1, background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #f1f5f9'}}>
+                <div style={{flex: 1, background: '#ffffff', padding: '20px', borderRadius: '12px', border: '2px solid #94a3b8', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'}}>
                   <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_sales')}</span>
-                  <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginTop: '8px'}}>RWF {selectedDateHistory.sales.toLocaleString()}</div>
+                  <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#0d9488', marginTop: '8px'}}>RWF {selectedDateHistory.sales.toLocaleString()}</div>
                 </div>
-                <div style={{flex: 1, background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #f1f5f9'}}>
+                <div style={{flex: 1, background: '#ffffff', padding: '20px', borderRadius: '12px', border: '2px solid #94a3b8', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'}}>
                   <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_purchases')}</span>
                   <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginTop: '8px'}}>RWF {selectedDateHistory.purchases.toLocaleString()}</div>
                 </div>
@@ -1370,19 +1444,19 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                 <span style={{background: '#ccfbf1', padding: '4px 8px', borderRadius: '6px'}}>💰</span> {t('sales_details')}
               </h3>
               <div className="table-responsive" style={{marginBottom: '30px'}}>
-                <table className="data-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                <table className="data-table">
                   <thead>
-                    <tr style={{background: '#f0fdfa'}}>
-                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('expense_description')}</th>
-                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('served_by')}</th>
-                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#0f766e'}}>{t('time')}</th>
-                      <th style={{padding: '12px', textAlign: 'right', fontSize: '0.75rem', color: '#0f766e'}}>{t('amount')}</th>
+                    <tr>
+                      <th>{t('order')}</th>
+                      <th className="text-right">{t('amount')}</th>
+                      <th>{t('time')}</th>
+                      <th>{t('served_by')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedDateHistory.transactions.filter(tx => tx.type === 'order').length > 0 ? (
                       selectedDateHistory.transactions.filter(tx => tx.type === 'order').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
-                        <tr key={tx.id} style={{borderBottom: '1px solid #f1f5f9'}}>
+                        <tr key={tx.id}>
                           <td style={{
                             padding: '12px', 
                             fontWeight: '500', 
@@ -1395,13 +1469,13 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                           }}>
                             {tx.description}
                           </td>
-                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
-                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
-                            {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-                          </td>
                           <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#0d9488', fontSize: '0.95rem'}}>
                             RWF {tx.amount.toLocaleString()}
                           </td>
+                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                            {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                          </td>
+                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
                         </tr>
                       ))
                     ) : (
@@ -1417,19 +1491,19 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                 <span style={{background: '#fff1f2', padding: '4px 8px', borderRadius: '6px'}}>🛒</span> {t('purchases_details')}
               </h3>
               <div className="table-responsive">
-                <table className="data-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                <table className="data-table">
                   <thead>
-                    <tr style={{background: '#fff1f2'}}>
-                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('expense_description')}</th>
-                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('served_by')}</th>
-                      <th style={{padding: '12px', textAlign: 'left', fontSize: '0.75rem', color: '#9f1239'}}>{t('time')}</th>
-                      <th style={{padding: '12px', textAlign: 'right', fontSize: '0.75rem', color: '#9f1239'}}>{t('amount')}</th>
+                    <tr>
+                      <th>{t('order')}</th>
+                      <th className="text-right">{t('amount')}</th>
+                      <th>{t('time')}</th>
+                      <th>{t('served_by')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedDateHistory.transactions.filter(tx => tx.type === 'purchase').length > 0 ? (
                       selectedDateHistory.transactions.filter(tx => tx.type === 'purchase').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
-                        <tr key={tx.id} style={{borderBottom: '1px solid #f1f5f9'}}>
+                        <tr key={tx.id}>
                           <td style={{
                             padding: '12px', 
                             fontWeight: '500', 
@@ -1442,13 +1516,13 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                           }}>
                             {tx.description}
                           </td>
-                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
-                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
-                            {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-                          </td>
                           <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#e11d48', fontSize: '0.95rem'}}>
                             - RWF {tx.amount.toLocaleString()}
                           </td>
+                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                            {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                          </td>
+                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
                         </tr>
                       ))
                     ) : (
@@ -1491,11 +1565,10 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
           <table className="data-table">
             <thead>
               <tr>
-                <th>{t('type')}</th>
-                <th>{t('expense_description')}</th>
-                <th>{t('served_by')}</th>
+                <th>{t('order')}</th>
                 <th>{t('amount')}</th>
                 <th>{t('time')}</th>
+                <th>{t('served_by')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1506,11 +1579,6 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                   .slice(0, 5)
                   .map(tx => (
                     <tr key={tx.id}>
-                      <td>
-                        <span className={`status-badge ${tx.type === 'order' ? 'occupied' : 'completed'}`} style={{fontSize: '0.7rem'}}>
-                          {tx.type === 'order' ? t('record_sale') : t('record_purchase')}
-                        </span>
-                      </td>
                       <td style={{
                         fontWeight: '500',
                         whiteSpace: 'pre-line',
@@ -1518,13 +1586,13 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                         lineHeight: '1.4',
                         padding: '12px 1.5rem'
                       }}>{tx.description}</td>
-                      <td style={{color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
                       <td className={tx.type === 'order' ? 'text-success' : 'text-danger'} style={{fontWeight: 'bold'}}>
                         {tx.type === 'order' ? '+' : '-'} RWF {tx.amount.toLocaleString()}
                       </td>
                       <td style={{color: '#64748b', fontSize: '0.85rem'}}>
                         {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </td>
+                      <td style={{color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
                     </tr>
                   ))
               ) : (

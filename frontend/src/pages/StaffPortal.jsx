@@ -161,12 +161,12 @@ export default function StaffPortal() {
           <p>Welcome, {user?.email}</p>
         </div>
         <div className="header-actions" style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-          <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
+          <div className="language-switch" style={{display: 'flex', background: 'rgba(255,255,255,0.2)', padding: '3px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(4px)'}}>
              <button 
                onClick={() => changeLanguage('en')}
                style={{
-                 background: language === 'en' ? '#0d9488' : 'transparent', 
-                 color: language === 'en' ? 'white' : '#64748b', 
+                 background: language === 'en' ? 'white' : 'transparent', 
+                 color: language === 'en' ? '#0d9488' : 'white', 
                  border: 'none', 
                  padding: '5px 12px', 
                  borderRadius: '25px', 
@@ -179,8 +179,8 @@ export default function StaffPortal() {
              <button 
                onClick={() => changeLanguage('rw')}
                style={{
-                 background: language === 'rw' ? '#0d9488' : 'transparent', 
-                 color: language === 'rw' ? 'white' : '#64748b', 
+                 background: language === 'rw' ? 'white' : 'transparent', 
+                 color: language === 'rw' ? '#0d9488' : 'white', 
                  border: 'none', 
                  padding: '5px 12px', 
                  borderRadius: '25px', 

@@ -38,14 +38,46 @@
 }
 
 .staff-header {
-  background-color: #ffffff;
+  background-color: #0d9488; /* Brilliant Teal */
   padding: 1.5rem 2rem;
   padding-top: calc(1.5rem + env(safe-area-inset-top));
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  border-bottom: none;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+  color: white;
+}
+
+.header-left h1 {
+  font-size: 1.5rem;
+  color: white !important;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.header-left p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.875rem;
+}
+
+.btn-logout {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.875rem;
+  backdrop-filter: blur(4px);
+}
+
+.btn-logout:hover {
+  background-color: white;
+  color: #0d9488;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
