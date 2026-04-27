@@ -39,12 +39,23 @@
 
 .staff-header {
   background-color: #ffffff;
-  padding: 1rem 2rem;
+  padding: 1.5rem 2rem;
+  padding-top: calc(1.5rem + env(safe-area-inset-top));
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 768px) {
+  .staff-header {
+    padding: 1.5rem 1rem;
+    padding-top: calc(2.5rem + env(safe-area-inset-top));
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 
 .header-left h1 {
