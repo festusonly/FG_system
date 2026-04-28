@@ -354,7 +354,7 @@ export default function KitchenPortal() {
                 <div className="form-summary" style={{background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #e2e8f0'}}>
                   <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <span style={{fontWeight: 'bold', color: '#64748b'}}>{t('total_money_paid') || "Total Money Paid"}:</span>
-                    <strong style={{fontSize: '1.25rem', color: '#0d9488'}}>RWF {calculateTotal(purcItems, 'purchase').toLocaleString()}</strong>
+                    <strong style={{fontSize: '1.25rem', color: '#ef4444'}}>RWF {calculateTotal(purcItems, 'purchase').toLocaleString()}</strong>
                   </div>
                 </div>
 

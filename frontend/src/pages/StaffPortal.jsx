@@ -37,27 +37,28 @@ export default function StaffPortal() {
   const todaysTransactions = transactions.filter(tx => new Date(tx.time).toDateString() === todayString)
   const todaysExpenses = realExpenses.filter(exp => new Date(exp.time).toDateString() === todayString)
 
-  // Cash on Hand: all transactions since the last collection
-  const cashOnHand = transactions
-    .filter(tx => {
-      const txTime = new Date(tx.time).getTime()
-      const collTime = lastCollectionTime.getTime()
-      return txTime > collTime
-    })
-    .reduce((sum, tx) => sum + tx.amount, 0)
-
-  // Stats
-  const totalRoomsTaken = rooms.filter(r => r.status === 'occupied').length
-  const totalMoney = todaysTransactions.reduce((sum, tx) => sum + tx.amount, 0)
-  const totalExpenses = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
-  const netRevenue = totalMoney - totalExpenses
-
-  // Shift Transactions: all transactions since the last collection
+  // Shift Calculations (Since Last Collection)
   const shiftTransactions = transactions.filter(tx => {
     const txTime = new Date(tx.time).getTime()
     const collTime = lastCollectionTime.getTime()
     return txTime > collTime
   })
+
+  const shiftExpenses = realExpenses.filter(exp => {
+    if (!exp.time) return false;
+    const txTime = new Date(exp.time).getTime()
+    const collTime = lastCollectionTime ? new Date(lastCollectionTime).getTime() : 0
+    return txTime > collTime
+  })
+
+  const cashOnHand = shiftTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+  const totalShiftExpenses = shiftExpenses.reduce((sum, exp) => sum + exp.amount, 0)
+  const netCashInDrawer = cashOnHand - totalShiftExpenses
+
+  // Stats (Still needed for specific daily view if needed)
+  const totalRoomsTaken = rooms.filter(r => r.status === 'occupied').length
+  const totalMoneyToday = todaysTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+  const totalExpensesToday = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
 
   // Filtered rooms
   const displayedRooms = rooms
@@ -249,17 +250,23 @@ export default function StaffPortal() {
 
         {/* Dashboard Stats */}
         <div className="dashboard-stats">
+          {/* 1. Cash to Give (Current Shift) */}
+          <div className="stat-card" style={{background: '#ffffff', color: '#1e293b', border: '3px solid #0d9488'}}>
+            <h3 style={{color: '#64748b'}}>{t('cash_to_give')}</h3>
+            <p className="stat-value" style={{color: '#0d9488'}}>RWF {netCashInDrawer.toLocaleString()}</p>
+            <span style={{fontSize: '0.7rem', color: '#64748b'}}>{t('total_after_expenses')}</span>
+          </div>
+
+          {/* 2. Clients in Shift */}
           <div className="stat-card">
-            <h3>{t('total_clients')}</h3>
-            <p className="stat-value">{todaysTransactions.length}</p>
-            <button className="btn-details-card" onClick={() => setShowDailyClientsModal(true)}>
+            <h3>{t('clients_in_shift')}</h3>
+            <p className="stat-value">{shiftTransactions.length}</p>
+            <button className="btn-details-card" onClick={() => setShowClientsModal(true)}>
               {t('view_details')}
             </button>
           </div>
-          <div className="stat-card">
-            <h3>{t('net_revenue')}</h3>
-            <p className="stat-value">RWF {netRevenue.toLocaleString()}</p>
-          </div>
+
+          {/* 3. Occupied */}
           <div 
             className={`stat-card clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
             onClick={() => handleFilterCard('occupied')}
@@ -267,6 +274,8 @@ export default function StaffPortal() {
             <h3>{t('occupied')}</h3>
             <p className="stat-value">{totalRoomsTaken}</p>
           </div>
+
+          {/* 4. Available */}
           <div 
             className={`stat-card clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
             onClick={() => handleFilterCard('available')}
@@ -274,20 +283,16 @@ export default function StaffPortal() {
             <h3>{t('available')}</h3>
             <p className="stat-value">{rooms.length - totalRoomsTaken}</p>
           </div>
-          <div className="stat-card">
-            <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
-            <p className="stat-value">{shiftTransactions.length}</p>
-            <button className="btn-details-card" onClick={() => setShowClientsModal(true)}>
-              {t('view_details')}
-            </button>
-          </div>
+
+          {/* 5. Today's Expenses */}
           <div className="stat-card">
             <h3>{t('total_expenses')}</h3>
-            <p className="stat-value">RWF {totalExpenses.toLocaleString()}</p>
+            <p className="stat-value" style={{color: '#ef4444'}}>RWF {totalExpensesToday.toLocaleString()}</p>
             <button className="btn-details-card" onClick={() => setShowExpenseDetails(true)}>
               {t('view_details')}
             </button>
           </div>
+
           <div className="stat-card action-stat">
              <button className="btn-expense" onClick={() => setShowExpenseForm(true)}>
                {t('record_expense')}
@@ -520,8 +525,8 @@ export default function StaffPortal() {
                     <strong>{shiftTransactions.length}</strong>
                   </div>
                   <div className="modal-stat">
-                    <span>{t('cash_in_drawer')}</span>
-                    <strong style={{color: '#0d9488'}}>RWF {cashOnHand.toLocaleString()}</strong>
+                    <span>{t('cash_to_give')}</span>
+                    <strong style={{color: '#0d9488'}}>RWF {Number(netCashInDrawer).toLocaleString()}</strong>
                   </div>
                 </div>
                 <h3 className="modal-subtitle">{t('detailed_log')}</h3>
@@ -548,7 +553,7 @@ export default function StaffPortal() {
                             <td>{tx.room}</td>
                             <td>{formatTime(tx.time)}</td>
                             <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
-                            <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                            <td className="text-success">RWF {Number(tx.amount).toLocaleString()}</td>
                           </tr>
                         ))
                       ) : (
@@ -567,7 +572,7 @@ export default function StaffPortal() {
           </div>
         )}
 
-        {/* Today's Expenses List Modal */}
+        {/* Shift Expenses List Modal (Admin Mirror) */}
         {showExpenseDetails && (
           <div className="modal-overlay" onClick={() => setShowExpenseDetails(false)}>
             <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
@@ -575,6 +580,7 @@ export default function StaffPortal() {
                 <h2>{t('total_expenses')}</h2>
                 <button className="btn-close" onClick={() => setShowExpenseDetails(false)}>&times;</button>
               </div>
+              
               <div className="modal-body p-0">
                 <div className="table-responsive">
                   <table className="data-table">
@@ -586,12 +592,12 @@ export default function StaffPortal() {
                       </tr>
                     </thead>
                     <tbody>
-                      {todaysExpenses.length > 0 ? (
-                        todaysExpenses.map((exp) => (
+                      {Array.isArray(shiftExpenses) && shiftExpenses.length > 0 ? (
+                        shiftExpenses.map((exp) => (
                           <tr key={exp.id}>
-                            <td className="desc-cell">{exp.description}</td>
-                            <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>RWF {exp.amount.toLocaleString()}</td>
-                            <td className="time-cell">{new Date(exp.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                            <td className="desc-cell"><span className="entry-desc-modern" style={{whiteSpace: 'pre-line', display: 'block', lineHeight: '1.4'}}>{exp.description}</span></td>
+                            <td className="amount-cell" style={{color: '#ef4444', fontWeight: '700'}}>RWF {Number(exp.amount).toLocaleString()}</td>
+                            <td className="time-cell">{formatTime(exp.time)}</td>
                           </tr>
                         ))
                       ) : (
@@ -603,10 +609,11 @@ export default function StaffPortal() {
                   </table>
                 </div>
               </div>
+              
               <div className="modal-footer">
                 <div className="modal-total">
-                  <span>{t('confirm')}:</span>
-                  <strong>RWF {totalExpenses.toLocaleString()}</strong>
+                  <span>{t('total_expenses')}:</span>
+                  <strong>RWF {Number(totalShiftExpenses || 0).toLocaleString()}</strong>
                 </div>
                 <button className="btn-modal-close" onClick={() => setShowExpenseDetails(false)}>{t('close')}</button>
               </div>

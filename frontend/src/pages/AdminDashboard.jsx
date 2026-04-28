@@ -71,34 +71,32 @@ export default function AdminDashboard() {
   const todaysTransactions = transactions.filter(tx => new Date(tx.time).toDateString() === todayString)
   const todaysExpenses = realExpenses.filter(exp => new Date(exp.time).toDateString() === todayString)
 
-  // Cash on Hand: all transactions since the last collection
-  const cashOnHand = transactions
-    .filter(tx => {
-      const txTime = new Date(tx.time).getTime()
-      const collTime = lastCollectionTime.getTime()
-      // If no collection ever happened (collTime 0), show all.
-      // Otherwise, show only transactions that happened AFTER the collection.
-      // We subtract 1000ms from the transaction time to be more lenient with server clock jitter.
-      return txTime > collTime
-    })
-    .reduce((sum, tx) => sum + tx.amount, 0)
-
-  // Computed Metrics (Today Only)
-  const totalToday = todaysTransactions.reduce((sum, tx) => sum + tx.amount, 0)
-  const totalExpenses = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
-  const netRevenue = totalToday - totalExpenses
-  const occupiedRooms = rooms.filter(r => r.status === 'occupied').length
-  const availableRooms = rooms.length - occupiedRooms
-
-  const activeTransactions = todaysTransactions.filter(tx => tx.status === 'active')
-  
-  // Clients Since Collection: count of transactions since the last manual collection
+  // Shift Calculations (Since Last Collection)
   const shiftTransactions = transactions.filter(tx => {
     const txTime = new Date(tx.time).getTime()
     const collTime = lastCollectionTime.getTime()
     return txTime > collTime
   })
+
+  const shiftExpenses = realExpenses.filter(exp => {
+    if (!exp.time) return false;
+    const txTime = new Date(exp.time).getTime()
+    const collTime = lastCollectionTime ? new Date(lastCollectionTime).getTime() : 0
+    return txTime > collTime
+  })
+
+  const cashOnHand = shiftTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+  const totalShiftExpenses = shiftExpenses.reduce((sum, exp) => sum + exp.amount, 0)
+  const netCashToCollect = cashOnHand - totalShiftExpenses
+
+  // Computed Metrics (Still needed for history)
+  const totalToday = todaysTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+  const totalExpensesToday = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
   
+  const occupiedRooms = rooms.filter(r => r.status === 'occupied').length
+  const availableRooms = rooms.length - occupiedRooms
+
+  const activeTransactions = todaysTransactions.filter(tx => tx.status === 'active')
   const shortStayCount = activeTransactions.filter(tx => tx.type === 'short_hours').length
   const nightStayCount = activeTransactions.filter(tx => tx.type === 'night' || tx.type === 'many_days').length
 
@@ -315,18 +313,18 @@ export default function AdminDashboard() {
         )}
         {activeTab === 'overview' && (
           <>
-            {/* Cash Collection Banner */}
+            {/* Cash Collection Banner (Brilliant Teal Area) */}
             <div className="cash-collection-banner">
               <div className="cash-info">
                 <h3>{t('cash_in_drawer')}</h3>
                 <p>Collected since: {lastCollectionTime.getTime() === 0 ? 'Beginning' : lastCollectionTime.toLocaleString([], {weekday: 'short', hour: '2-digit', minute: '2-digit'})}</p>
               </div>
               <div className="cash-action">
-                <span className="cash-amount">RWF {cashOnHand.toLocaleString()}</span>
+                <span className="cash-amount">RWF {netCashToCollect.toLocaleString()}</span>
                 <button 
                   className="btn-collect" 
                   onClick={handleCollectCash}
-                  disabled={cashOnHand === 0}
+                  disabled={netCashToCollect === 0}
                 >
                   {t('collect_cash')}
                 </button>
@@ -335,23 +333,26 @@ export default function AdminDashboard() {
 
             {/* Live Metrics */}
         <div className="metrics-section">
+          {/* 1. Net Cash to Collect (Gross - Total money made) */}
+          <div className="metric-card primary">
+            <h3>{t('net_cash_to_collect')}</h3>
+            <p className="metric-value">RWF {cashOnHand.toLocaleString()}</p>
+            <span className="metric-label">{t('total_cash_minus_expenses')}</span>
+          </div>
+
+          {/* 3. Client in Shift */}
           <div className="metric-card info">
-            <h3>{t('total_clients')}</h3>
-            <p className="metric-value">{todaysTransactions.length}</p>
+            <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
+            <p className="metric-value">{shiftTransactions.length}</p>
             <button 
               className="btn-details-card"
-              onClick={() => setShowDailyClientsModal(true)}
+              onClick={() => setShowClientsModal(true)}
             >
               {t('view_details')}
             </button>
           </div>
 
-          <div className="metric-card primary">
-            <h3>{t('net_revenue')}</h3>
-            <p className="metric-value">RWF {netRevenue.toLocaleString()}</p>
-            <span className="metric-label">Total Cash - Expenses</span>
-          </div>
-
+          {/* 4. Occupied */}
           <div 
             className={`metric-card warning clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
             onClick={() => handleRoomFilter('occupied')}
@@ -369,6 +370,7 @@ export default function AdminDashboard() {
             </button>
           </div>
 
+          {/* 5. Available */}
           <div 
             className={`metric-card success clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
             onClick={() => handleRoomFilter('available')}
@@ -378,17 +380,7 @@ export default function AdminDashboard() {
             <span className="metric-label">{t('ready_for_booking') || 'Ready for booking'}</span>
           </div>
 
-          <div className="metric-card info">
-            <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
-            <p className="metric-value">{shiftTransactions.length}</p>
-            <button 
-              className="btn-details-card"
-              onClick={() => setShowClientsModal(true)}
-            >
-              {t('view_details')}
-            </button>
-          </div>
-
+          {/* 6. Stay Breakdown */}
           <div className="metric-card info">
             <h3>{t('stay_breakdown')}</h3>
             <p className="metric-value breakdown-value">
@@ -399,9 +391,10 @@ export default function AdminDashboard() {
             <span className="metric-label">{t('active_bookings')}</span>
           </div>
 
+          {/* 7. Today's Expenses */}
           <div className="metric-card danger">
             <h3>{t('total_expenses')}</h3>
-            <p className="metric-value">RWF {totalExpenses.toLocaleString()}</p>
+            <p className="metric-value" style={{color: '#ef4444'}}>RWF {totalExpensesToday.toLocaleString()}</p>
             <button 
               className="btn-details-card"
               onClick={() => setShowExpensesModal(true)}
@@ -509,7 +502,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="history-metric">
                       <span>{t('expenses')}</span>
-                      <strong style={{color: '#0d9488'}}>RWF {day.expense.toLocaleString()}</strong>
+                      <strong style={{color: '#ef4444'}}>RWF {day.expense.toLocaleString()}</strong>
                     </div>
                     <div className="history-metric">
                       <span>{t('net_profit')}</span>
@@ -622,7 +615,7 @@ export default function AdminDashboard() {
             <div className="modal-body">
               <div className="detail-item">
                 <span className="detail-label">{t('amount')}</span>
-                <span className="detail-value" style={{color: '#0d9488', fontWeight: '700'}}>RWF {viewingExpense.amount.toLocaleString()}</span>
+                <span className="detail-value" style={{color: '#ef4444', fontWeight: '700'}}>RWF {viewingExpense.amount.toLocaleString()}</span>
               </div>
               
               <div className="detail-item">
@@ -667,11 +660,11 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {todaysExpenses.length > 0 ? (
-                      todaysExpenses.map((exp) => (
+                    {shiftExpenses.length > 0 ? (
+                      shiftExpenses.map((exp) => (
                         <tr key={exp.id}>
                           <td className="desc-cell"><span className="entry-desc-modern" style={{whiteSpace: 'pre-line', display: 'block', lineHeight: '1.4'}}>{exp.description}</span></td>
-                          <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>RWF {exp.amount.toLocaleString()}</td>
+                          <td className="amount-cell" style={{color: '#ef4444', fontWeight: '700'}}>RWF {Number(exp.amount).toLocaleString()}</td>
                           <td className="time-cell">{formatTime(exp.time)}</td>
                         </tr>
                       ))
@@ -687,8 +680,8 @@ export default function AdminDashboard() {
             
             <div className="modal-footer">
               <div className="modal-total">
-                <span>{t('confirm')}:</span>
-                <strong>RWF {totalExpenses.toLocaleString()}</strong>
+                <span>{t('total_expenses')}:</span>
+                <strong>RWF {Number(totalShiftExpenses).toLocaleString()}</strong>
               </div>
               <button className="btn-modal-close" onClick={() => setShowExpensesModal(false)}>{t('close')}</button>
             </div>
@@ -1321,7 +1314,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
         </div>
         <div className="metric-card warning">
           <h3>{t('purchases_to_deduct')}</h3>
-          <p className="metric-value">RWF {pendingPurchases.toLocaleString()}</p>
+          <p className="metric-value" style={{color: '#ef4444'}}>RWF {pendingPurchases.toLocaleString()}</p>
           <span className="metric-label">Purchases since last collection</span>
         </div>
         <div className={`metric-card ${pendingProfit >= 0 ? 'primary' : 'danger'}`}>
@@ -1391,7 +1384,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                 </div>
                 <div style={{flex: 1, background: '#ffffff', padding: '20px', borderRadius: '12px', border: '2px solid #94a3b8', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'}}>
                   <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_purchases')}</span>
-                  <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginTop: '8px'}}>RWF {selectedDateHistory.purchases.toLocaleString()}</div>
+                  <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#ef4444', marginTop: '8px'}}>RWF {selectedDateHistory.purchases.toLocaleString()}</div>
                 </div>
               </div>
 
@@ -1471,7 +1464,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                           }}>
                             {tx.description}
                           </td>
-                          <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#0d9488', fontSize: '0.95rem'}}>
+                          <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#ef4444', fontSize: '0.95rem'}}>
                             - RWF {tx.amount.toLocaleString()}
                           </td>
                           <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>

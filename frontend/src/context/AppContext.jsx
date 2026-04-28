@@ -6,12 +6,19 @@ import { translations } from '../utils/translations'
 const showLocalNotification = (title, body, tag) => {
   console.log('🔔 AppContext: Attempting notification:', title, body);
   
-  // Use a simple local storage check since we are inside context and might not have state yet
-  const enabled = localStorage.getItem('admin_notifications_enabled') === 'true';
-  if (!enabled) return;
-
   try {
-    if ('serviceWorker' in navigator) {
+    // Rely primarily on browser permissions, not just a local flag.
+    if (!window.Notification || Notification.permission !== 'granted') return;
+
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIFICATION',
+        title: title,
+        body: body,
+        tag: tag || 'general'
+      });
+    } else if ('serviceWorker' in navigator) {
+      // Fallback if controller isn't active yet
       navigator.serviceWorker.ready.then(registration => {
         registration.showNotification(title, {
           body: body,
@@ -22,8 +29,8 @@ const showLocalNotification = (title, body, tag) => {
           requireInteraction: true
         });
       });
-    } else if (window.Notification && Notification.permission === 'granted') {
-      new window.Notification(title, { body, icon: '/icon-512.png' });
+    } else {
+      new window.Notification(title, { body, icon: '/icon-512.png', requireInteraction: true });
     }
   } catch (e) {
     console.error('🔔 Notification error:', e);
