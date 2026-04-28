@@ -16,6 +16,7 @@ export default function StaffPortal() {
   const [stayType, setStayType] = useState('short_hours')
   const [days, setDays] = useState(1)
   const [showForm, setShowForm] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
   
   const [expenseAmount, setExpenseAmount] = useState('')
   const [expenseDescription, setExpenseDescription] = useState('')
@@ -119,6 +120,11 @@ export default function StaffPortal() {
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault()
+    if (!showConfirmation) {
+      setShowConfirmation(true)
+      return
+    }
+    
     setSubmitting(true)
     setActionError('')
     const result = await bookRoom(selectedRoom.id, {
@@ -129,11 +135,13 @@ export default function StaffPortal() {
     setSubmitting(false)
     if (!result.success) {
       setActionError(result.error || 'Failed to book room.')
+      setShowConfirmation(false)
     } else {
       setAmount('')
       setDays(1)
       setStayType('short_hours')
       setShowForm(false)
+      setShowConfirmation(false)
       setSelectedRoom(null)
     }
   }
@@ -381,75 +389,117 @@ export default function StaffPortal() {
         {showForm && selectedRoom && selectedRoom.status === 'available' && (
           <div className="modal-overlay">
             <form className="modal-form" onSubmit={handleBookingSubmit}>
-              <h3>{t('record_new_booking')} - {selectedRoom.name}</h3>
-
-              <div className="form-group">
-                <label>{t('select_stay_type')}</label>
-                <div className="toggle-buttons">
-                  <button
-                    type="button"
-                    className={`toggle-btn ${stayType === 'short_hours' ? 'active' : ''}`}
-                    onClick={() => setStayType('short_hours')}
-                  >
-                    {t('short_stay')}
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-btn ${stayType === 'night' ? 'active' : ''}`}
-                    onClick={() => setStayType('night')}
-                  >
-                    {t('night_stay')}
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-btn ${stayType === 'many_days' ? 'active' : ''}`}
-                    onClick={() => setStayType('many_days')}
-                  >
-                    {t('number_of_days')}
-                  </button>
-                </div>
+              <div style={{textAlign: 'center', marginBottom: '1.5rem', background: '#f0fdfa', padding: '1rem', borderRadius: '12px', border: '2px solid #0d9488'}}>
+                <span style={{fontSize: '0.85rem', color: '#0d9488', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em'}}>{t('booking_for') || "Booking for"}</span>
+                <h2 style={{fontSize: '2.5rem', color: '#0d9488', margin: '0.25rem 0'}}>{selectedRoom.name}</h2>
               </div>
 
-              {stayType === 'many_days' && (
-                <div className="form-group">
-                  <label htmlFor="days">{t('number_of_days')}</label>
-                  <input
-                    id="days"
-                    type="number"
-                    value={days}
-                    onChange={(e) => setDays(parseInt(e.target.value) || 1)}
-                    min="1"
-                    required
-                  />
+              {!showConfirmation ? (
+                <>
+                  <div className="form-group">
+                    <label>{t('select_stay_type')}</label>
+                    <div className="toggle-buttons">
+                      <button
+                        type="button"
+                        className={`toggle-btn ${stayType === 'short_hours' ? 'active' : ''}`}
+                        onClick={() => setStayType('short_hours')}
+                      >
+                        {t('short_stay')}
+                      </button>
+                      <button
+                        type="button"
+                        className={`toggle-btn ${stayType === 'night' ? 'active' : ''}`}
+                        onClick={() => setStayType('night')}
+                      >
+                        {t('night_stay')}
+                      </button>
+                      <button
+                        type="button"
+                        className={`toggle-btn ${stayType === 'many_days' ? 'active' : ''}`}
+                        onClick={() => setStayType('many_days')}
+                      >
+                        {t('number_of_days')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {stayType === 'many_days' && (
+                    <div className="form-group">
+                      <label htmlFor="days">{t('number_of_days')}</label>
+                      <input
+                        id="days"
+                        type="number"
+                        value={days}
+                        onChange={(e) => setDays(parseInt(e.target.value) || 1)}
+                        min="1"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <label htmlFor="amount">{t('total_amount_rwf')}</label>
+                    <input
+                      id="amount"
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0"
+                      required
+                      min="0"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="confirmation-review" style={{background: '#fffbeb', padding: '1.5rem', borderRadius: '12px', border: '1px solid #fde68a', marginBottom: '1.5rem'}}>
+                  <h4 style={{margin: '0 0 1rem 0', color: '#92400e', textAlign: 'center', fontSize: '1.1rem'}}>{t('please_review_booking') || "Please Review Booking"}</h4>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                      <span style={{color: '#92400e'}}>{t('room')}:</span>
+                      <strong style={{fontSize: '1.2rem'}}>{selectedRoom.name}</strong>
+                    </div>
+                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                      <span style={{color: '#92400e'}}>{t('type')}:</span>
+                      <strong>{t(stayType) || stayType}</strong>
+                    </div>
+                    {stayType === 'many_days' && (
+                      <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <span style={{color: '#92400e'}}>{t('days')}:</span>
+                        <strong>{days}</strong>
+                      </div>
+                    )}
+                    <div style={{display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #fde68a', paddingTop: '0.75rem', marginTop: '0.25rem'}}>
+                      <span style={{color: '#92400e', fontWeight: 'bold'}}>{t('total_amount')}:</span>
+                      <strong style={{fontSize: '1.25rem', color: '#0d9488'}}>RWF {parseFloat(amount).toLocaleString()}</strong>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <div className="form-group">
-                <label htmlFor="amount">{t('total_amount_rwf')}</label>
-                <input
-                  id="amount"
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0"
-                  required
-                  min="0"
-                />
-              </div>
-
-              <div className="form-actions">
-                <button type="submit" className="btn-submit" disabled={submitting}>
-                  {submitting ? t('loading') : t('book_room_btn')}
-                </button>
+              <div className="form-actions" style={{flexDirection: 'column', gap: '0.75rem'}}>
+                {!showConfirmation ? (
+                  <button type="submit" className="btn-submit" style={{width: '100%', padding: '1rem'}}>
+                    {t('book_room_btn')}
+                  </button>
+                ) : (
+                  <button type="submit" className="btn-submit" disabled={submitting} style={{width: '100%', padding: '1rem', background: '#0d9488'}}>
+                    {submitting ? t('loading') : `${t('confirm_and_save') || "Confirm & Save"}`}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn-cancel"
+                  style={{width: '100%', background: 'transparent', border: 'none', color: '#64748b', textDecoration: 'underline'}}
                   onClick={() => {
-                    setShowForm(false)
-                    setSelectedRoom(null)
+                    if (showConfirmation) {
+                      setShowConfirmation(false)
+                    } else {
+                      setShowForm(false)
+                      setSelectedRoom(null)
+                    }
                   }}
                 >
-                  Cancel
+                  {showConfirmation ? t('go_back_edit') || "Go back and edit" : t('cancel')}
                 </button>
               </div>
             </form>
@@ -471,7 +521,7 @@ export default function StaffPortal() {
                   </div>
                   <div className="modal-stat">
                     <span>{t('cash_in_drawer')}</span>
-                    <strong className="text-success">RWF {cashOnHand.toLocaleString()}</strong>
+                    <strong style={{color: '#0d9488'}}>RWF {cashOnHand.toLocaleString()}</strong>
                   </div>
                 </div>
                 <h3 className="modal-subtitle">{t('detailed_log')}</h3>
@@ -540,7 +590,7 @@ export default function StaffPortal() {
                         todaysExpenses.map((exp) => (
                           <tr key={exp.id}>
                             <td className="desc-cell">{exp.description}</td>
-                            <td className="amount-cell text-danger">RWF {exp.amount.toLocaleString()}</td>
+                            <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>RWF {exp.amount.toLocaleString()}</td>
                             <td className="time-cell">{new Date(exp.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                           </tr>
                         ))
@@ -579,7 +629,7 @@ export default function StaffPortal() {
                   </div>
                   <div className="modal-stat">
                     <span>{t('net_revenue')}</span>
-                    <strong className="text-success">RWF {totalMoney.toLocaleString()}</strong>
+                    <strong style={{color: '#0d9488'}}>RWF {totalMoney.toLocaleString()}</strong>
                   </div>
                 </div>
                 <h3 className="modal-subtitle">{t('room_utilization')}</h3>

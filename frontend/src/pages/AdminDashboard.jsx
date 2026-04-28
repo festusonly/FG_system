@@ -159,39 +159,49 @@ export default function AdminDashboard() {
   }
 
   const showLocalNotification = (title, body, tag) => {
-    if (!notificationsEnabled) return;
+    console.log('🔔 Attempting notification:', title, body);
+    if (!notificationsEnabled) {
+      console.log('🔔 Notifications are currently DISABLED in settings.');
+      return;
+    }
 
     try {
-      // Method 1: PWA/Service Worker (Standard for mobile/PWA)
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(registration => {
+          console.log('🔔 Service Worker Ready. Showing notification...');
           registration.showNotification(title, {
             body: body,
             icon: '/icon-512.png',
             badge: '/icon-512.png',
-            tag: tag,
-            vibrate: [200, 100, 200]
+            tag: tag || 'general',
+            vibrate: [200, 100, 200],
+            requireInteraction: true
           });
-        }).catch(() => {
-          // Method 2 Fallback: Browser window (PC)
-          if (typeof window !== 'undefined' && window.Notification && window.Notification.permission === 'granted') {
+        }).catch(err => {
+          console.error('🔔 Service Worker error:', err);
+          // Last resort fallback
+          if (window.Notification && Notification.permission === 'granted') {
             new window.Notification(title, { body, icon: '/icon-512.png' });
           }
         });
-      } else if (typeof window !== 'undefined' && window.Notification && window.Notification.permission === 'granted') {
-        // Method 2 Fallback: Browser window (PC)
+      } else if (window.Notification && Notification.permission === 'granted') {
+        console.log('🔔 Using standard Browser Notification fallback.');
         new window.Notification(title, { body, icon: '/icon-512.png' });
+      } else {
+        console.warn('🔔 Notifications not supported or permission denied.');
       }
     } catch (e) {
-      console.error('Notification trigger error:', e);
+      console.error('🔔 Notification trigger error:', e);
     }
   }
 
   // Real-time Notifications Setup
   useEffect(() => {
-    // Setup Realtime Channel
+    console.log('🔄 Initializing Real-time Notifications Channel...');
+    
     const channel = supabase.channel('admin_notifications')
       .on('postgres_changes', { event: '*', table: 'transactions', schema: 'public' }, (payload) => {
+        console.log('📝 Transaction Change Detected:', payload);
         const tx = payload.new
         const userLabel = tx.served_by ? tx.served_by.split('@')[0] : 'Staff'
         const amount = tx.amount_rwf || tx.amount || 0;
@@ -211,6 +221,7 @@ export default function AdminDashboard() {
         }
       })
       .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
+        console.log('📝 Kitchen Change Detected:', payload);
         const tx = payload.new
         const userLabel = tx.served_by ? tx.served_by.split('@')[0] : 'Kitchen'
         const typeLabel = tx.type === 'order' ? 'New Order' : 'New Purchase'
@@ -222,6 +233,7 @@ export default function AdminDashboard() {
         )
       })
       .on('postgres_changes', { event: 'INSERT', table: 'expenses', schema: 'public' }, (payload) => {
+        console.log('📝 Expense Change Detected:', payload);
         const tx = payload.new
         if (tx.description === 'SYSTEM_CASH_COLLECTION' || tx.description === 'KITCHEN_CASH_COLLECTION') return;
         
@@ -233,12 +245,15 @@ export default function AdminDashboard() {
           'expense-report'
         )
       })
-      .subscribe()
+      .subscribe((status) => {
+        console.log('📡 Real-time Subscription Status:', status);
+      })
 
     return () => {
+      console.log('🔌 Closing Real-time Channel...');
       supabase.removeChannel(channel)
     }
-  }, [t, notificationsEnabled])
+  }, [t, notificationsEnabled]) // Still depend on notificationsEnabled to refresh the function closure
 
   const toggleNotifications = () => {
     try {
@@ -343,7 +358,7 @@ export default function AdminDashboard() {
         <button className="btn-avatar" onClick={() => setShowSidebar(true)}>
           {user?.email?.[0]?.toUpperCase() || 'A'}
         </button>
-        <h1 className="header-title">{t(activeTab) || 'Home'}</h1>
+        <h1 className="header-title">{t(activeTab) || 'Home'} <small style={{fontSize: '0.6rem', opacity: 0.5, verticalAlign: 'middle'}}>v1.0.5-notif-fix</small></h1>
         <div className="header-right">
           <div className="language-switch-header">
             <button 
@@ -493,7 +508,7 @@ export default function AdminDashboard() {
                     todaysTransactions.slice(0, 5).map((tx) => (
                       <tr key={tx.id}>
                         <td className="room-cell">{tx.room}</td>
-                        <td className="amount-cell text-success">
+                        <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>
                           + RWF {tx.amount.toLocaleString()}
                         </td>
                         <td className="type-cell">
@@ -566,17 +581,17 @@ export default function AdminDashboard() {
                     <span className="history-bookings">{day.bookings} {t('bookings')}</span>
                   </div>
                   <div className="history-metrics">
-                    <div className="history-metric text-success">
+                    <div className="history-metric">
                       <span>{t('revenue')}</span>
-                      <strong>RWF {day.revenue.toLocaleString()}</strong>
+                      <strong style={{color: '#0d9488'}}>RWF {day.revenue.toLocaleString()}</strong>
                     </div>
-                    <div className="history-metric text-danger">
+                    <div className="history-metric">
                       <span>{t('expenses')}</span>
-                      <strong>RWF {day.expense.toLocaleString()}</strong>
+                      <strong style={{color: '#0d9488'}}>RWF {day.expense.toLocaleString()}</strong>
                     </div>
-                    <div className={`history-metric ${day.net >= 0 ? 'text-primary' : 'text-danger'}`}>
+                    <div className="history-metric">
                       <span>{t('net_profit')}</span>
-                      <strong>RWF {day.net.toLocaleString()}</strong>
+                      <strong style={{color: '#0d9488'}}>RWF {day.net.toLocaleString()}</strong>
                     </div>
                   </div>
                   
@@ -625,7 +640,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
                   <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('net_profit')}</span>
-                  <strong className={selectedDayDetails.net >= 0 ? 'text-primary' : 'text-danger'} style={{fontSize: '1.25rem'}}>
+                  <strong style={{fontSize: '1.25rem', color: '#0d9488'}}>
                     RWF {selectedDayDetails.net.toLocaleString()}
                   </strong>
                 </div>
@@ -655,7 +670,7 @@ export default function AdminDashboard() {
                           <td>{tx.room}</td>
                           <td>{formatTime(tx.time)}</td>
                           <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied_short')}</span>}</td>
-                          <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                          <td style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
                         </tr>
                       ))
                     ) : (
@@ -685,7 +700,7 @@ export default function AdminDashboard() {
             <div className="modal-body">
               <div className="detail-item">
                 <span className="detail-label">{t('amount')}</span>
-                <span className="detail-value text-danger">RWF {viewingExpense.amount.toLocaleString()}</span>
+                <span className="detail-value" style={{color: '#0d9488', fontWeight: '700'}}>RWF {viewingExpense.amount.toLocaleString()}</span>
               </div>
               
               <div className="detail-item">
@@ -734,7 +749,7 @@ export default function AdminDashboard() {
                       todaysExpenses.map((exp) => (
                         <tr key={exp.id}>
                           <td className="desc-cell"><span className="entry-desc-modern" style={{whiteSpace: 'pre-line', display: 'block', lineHeight: '1.4'}}>{exp.description}</span></td>
-                          <td className="amount-cell text-danger">RWF {exp.amount.toLocaleString()}</td>
+                          <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>RWF {exp.amount.toLocaleString()}</td>
                           <td className="time-cell">{formatTime(exp.time)}</td>
                         </tr>
                       ))
@@ -876,7 +891,7 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td style={{color: '#64748b', fontSize: '0.85rem'}}>{formatTime(tx.time)}</td>
-                          <td className="text-success" style={{fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                          <td style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
                         </tr>
                       ))
                     ) : (
@@ -949,7 +964,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
                   <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('net_revenue')}</span>
-                  <strong className="text-success" style={{fontSize: '1.25rem'}}>RWF {totalToday.toLocaleString()}</strong>
+                  <strong style={{fontSize: '1.25rem', color: '#0d9488'}}>RWF {totalToday.toLocaleString()}</strong>
                 </div>
               </div>
 
@@ -977,7 +992,7 @@ export default function AdminDashboard() {
                           <td>{tx.room}</td>
                           <td>{formatTime(tx.time)}</td>
                           <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
-                          <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                          <td style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
                         </tr>
                       ))
                     ) : (
@@ -1050,22 +1065,36 @@ const AdminSettingsSection = ({ user }) => {
           </div>
 
           <div style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
-            <button 
-              onClick={() => {
-                if ('Notification' in window) {
-                  Notification.requestPermission().then(permission => {
-                    alert(`Notification permission: ${permission}`);
-                    window.location.reload();
-                  });
-                } else {
-                  alert('Notifications not supported.');
-                }
-              }}
-              className="btn-save-settings" 
-              style={{background: '#0d9488', flex: 1, minWidth: '150px'}}
-            >
-              1. Enable Alerts
-            </button>
+              <button 
+                onClick={() => {
+                  if ('Notification' in window) {
+                    if (Notification.permission === 'denied') {
+                      alert('🛑 Notifications are BLOCKED by your browser. Please click the "Lock" icon in the address bar and set Notifications to "Allow", then reload the page.');
+                      return;
+                    }
+                    Notification.requestPermission().then(permission => {
+                      if (permission === 'granted') {
+                        // Trigger a test message to register the SW controller
+                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                          navigator.serviceWorker.controller.postMessage({
+                            type: 'SHOW_NOTIFICATION',
+                            title: '🔔 Alerts Enabled',
+                            body: 'You will now receive live updates on this device.'
+                          });
+                        } else {
+                          // Fallback to local notification if controller not ready
+                          new Notification('🔔 Alerts Enabled', { body: 'Ready for live updates!' });
+                        }
+                      }
+                      window.location.reload();
+                    });
+                  }
+                }}
+                className="btn-save-settings" 
+                style={{background: Notification.permission === 'denied' ? '#ef4444' : '#0d9488', flex: 1, minWidth: '150px'}}
+              >
+                {Notification.permission === 'denied' ? '1. Alerts are Blocked' : '1. Enable Alerts'}
+              </button>
 
             <button 
               onClick={() => {
@@ -1092,6 +1121,10 @@ const AdminSettingsSection = ({ user }) => {
                ⚠️ iOS Warning: Notifications ONLY work if you "Add to Home Screen" first!
              </p>
           )}
+
+          <p style={{fontSize: '0.7rem', color: '#64748b', fontStyle: 'italic', marginTop: '0.5rem'}}>
+            💡 Tip: If you don't hear a sound, check if your phone/PC is in "Do Not Disturb" or "Focus Mode".
+          </p>
         </div>
       </div>
 
@@ -1347,7 +1380,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
           <p>{t('since_last_collection')}: {lastKitchenCollectionTime.getTime() === 0 ? t('none') : lastKitchenCollectionTime.toLocaleString()}</p>
         </div>
         <div className="cash-action">
-          <span className="cash-amount">RWF {pendingProfit.toLocaleString()}</span>
+          <span className="cash-amount" style={{color: '#0d9488'}}>RWF {pendingProfit.toLocaleString()}</span>
           <button 
             className="btn-collect" 
             onClick={handleCollect}
@@ -1361,7 +1394,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
       <div className="metrics-section" style={{marginBottom: '2rem'}}>
         <div className="metric-card success">
           <h3>{t('sales_to_collect')}</h3>
-          <p className="metric-value">RWF {pendingSales.toLocaleString()}</p>
+          <p className="metric-value" style={{color: '#0d9488'}}>RWF {pendingSales.toLocaleString()}</p>
           <span className="metric-label">Sales since last collection</span>
         </div>
         <div className="metric-card warning">
@@ -1371,7 +1404,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
         </div>
         <div className={`metric-card ${pendingProfit >= 0 ? 'primary' : 'danger'}`}>
           <h3>{t('profit_for_dad')}</h3>
-          <p className="metric-value">RWF {pendingProfit.toLocaleString()}</p>
+          <p className="metric-value" style={{color: '#0d9488'}}>RWF {pendingProfit.toLocaleString()}</p>
           <span className="metric-label">Net profit since collection</span>
         </div>
       </div>
@@ -1516,7 +1549,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                           }}>
                             {tx.description}
                           </td>
-                          <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#e11d48', fontSize: '0.95rem'}}>
+                          <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#0d9488', fontSize: '0.95rem'}}>
                             - RWF {tx.amount.toLocaleString()}
                           </td>
                           <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
@@ -1586,7 +1619,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                         lineHeight: '1.4',
                         padding: '12px 1.5rem'
                       }}>{tx.description}</td>
-                      <td className={tx.type === 'order' ? 'text-success' : 'text-danger'} style={{fontWeight: 'bold'}}>
+                      <td style={{color: '#0d9488', fontWeight: 'bold'}}>
                         {tx.type === 'order' ? '+' : '-'} RWF {tx.amount.toLocaleString()}
                       </td>
                       <td style={{color: '#64748b', fontSize: '0.85rem'}}>

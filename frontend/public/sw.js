@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flower-guesthouse-v17';
+const CACHE_NAME = 'flower-guesthouse-v1.0.5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -73,6 +73,22 @@ self.addEventListener('push', (event) => {
     data: { url: data.url || '/' }
   };
   event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Message listener for foreground/background alerts
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body, tag } = event.data;
+    const options = {
+      body: body,
+      icon: '/icon-512.png',
+      badge: '/icon-512.png',
+      tag: tag || 'general',
+      vibrate: [200, 100, 200],
+      requireInteraction: true // Keeps notification visible until user clicks
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+  }
 });
 
 self.addEventListener('notificationclick', (event) => {

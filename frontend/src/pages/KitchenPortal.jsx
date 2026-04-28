@@ -15,9 +15,8 @@ export default function KitchenPortal() {
   const [saleAmount, setSaleAmount] = useState('')
   const [saleServedBy, setSaleServedBy] = useState('')
   
-  // Purchase States
-  const [purcDesc, setPurcDesc] = useState('')
-  const [purcAmount, setPurcAmount] = useState('')
+  // Simplified Purchase States
+  const [purcItems, setPurcItems] = useState([{ desc: '', total: '' }])
   const [showPurcForm, setShowPurcForm] = useState(false)
 
   const [loading, setLoading] = useState(false)
@@ -86,6 +85,49 @@ export default function KitchenPortal() {
   const recentEntries = kitchenTransactions
     .filter(t => new Date(t.created_at).toDateString() === todayString)
     .slice(0, 20) // Show up to 20 for today
+    
+  const handleAddItem = (type) => {
+    if (type === 'sale') {
+      // Sales were reverted to simple state, but just in case
+    } else {
+      setPurcItems([...purcItems, { desc: '', total: '' }])
+    }
+  }
+
+  const handleRemoveItem = (type, index) => {
+    if (type === 'sale') {
+      // Sales were reverted to simple state
+    } else {
+      const newItems = [...purcItems]
+      newItems.splice(index, 1)
+      setPurcItems(newItems)
+    }
+  }
+
+  const handleUpdateItem = (type, index, field, value) => {
+    if (type === 'sale') {
+      const newItems = [...saleItems]
+      newItems[index][field] = value
+      setSaleItems(newItems)
+    } else {
+      const newItems = [...purcItems]
+      newItems[index][field] = value
+      setPurcItems(newItems)
+    }
+  }
+
+  const calculateTotal = (items, type) => {
+    if (type === 'sale') {
+      // For sales, we still use the old logic if needed, but wait, sales was reverted.
+      // Actually handleRecordSale was reverted to use saleAmount.
+      return 0 
+    }
+    return items.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0)
+  }
+
+  const formatDescription = (items, type) => {
+    return items.map(i => `${i.desc} (RWF ${i.total})`).join('\n')
+  }
 
   const handleRecordSale = async (e) => {
     e.preventDefault()
@@ -119,15 +161,16 @@ export default function KitchenPortal() {
 
   const handleRecordPurchase = async (e) => {
     e.preventDefault()
-    if (!purcDesc || !purcAmount) return
+    const total = calculateTotal(purcItems, 'purchase')
+    if (total <= 0) return
     
     setLoading(true)
     const { error } = await supabase
       .from('kitchen_transactions')
       .insert([
         { 
-          description: purcDesc, 
-          amount: parseFloat(purcAmount), 
+          description: formatDescription(purcItems, 'purchase'), 
+          amount: total, 
           type: 'purchase', 
           worker_id: user.id,
           served_by: user.email // Add this for notifications
@@ -140,8 +183,7 @@ export default function KitchenPortal() {
       setMessage({ type: 'error', text: error.message })
     } else {
       setMessage({ type: 'success', text: t('success_save') })
-      setPurcDesc('')
-      setPurcAmount('')
+      setPurcItems([{ desc: '', total: '' }])
       setShowPurcForm(false) // Close form after saving
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     }
@@ -278,27 +320,44 @@ export default function KitchenPortal() {
                 <button className="btn-close" onClick={() => setShowPurcForm(false)}>&times;</button>
               </div>
               <form onSubmit={handleRecordPurchase} className="entry-form">
-                <div className="form-group">
-                  <label>{t('what_bought')}</label>
-                  <textarea 
-                    value={purcDesc}
-                    onChange={(e) => setPurcDesc(e.target.value)}
-                    placeholder="Meat, Oil, etc."
-                    required
-                    className="large-input"
-                  />
+                <div className="line-items-container">
+                  {purcItems.map((item, index) => (
+                    <div key={index} className="line-item-row" style={{display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'center'}}>
+                      <input 
+                        style={{flex: 2}}
+                        type="text" 
+                        value={item.desc}
+                        onChange={(e) => handleUpdateItem('purchase', index, 'desc', e.target.value)}
+                        placeholder={`${t('item_name') || "What?"} (e.g. 2kg Meat)`}
+                        required
+                        className="large-input"
+                      />
+                      <input 
+                        style={{flex: 1}}
+                        type="number" 
+                        value={item.total}
+                        onChange={(e) => handleUpdateItem('purchase', index, 'total', e.target.value)}
+                        placeholder={t('price_paid') || "Price paid"}
+                        required
+                        className="large-input"
+                      />
+                      {purcItems.length > 1 && (
+                        <button type="button" onClick={() => handleRemoveItem('purchase', index)} style={{background: '#fee2e2', color: '#dc2626', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer'}}>×</button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => handleAddItem('purchase')} className="btn-add-item" style={{width: '100%', padding: '12px', background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', fontWeight: 'bold', cursor: 'pointer', marginBottom: '20px'}}>
+                    + {t('add_another_item') || "Add another item"}
+                  </button>
                 </div>
-                <div className="form-group">
-                  <label>{t('price_rwf')}</label>
-                  <input 
-                    type="number" 
-                    value={purcAmount}
-                    onChange={(e) => setPurcAmount(e.target.value)}
-                    placeholder="Price"
-                    required
-                    className="large-input"
-                  />
+
+                <div className="form-summary" style={{background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #e2e8f0'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                    <span style={{fontWeight: 'bold', color: '#64748b'}}>{t('total_money_paid') || "Total Money Paid"}:</span>
+                    <strong style={{fontSize: '1.25rem', color: '#0d9488'}}>RWF {calculateTotal(purcItems, 'purchase').toLocaleString()}</strong>
+                  </div>
                 </div>
+
                 {message.text && message.text.includes('Purchase') && (
                   <div className={`portal-msg-large ${message.type}`}>
                     {message.text}
@@ -507,7 +566,7 @@ export default function KitchenPortal() {
                             }}>
                               {tx.description}
                             </td>
-                            <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#e11d48', fontSize: '0.95rem'}}>
+                            <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#0d9488', fontSize: '0.95rem'}}>
                               - RWF {tx.amount.toLocaleString()}
                             </td>
                             <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
@@ -567,8 +626,8 @@ export default function KitchenPortal() {
                   {recentEntries.filter(e => e.type === 'order').length > 0 ? (
                     recentEntries.filter(e => e.type === 'order').map(entry => (
                       <tr key={entry.id}>
-                        <td style={{fontWeight: '500'}}>{entry.description}</td>
-                        <td className="text-success" style={{fontWeight: 'bold'}}>+ RWF {entry.amount.toLocaleString()}</td>
+                        <td style={{fontWeight: '500', whiteSpace: 'pre-line', minWidth: '180px'}}>{entry.description}</td>
+                        <td style={{color: '#0d9488', fontWeight: 'bold'}}>+ RWF {entry.amount.toLocaleString()}</td>
                         <td style={{color: '#64748b', fontSize: '0.85rem'}}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                         <td style={{color: '#64748b', fontSize: '0.85rem'}}>{entry.served_by || '--'}</td>
                       </tr>
@@ -601,8 +660,8 @@ export default function KitchenPortal() {
                   {recentEntries.filter(e => e.type === 'purchase').length > 0 ? (
                     recentEntries.filter(e => e.type === 'purchase').map(entry => (
                       <tr key={entry.id}>
-                        <td style={{fontWeight: '500'}}>{entry.description}</td>
-                        <td className="text-danger" style={{fontWeight: 'bold'}}>- RWF {entry.amount.toLocaleString()}</td>
+                        <td style={{fontWeight: '500', whiteSpace: 'pre-line', minWidth: '180px'}}>{entry.description}</td>
+                        <td style={{color: '#0d9488', fontWeight: 'bold'}}>- RWF {entry.amount.toLocaleString()}</td>
                         <td style={{color: '#64748b', fontSize: '0.85rem'}}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                       </tr>
                     ))

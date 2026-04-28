@@ -156,7 +156,19 @@ export const translations = {
     notifications_on: 'Alerts On',
     notifications_off: 'Alerts Off',
     install_app: 'Install App',
-    install_hint: 'To install: Tap Chrome menu (3 dots) then "Add to Home Screen"'
+    install_hint: 'To install: Tap Chrome menu (3 dots) then "Add to Home Screen"',
+    
+    // New Additions
+    please_review_booking: 'Please Review Booking',
+    confirm_and_save: 'Confirm & Save',
+    go_back_edit: 'Go back and edit',
+    booking_for: 'Booking for',
+    add_item: 'Add Item',
+    add_another_item: 'Add another item',
+    item_name: 'Item Name',
+    unit_price: 'Unit Price',
+    total_money_paid: 'Total Money Paid',
+    price_paid: 'Price paid'
   },
   rw: {
     // Header & General
@@ -320,6 +332,18 @@ export const translations = {
     notifications_on: 'Alerts Akora',
     notifications_off: 'Alerts Ofu',
     install_app: 'Shyiramo App',
-    install_hint: 'Gushyiramo App: Kanda utubulungushwa 3 muri Chrome hanyuma ukande "Add to Home Screen"'
+    install_hint: 'Gushyiramo App: Kanda utubulungushwa 3 muri Chrome hanyuma ukande "Add to Home Screen"',
+    
+    // New Additions
+    please_review_booking: 'Genzura neza ibyo wujuje',
+    confirm_and_save: 'Emeza ubike',
+    go_back_edit: 'Subira inyuma ukosore',
+    booking_for: 'Kuhagarika icyumba',
+    add_item: 'Ongeraho ikindi',
+    add_another_item: 'Ongeraho ikindi kintu',
+    item_name: "Izina ry'ikintu",
+    unit_price: 'Igiciro kuri kimwe',
+    total_money_paid: 'Amafaranga yose hamwe',
+    price_paid: 'Igiciro wishyuye'
   }
 };
