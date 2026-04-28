@@ -1295,7 +1295,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
           <p>{t('since_last_collection')}: {lastKitchenCollectionTime.getTime() === 0 ? t('none') : lastKitchenCollectionTime.toLocaleString()}</p>
         </div>
         <div className="cash-action">
-          <span className="cash-amount" style={{color: '#0d9488'}}>RWF {pendingProfit.toLocaleString()}</span>
+          <span className="cash-amount" style={{color: '#ffffff'}}>RWF {pendingProfit.toLocaleString()}</span>
           <button 
             className="btn-collect" 
             onClick={handleCollect}

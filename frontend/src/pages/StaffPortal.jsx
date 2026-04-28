@@ -287,7 +287,7 @@ export default function StaffPortal() {
           {/* 5. Today's Expenses */}
           <div className="stat-card">
             <h3>{t('total_expenses')}</h3>
-            <p className="stat-value" style={{color: '#ef4444'}}>RWF {totalExpensesToday.toLocaleString()}</p>
+            <p className="stat-value" style={{color: '#ef4444'}}>RWF {Number(totalShiftExpenses).toLocaleString()}</p>
             <button className="btn-details-card" onClick={() => setShowExpenseDetails(true)}>
               {t('view_details')}
             </button>
