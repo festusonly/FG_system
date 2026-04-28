@@ -113,7 +113,15 @@ export function AppProvider({ children }) {
   }
 
   // Translation helper
-  const t = (key) => translations[language][key] || key
+  const t = (key, vars = {}) => {
+    let str = translations[language][key] || translations['en'][key] || key
+    if (typeof str === 'string') {
+      Object.keys(vars).forEach(k => {
+        str = str.replace(`{${k}}`, vars[k])
+      })
+    }
+    return str
+  }
 
   const changeLanguage = (lang) => {
     setLanguage(lang)
@@ -248,16 +256,16 @@ export function AppProvider({ children }) {
         // Notify if it's a NEW booking or a completion
         if (payload.eventType === 'INSERT' && payload.new.worker_id !== user.id) {
           const amount = payload.new.amount_rwf || 0;
-          const typeName = payload.new.stay_type === 'short_hours' ? 'Short Stay (Bataha)' : 'Night Stay (Barara)';
+          const typeName = payload.new.stay_type === 'short_hours' ? t('short_stay') : t('night_stay');
           showLocalNotification(
-            `🏨 New Room Booking`, 
-            `A staff member just booked a room (${typeName}) and collected RWF ${amount.toLocaleString()}.`, 
+            t('alert_new_booking_title'), 
+            t('alert_new_booking_desc', { type: typeName, amount: amount.toLocaleString() }), 
             'room-booking'
           )
         } else if (payload.eventType === 'UPDATE' && payload.new.status === 'completed' && payload.new.worker_id !== user.id) {
           showLocalNotification(
-            `🗝️ Room Check-out`, 
-            `A staff member checked a guest out. The room is now available.`, 
+            t('alert_checkout_title'), 
+            t('alert_checkout_desc'), 
             'room-checkout'
           )
         }
@@ -276,8 +284,8 @@ export function AppProvider({ children }) {
           
           const amount = payload.new.amount_rwf || 0;
           showLocalNotification(
-            `💸 Money Spent (Expense)`, 
-            `A staff member spent RWF ${amount.toLocaleString()} on: "${desc}". This reduces the cash you will collect.`, 
+            t('alert_expense_title'), 
+            t('alert_expense_desc', { amount: amount.toLocaleString(), desc }), 
             'expense-report'
           )
         }
@@ -295,18 +303,18 @@ export function AppProvider({ children }) {
           if (payload.new.served_by !== user.email) {
             const tx = payload.new
             const amount = tx.amount || 0;
-            const workerName = tx.served_by ? tx.served_by.split('@')[0] : 'Kitchen staff';
+            const workerName = tx.served_by ? tx.served_by.split('@')[0] : t('kitchen_worker');
             
             if (tx.type === 'order') {
               showLocalNotification(
-                `🍳 Kitchen Sale`, 
-                `${workerName} just sold "${tx.description}" and received RWF ${amount.toLocaleString()}.`, 
+                t('alert_kitchen_sale_title'), 
+                t('alert_kitchen_sale_desc', { worker: workerName, desc: tx.description, amount: amount.toLocaleString() }), 
                 'kitchen-sale'
               )
             } else {
               showLocalNotification(
-                `🛒 Kitchen Purchase`, 
-                `${workerName} spent RWF ${amount.toLocaleString()} to buy: "${tx.description}".`, 
+                t('alert_kitchen_purchase_title'), 
+                t('alert_kitchen_purchase_desc', { worker: workerName, desc: tx.description, amount: amount.toLocaleString() }), 
                 'kitchen-purchase'
               )
             }

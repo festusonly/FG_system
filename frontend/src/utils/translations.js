@@ -172,7 +172,19 @@ export const translations = {
     item_name: 'Item Name',
     unit_price: 'Unit Price',
     total_money_paid: 'Total Money Paid',
-    price_paid: 'Price paid'
+    price_paid: 'Price paid',
+    
+    // Alerts
+    alert_new_booking_title: '🏨 New Room Booking',
+    alert_new_booking_desc: 'A staff member just booked a room ({type}) and collected RWF {amount}.',
+    alert_checkout_title: '🗝️ Room Check-out',
+    alert_checkout_desc: 'A staff member checked a guest out. The room is now available.',
+    alert_expense_title: '💸 Money Spent (Expense)',
+    alert_expense_desc: 'A staff member spent RWF {amount} on: "{desc}". This reduces the cash you will collect.',
+    alert_kitchen_sale_title: '🍳 Kitchen Sale',
+    alert_kitchen_sale_desc: '{worker} just sold "{desc}" and received RWF {amount}.',
+    alert_kitchen_purchase_title: '🛒 Kitchen Purchase',
+    alert_kitchen_purchase_desc: '{worker} spent RWF {amount} to buy: "{desc}".'
   },
   rw: {
     // Header & General
@@ -352,6 +364,18 @@ export const translations = {
     item_name: "Izina ry'ikintu",
     unit_price: 'Igiciro kuri kimwe',
     total_money_paid: 'Amafaranga yose hamwe',
-    price_paid: 'Igiciro wishyuye'
+    price_paid: 'Igiciro wishyuye',
+    
+    // Alerts
+    alert_new_booking_title: '🏨 Gukodesha Icyumba Gishya',
+    alert_new_booking_desc: 'Umukozi akodesheje icyumba ({type}) yakira RWF {amount}.',
+    alert_checkout_title: '🗝️ Kuva mu Cyumba',
+    alert_checkout_desc: 'Umukozi asohoye umukiriya. Icyumba kiraboneka.',
+    alert_expense_title: '💸 Gusohora Amafaranga (Depanse)',
+    alert_expense_desc: 'Umukozi akoresheje RWF {amount} kuri: "{desc}". Aya mafaranga agabanya ayo ugomba kwakira.',
+    alert_kitchen_sale_title: '🍳 Igurisha mu Gikoni',
+    alert_kitchen_sale_desc: '{worker} agurishije "{desc}" yakira RWF {amount}.',
+    alert_kitchen_purchase_title: '🛒 Ibyaranguwe mu Gikoni',
+    alert_kitchen_purchase_desc: '{worker} akoresheje RWF {amount} arangura: "{desc}".'
   }
 };
