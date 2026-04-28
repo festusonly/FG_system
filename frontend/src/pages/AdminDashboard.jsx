@@ -391,10 +391,10 @@ export default function AdminDashboard() {
             <span className="metric-label">{t('active_bookings')}</span>
           </div>
 
-          {/* 7. Today's Expenses */}
+          {/* 7. Shift Expenses */}
           <div className="metric-card danger">
             <h3>{t('total_expenses')}</h3>
-            <p className="metric-value" style={{color: '#ef4444'}}>RWF {totalExpensesToday.toLocaleString()}</p>
+            <p className="metric-value" style={{color: '#ef4444'}}>RWF {Number(totalShiftExpenses).toLocaleString()}</p>
             <button 
               className="btn-details-card"
               onClick={() => setShowExpensesModal(true)}

@@ -248,13 +248,18 @@ export function AppProvider({ children }) {
         // Notify if it's a NEW booking or a completion
         if (payload.eventType === 'INSERT' && payload.new.worker_id !== user.id) {
           const amount = payload.new.amount_rwf || 0;
+          const typeName = payload.new.stay_type === 'short_hours' ? 'Short Stay (Bataha)' : 'Night Stay (Barara)';
           showLocalNotification(
-            `🏨 New Booking`, 
-            `A new room occupation was recorded for RWF ${amount.toLocaleString()}.`, 
+            `🏨 New Room Booking`, 
+            `A staff member just booked a room (${typeName}) and collected RWF ${amount.toLocaleString()}.`, 
             'room-booking'
           )
         } else if (payload.eventType === 'UPDATE' && payload.new.status === 'completed' && payload.new.worker_id !== user.id) {
-          showLocalNotification(`🗝️ Check-out`, `A room was finalized and is now available.`, 'room-checkout')
+          showLocalNotification(
+            `🗝️ Room Check-out`, 
+            `A staff member checked a guest out. The room is now available.`, 
+            'room-checkout'
+          )
         }
       })
       .subscribe()
@@ -271,8 +276,8 @@ export function AppProvider({ children }) {
           
           const amount = payload.new.amount_rwf || 0;
           showLocalNotification(
-            `💸 New Expense`, 
-            `${desc} - RWF ${amount.toLocaleString()}`, 
+            `💸 Money Spent (Expense)`, 
+            `A staff member spent RWF ${amount.toLocaleString()} on: "${desc}". This reduces the cash you will collect.`, 
             'expense-report'
           )
         }
@@ -289,13 +294,22 @@ export function AppProvider({ children }) {
           // Check if triggered by someone else (we use served_by email check here)
           if (payload.new.served_by !== user.email) {
             const tx = payload.new
-            const typeLabel = tx.type === 'order' ? 'New Sale' : 'New Purchase'
             const amount = tx.amount || 0;
-            showLocalNotification(
-              `🍳 Kitchen: ${typeLabel}`, 
-              `${tx.description} - RWF ${amount.toLocaleString()}`, 
-              'kitchen-sale'
-            )
+            const workerName = tx.served_by ? tx.served_by.split('@')[0] : 'Kitchen staff';
+            
+            if (tx.type === 'order') {
+              showLocalNotification(
+                `🍳 Kitchen Sale`, 
+                `${workerName} just sold "${tx.description}" and received RWF ${amount.toLocaleString()}.`, 
+                'kitchen-sale'
+              )
+            } else {
+              showLocalNotification(
+                `🛒 Kitchen Purchase`, 
+                `${workerName} spent RWF ${amount.toLocaleString()} to buy: "${tx.description}".`, 
+                'kitchen-purchase'
+              )
+            }
           }
         }
       })
