@@ -3,6 +3,33 @@ import { supabase } from '../services/supabaseClient'
 import { useAuth } from './AuthContext'
 import { translations } from '../utils/translations'
 
+const showLocalNotification = (title, body, tag) => {
+  console.log('🔔 AppContext: Attempting notification:', title, body);
+  
+  // Use a simple local storage check since we are inside context and might not have state yet
+  const enabled = localStorage.getItem('admin_notifications_enabled') === 'true';
+  if (!enabled) return;
+
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, {
+          body: body,
+          icon: '/icon-512.png',
+          badge: '/icon-512.png',
+          tag: tag || 'general',
+          vibrate: [200, 100, 200],
+          requireInteraction: true
+        });
+      });
+    } else if (window.Notification && Notification.permission === 'granted') {
+      new window.Notification(title, { body, icon: '/icon-512.png' });
+    }
+  } catch (e) {
+    console.error('🔔 Notification error:', e);
+  }
+}
+
 const AppContext = createContext()
 
 export function useApp() {
@@ -208,24 +235,62 @@ export function AppProvider({ children }) {
     // Subscribe to new transactions
     const txChannel = supabase
       .channel('transactions-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, (payload) => {
         fetchTransactions()
+        
+        // Notify if it's a NEW booking or a completion
+        if (payload.eventType === 'INSERT' && payload.new.worker_id !== user.id) {
+          const amount = payload.new.amount_rwf || 0;
+          showLocalNotification(
+            `🏨 New Booking`, 
+            `A new room occupation was recorded for RWF ${amount.toLocaleString()}.`, 
+            'room-booking'
+          )
+        } else if (payload.eventType === 'UPDATE' && payload.new.status === 'completed' && payload.new.worker_id !== user.id) {
+          showLocalNotification(`🗝️ Check-out`, `A room was finalized and is now available.`, 'room-checkout')
+        }
       })
       .subscribe()
 
     // Subscribe to new expenses
     const expChannel = supabase
       .channel('expenses-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, (payload) => {
         fetchExpenses()
+        
+        if (payload.eventType === 'INSERT' && payload.new.worker_id !== user.id) {
+          const desc = payload.new.description;
+          if (desc === 'SYSTEM_CASH_COLLECTION' || desc === 'KITCHEN_CASH_COLLECTION') return;
+          
+          const amount = payload.new.amount_rwf || 0;
+          showLocalNotification(
+            `💸 New Expense`, 
+            `${desc} - RWF ${amount.toLocaleString()}`, 
+            'expense-report'
+          )
+        }
       })
       .subscribe()
 
     // Subscribe to kitchen transactions
     const kitchenChannel = supabase
       .channel('kitchen-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'kitchen_transactions' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kitchen_transactions' }, (payload) => {
         fetchKitchenTransactions()
+        
+        if (payload.eventType === 'INSERT') {
+          // Check if triggered by someone else (we use served_by email check here)
+          if (payload.new.served_by !== user.email) {
+            const tx = payload.new
+            const typeLabel = tx.type === 'order' ? 'New Sale' : 'New Purchase'
+            const amount = tx.amount || 0;
+            showLocalNotification(
+              `🍳 Kitchen: ${typeLabel}`, 
+              `${tx.description} - RWF ${amount.toLocaleString()}`, 
+              'kitchen-sale'
+            )
+          }
+        }
       })
       .subscribe()
 

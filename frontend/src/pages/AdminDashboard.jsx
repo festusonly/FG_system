@@ -159,101 +159,23 @@ export default function AdminDashboard() {
   }
 
   const showLocalNotification = (title, body, tag) => {
-    console.log('🔔 Attempting notification:', title, body);
-    if (!notificationsEnabled) {
-      console.log('🔔 Notifications are currently DISABLED in settings.');
-      return;
-    }
-
-    try {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(registration => {
-          console.log('🔔 Service Worker Ready. Showing notification...');
-          registration.showNotification(title, {
-            body: body,
-            icon: '/icon-512.png',
-            badge: '/icon-512.png',
-            tag: tag || 'general',
-            vibrate: [200, 100, 200],
-            requireInteraction: true
-          });
-        }).catch(err => {
-          console.error('🔔 Service Worker error:', err);
-          // Last resort fallback
-          if (window.Notification && Notification.permission === 'granted') {
-            new window.Notification(title, { body, icon: '/icon-512.png' });
-          }
+    // This is now a simple wrapper for manual/test alerts.
+    // Real-time alerts are handled centrally in AppContext.jsx
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, {
+          body: body,
+          icon: '/icon-512.png',
+          badge: '/icon-512.png',
+          tag: tag || 'general',
+          vibrate: [200, 100, 200],
+          requireInteraction: true
         });
-      } else if (window.Notification && Notification.permission === 'granted') {
-        console.log('🔔 Using standard Browser Notification fallback.');
-        new window.Notification(title, { body, icon: '/icon-512.png' });
-      } else {
-        console.warn('🔔 Notifications not supported or permission denied.');
-      }
-    } catch (e) {
-      console.error('🔔 Notification trigger error:', e);
+      });
+    } else if (window.Notification && Notification.permission === 'granted') {
+      new window.Notification(title, { body, icon: '/icon-512.png' });
     }
   }
-
-  // Real-time Notifications Setup
-  useEffect(() => {
-    console.log('🔄 Initializing Real-time Notifications Channel...');
-    
-    const channel = supabase.channel('admin_notifications')
-      .on('postgres_changes', { event: '*', table: 'transactions', schema: 'public' }, (payload) => {
-        console.log('📝 Transaction Change Detected:', payload);
-        const tx = payload.new
-        const userLabel = tx.served_by ? tx.served_by.split('@')[0] : 'Staff'
-        const amount = tx.amount_rwf || tx.amount || 0;
-        
-        if (payload.eventType === 'INSERT') {
-          showLocalNotification(
-            `🏨 New Occupation: ${tx.description || 'Room Stay'}`, 
-            `${userLabel} recorded RWF ${amount.toLocaleString()}. Room is now Occupied.`, 
-            'room-booking'
-          )
-        } else if (payload.eventType === 'UPDATE' && tx.status === 'completed') {
-          showLocalNotification(
-            `🗝️ Check-out: ${tx.description || 'Room Stay'}`, 
-            `${userLabel} finalized check-out. Room is now Available.`, 
-            'room-checkout'
-          )
-        }
-      })
-      .on('postgres_changes', { event: 'INSERT', table: 'kitchen_transactions', schema: 'public' }, (payload) => {
-        console.log('📝 Kitchen Change Detected:', payload);
-        const tx = payload.new
-        const userLabel = tx.served_by ? tx.served_by.split('@')[0] : 'Kitchen'
-        const typeLabel = tx.type === 'order' ? 'New Order' : 'New Purchase'
-        const amount = tx.amount || tx.amount_rwf || 0;
-        showLocalNotification(
-          `🍳 Kitchen: ${typeLabel}`, 
-          `${userLabel} recorded ${tx.description} for RWF ${amount.toLocaleString()}.`, 
-          'kitchen-sale'
-        )
-      })
-      .on('postgres_changes', { event: 'INSERT', table: 'expenses', schema: 'public' }, (payload) => {
-        console.log('📝 Expense Change Detected:', payload);
-        const tx = payload.new
-        if (tx.description === 'SYSTEM_CASH_COLLECTION' || tx.description === 'KITCHEN_CASH_COLLECTION') return;
-        
-        const userLabel = (tx.recorded_by || tx.served_by) ? (tx.recorded_by || tx.served_by).split('@')[0] : 'Staff'
-        const amount = tx.amount_rwf || tx.amount || 0;
-        showLocalNotification(
-          `💸 New Expense Alert`, 
-          `${userLabel} recorded: ${tx.description} - RWF ${amount.toLocaleString()}.`, 
-          'expense-report'
-        )
-      })
-      .subscribe((status) => {
-        console.log('📡 Real-time Subscription Status:', status);
-      })
-
-    return () => {
-      console.log('🔌 Closing Real-time Channel...');
-      supabase.removeChannel(channel)
-    }
-  }, [t, notificationsEnabled]) // Still depend on notificationsEnabled to refresh the function closure
 
   const toggleNotifications = () => {
     try {
