@@ -32,7 +32,7 @@ html, body {
   overflow-x: hidden;
   position: relative;
   overscroll-behavior-x: none; /* Block horizontal sliding */
-  overscroll-behavior-y: auto; /* Enable vertical pull-to-refresh */
+  overscroll-behavior-y: none; /* Disable default PWA pull-to-refresh */
 }
 
 body {

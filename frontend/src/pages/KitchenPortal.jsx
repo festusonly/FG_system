@@ -250,7 +250,8 @@ export default function KitchenPortal() {
                 gap: '0.5rem'
               }}
             >
-              <span>📲</span> {t('install_app') || 'Install App'}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+              {t('install_app') || 'Install App'}
             </button>
           )}
           <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
@@ -260,7 +261,7 @@ export default function KitchenPortal() {
       <main className="portal-main">
         {isOffline && (
           <div className="offline-banner" style={{background: '#fffbeb', color: '#b45309', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', maxWidth: '800px', margin: '0 auto 2rem auto'}}>
-             <span style={{fontSize: '1.5rem'}}>📡</span>
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{color: '#b45309'}}><path d="M5 12s2.545-5 7-5c4.454 0 7 5 7 5s-2.546 5-7 5c-4.455 0-7-5-7-5z"/><circle cx="12" cy="12" r="3"/><path d="m21 21-4.35-4.35"/></svg>
              <div>
                <div style={{fontSize: '1rem'}}>{t('offline_mode')}</div>
                <div style={{fontSize: '0.85rem', fontWeight: 'normal', opacity: 0.9}}>{t('viewing_cached_data')}</div>

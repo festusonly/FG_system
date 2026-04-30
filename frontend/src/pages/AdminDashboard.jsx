@@ -220,21 +220,27 @@ export default function AdminDashboard() {
           className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} 
           onClick={() => setActiveTab('overview')}
         >
-          <span className="nav-icon">🏠</span>
+          <span className="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </span>
           <span className="nav-text">{t('overview')}</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'kitchen' ? 'active' : ''}`} 
           onClick={() => setActiveTab('kitchen')}
         >
-          <span className="nav-icon">🍳</span>
+          <span className="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 2-2.3 2.3c-.7.7-.7 1.8 0 2.5l2.8 2.8c.7.7 1.8.7 2.5 0L21.4 7.3c.7-.7.7-1.8 0-2.5L19 2.5"/><path d="m11 11 5-5"/><path d="m15 15 5 5"/><path d="m8 16-4.4 4.4c-.8.8-.8 2 0 2.8.8.8 2 .8 2.8 0L10.8 18.8"/><path d="M13 18c.7.7 1.8.7 2.5 0L18 15.5"/><path d="m9.5 14.5 2.5 2.5"/><path d="M5.8 10.3c.7.7 1.8.7 2.5 0l2-2.3"/><path d="M7 14c-2.3 2.3-5.5 2.5-7 1 1.5-1.5 1.3-4.7 3.5-7l4 4Z"/></svg>
+          </span>
           <span className="nav-text">{t('kitchen')}</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} 
           onClick={() => setActiveTab('history')}
         >
-          <span className="nav-icon">📊</span>
+          <span className="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+          </span>
           <span className="nav-text">{t('history')}</span>
         </button>
       </div>
@@ -258,19 +264,22 @@ export default function AdminDashboard() {
             className={`sidebar-link ${activeTab === 'overview' ? 'active' : ''}`} 
             onClick={() => { setActiveTab('overview'); setShowSidebar(false); }}
           >
-            <span>🏠</span> {t('overview')}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{marginRight: '12px'}}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            {t('overview')}
           </button>
           <button 
             className={`sidebar-link ${activeTab === 'kitchen' ? 'active' : ''}`} 
             onClick={() => { setActiveTab('kitchen'); setShowSidebar(false); }}
           >
-            <span>🍳</span> {t('kitchen')}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{marginRight: '12px'}}><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" x2="18" y1="17" y2="17"/></svg>
+            {t('kitchen')}
           </button>
           <button 
             className={`sidebar-link ${activeTab === 'history' ? 'active' : ''}`} 
             onClick={() => { setActiveTab('history'); setShowSidebar(false); }}
           >
-            <span>📊</span> {t('history')}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{marginRight: '12px'}}><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+            {t('history')}
           </button>
           
           <div className="sidebar-divider"></div>
@@ -279,7 +288,8 @@ export default function AdminDashboard() {
             className={`sidebar-link ${activeTab === 'settings' ? 'active' : ''}`} 
             onClick={() => { setActiveTab('settings'); setShowSidebar(false); }}
           >
-            <span>⚙️</span> {t('settings')}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{marginRight: '12px'}}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            {t('settings')}
           </button>
           
           <div className="sidebar-divider"></div>
