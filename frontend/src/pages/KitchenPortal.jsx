@@ -8,7 +8,7 @@ import '../styles/AdminDashboard.css' // Import for metric-card styles
 
 export default function KitchenPortal() {
   const { user, logout } = useAuth()
-  const { kitchenTransactions, lastKitchenCollectionTime, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled } = useApp()
+  const { kitchenTransactions, lastKitchenCollectionTime, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData } = useApp()
   const navigate = useNavigate()
   // Sale States
   const [saleDesc, setSaleDesc] = useState('')
@@ -708,6 +708,28 @@ export default function KitchenPortal() {
               </table>
             </div>
           </div>
+        </div>
+
+        <div style={{textAlign: 'center', marginTop: '3rem', paddingBottom: '2rem'}}>
+          <button 
+            onClick={() => refreshData()}
+            style={{
+              background: 'transparent',
+              color: '#94a3b8',
+              border: '1px solid #cbd5e1',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '0.85rem',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            Sync Data
+          </button>
         </div>
       </main>
     </div>

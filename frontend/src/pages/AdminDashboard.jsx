@@ -22,7 +22,8 @@ export default function AdminDashboard() {
     isOffline,
     deferredPrompt,
     installPWA,
-    isPWAInstalled
+    isPWAInstalled,
+    refreshData
   } = useApp()
   const navigate = useNavigate()
 
@@ -292,6 +293,14 @@ export default function AdminDashboard() {
             {t('settings')}
           </button>
           
+          <button 
+            className="sidebar-link" 
+            onClick={() => { refreshData(); setShowSidebar(false); }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{marginRight: '12px'}}><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            Sync Data
+          </button>
+
           <div className="sidebar-divider"></div>
           
           <div className="sidebar-footer">
@@ -315,20 +324,22 @@ export default function AdminDashboard() {
         </button>
         <h1 className="header-title">{t(activeTab) || 'Home'} <small style={{fontSize: '0.6rem', opacity: 0.5, verticalAlign: 'middle'}}>v1.0.5-notif-fix</small></h1>
         <div className="header-right">
-          <div className="language-switch-header">
-            <button 
-              className={`lang-btn ${language === 'en' ? 'active' : ''}`}
-              onClick={() => changeLanguage('en')}
-            >
-              EN
-            </button>
-            <span className="lang-divider">|</span>
-            <button 
-              className={`lang-btn ${language === 'rw' ? 'active' : ''}`}
-              onClick={() => changeLanguage('rw')}
-            >
-              RW
-            </button>
+          <div className="header-actions" style={{display: 'flex', gap: '0.75rem', alignItems: 'center'}}>
+            <div className="language-switch-header">
+              <button 
+                className={`lang-btn ${language === 'en' ? 'active' : ''}`}
+                onClick={() => changeLanguage('en')}
+              >
+                EN
+              </button>
+              <span className="lang-divider">|</span>
+              <button 
+                className={`lang-btn ${language === 'rw' ? 'active' : ''}`}
+                onClick={() => changeLanguage('rw')}
+              >
+                RW
+              </button>
+            </div>
           </div>
         </div>
       </header>

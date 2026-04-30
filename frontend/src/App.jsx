@@ -5,7 +5,6 @@ import Login from './pages/Login'
 import StaffPortal from './pages/StaffPortal'
 import KitchenPortal from './pages/KitchenPortal'
 import AdminDashboard from './pages/AdminDashboard'
-import PullToRefresh from './components/PullToRefresh'
 import './styles/index.css'
 
 // Protected route — only waits for loading on protected pages, not the login page
@@ -58,59 +57,57 @@ export default function App() {
   }
 
   return (
-    <PullToRefresh>
-      <Routes>
-        {/* Public route — always renders immediately */}
-        <Route path="/login" element={<Login />} />
+    <Routes>
+      {/* Public route — always renders immediately */}
+      <Route path="/login" element={<Login />} />
 
-        {/* Staff portal */}
-        <Route
-          path="/staff"
-          element={
-            <ProtectedRoute requiredRole="worker">
-              <StaffPortal />
-            </ProtectedRoute>
-          }
-        />
+      {/* Staff portal */}
+      <Route
+        path="/staff"
+        element={
+          <ProtectedRoute requiredRole="worker">
+            <StaffPortal />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Kitchen portal */}
-        <Route
-          path="/kitchen"
-          element={
-            <ProtectedRoute requiredRole="kitchen">
-              <KitchenPortal />
-            </ProtectedRoute>
-          }
-        />
+      {/* Kitchen portal */}
+      <Route
+        path="/kitchen"
+        element={
+          <ProtectedRoute requiredRole="kitchen">
+            <KitchenPortal />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Admin dashboard */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+      {/* Admin dashboard */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Smart redirect after login */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+      {/* Smart redirect after login */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Root: go to login, not dashboard (avoids blocking) */}
-        {/* Root: Check if logged in, otherwise go to login */}
-        <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
+      {/* Root: go to login, not dashboard (avoids blocking) */}
+      {/* Root: Check if logged in, otherwise go to login */}
+      <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
 
-        {/* 404 fallback */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </PullToRefresh>
+      {/* 404 fallback */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   )
 }
 

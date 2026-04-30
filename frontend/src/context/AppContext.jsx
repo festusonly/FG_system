@@ -232,6 +232,12 @@ export function AppProvider({ children }) {
     loadAll()
   }, [user, fetchRooms, fetchTransactions, fetchExpenses, fetchKitchenTransactions])
 
+  const refreshData = async () => {
+    setLoadingData(true)
+    await Promise.all([fetchRooms(), fetchTransactions(), fetchExpenses(), fetchKitchenTransactions()])
+    setLoadingData(false)
+  }
+
   // -----------------------------------------------------------------
   // REAL-TIME SUBSCRIPTIONS (WebSocket)
   // Any change in Supabase will instantly update every device.
@@ -515,7 +521,8 @@ export function AppProvider({ children }) {
     isOffline,
     deferredPrompt,
     installPWA,
-    isPWAInstalled
+    isPWAInstalled,
+    refreshData
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
