@@ -1301,7 +1301,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
             onClick={handleCollect}
             disabled={pendingProfit <= 0 || isCollecting}
           >
-            {isCollecting ? t('loading') : 'Collect Kitchen Profit'}
+            {isCollecting ? t('loading') : t('collect_cash')}
           </button>
         </div>
       </div>
@@ -1336,7 +1336,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                 minWidth: '120px',
                 background: 'rgba(16, 185, 129, 0.05)',
                 padding: '20px 15px',
-                borderRadius: '16px',
+                borderRadius: '10px',
                 boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.07)',
                 cursor: 'pointer',
                 textAlign: 'center',

@@ -272,7 +272,6 @@ export default function KitchenPortal() {
           <div className="metric-card" style={{border: '1.5px solid #34d399', background: 'rgba(52, 211, 153, 0.05)'}}>
             <h3>{t('sales_to_collect')}</h3>
             <p className="metric-value">RWF {pendingKitchenCash.toLocaleString()}</p>
-            <span className="metric-label">{t('since_last_collection')}</span>
           </div>
           <div className="metric-card" style={{border: '1.5px solid #fb7185', background: 'rgba(251, 113, 133, 0.05)'}}>
             <h3>{t('purchases_to_deduct')}</h3>
@@ -283,7 +282,6 @@ export default function KitchenPortal() {
                 return t.type === 'purchase' && tTime > collTime
               })
               .reduce((sum, t) => sum + t.amount, 0)).toLocaleString()}</p>
-            <span className="metric-label">{t('since_last_collection')}</span>
           </div>
           <div className="metric-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)'}}>
             <h3>{t('profit_for_dad')}</h3>
@@ -294,14 +292,106 @@ export default function KitchenPortal() {
                 return t.type === 'purchase' && tTime > collTime
               })
               .reduce((sum, t) => sum + t.amount, 0)).toLocaleString()}</p>
-            <span className="metric-label">{t('since_last_collection')}</span>
           </div>
 
           {/* 4th Card: Purchase Toggle */}
           <div className="metric-card purchase-toggle-card" onClick={() => setShowPurcForm(true)} style={{cursor: 'pointer', border: '1.5px solid #94a3b8', background: 'rgba(148, 163, 184, 0.05)'}}>
              <h3 style={{color: '#475569'}}>{t('record_purchase')}</h3>
              <div className="plus-icon" style={{fontSize: '2rem', margin: '0.5rem 0'}}>+</div>
-             <span className="metric-label">{t('view_details')}</span>
+          </div>
+        </div>
+
+        {/* TOP: Record Sale Form (Highest Visibility) */}
+        <div className="entry-card sale-card-pro" style={{
+          maxWidth: '800px', 
+          margin: '0 auto 2.5rem auto',
+          border: '2px solid #000000',
+          borderRadius: '10px',
+          boxShadow: '0 15px 35px -5px rgba(18, 140, 126, 0.15), 0 10px 15px -8px rgba(18, 140, 126, 0.1)',
+          background: 'white',
+          overflow: 'hidden'
+        }}>
+          <div className="entry-header" style={{background: 'rgba(18, 140, 126, 0.05)', padding: '1.5rem', borderBottom: '2px solid #000000'}}>
+            <h2 style={{color: '#000000', display: 'flex', alignItems: 'center', gap: '10px', margin: 0}}>
+              {t('record_sale')}
+            </h2>
+            <p className="subtitle" style={{color: '#000000', fontWeight: '600', margin: '5px 0 0 0'}}>{t('money_in')}</p>
+          </div>
+          <div style={{padding: '1.5rem'}}>
+            <form onSubmit={handleRecordSale} className="entry-form">
+              <div className="form-group" style={{marginBottom: '1.5rem'}}>
+                <label style={{display: 'block', marginBottom: '8px', color: '#000000', fontWeight: '700'}}>{t('what_sold')}</label>
+                <textarea 
+                  value={saleDesc}
+                  onChange={(e) => setSaleDesc(e.target.value)}
+                  placeholder="Example: 2 Fish, 5 Beers"
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    border: '2px solid #000000',
+                    minHeight: '80px',
+                    fontSize: '1rem',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+              <div className="form-group" style={{marginBottom: '1.5rem'}}>
+                <label style={{display: 'block', marginBottom: '8px', color: '#000000', fontWeight: '700'}}>{t('price_rwf')}</label>
+                <input 
+                  type="number" 
+                  value={saleAmount}
+                  onChange={(e) => setSaleAmount(e.target.value)}
+                  placeholder="Price"
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    border: '2px solid #000000',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+              <div className="form-group" style={{marginBottom: '1.5rem'}}>
+                <label style={{display: 'block', marginBottom: '8px', color: '#000000', fontWeight: '700'}}>{t('served_by')}</label>
+                <input 
+                  type="text" 
+                  value={saleServedBy}
+                  onChange={(e) => setSaleServedBy(e.target.value)}
+                  placeholder="Worker name"
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    border: '2px solid #000000',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+              {message.text && message.text.includes('Sale') && (
+                <div className={`portal-msg-large ${message.type}`} style={{borderRadius: '10px', padding: '1rem', marginBottom: '1rem', background: message.type === 'success' ? '#ecfdf5' : '#fff1f2', color: message.type === 'success' ? '#059669' : '#e11d48'}}>
+                  {message.text}
+                </div>
+              )}
+              <button type="submit" className="btn-submit-pro sale-theme" disabled={loading} style={{
+                background: '#128c7e',
+                color: 'white',
+                padding: '1rem',
+                borderRadius: '10px',
+                fontSize: '1.1rem',
+                fontWeight: '800',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(18, 140, 126, 0.3)',
+                cursor: 'pointer',
+                width: '100%',
+                transition: 'all 0.2s'
+              }}>
+                {loading ? t('loading') : t('save_sale')}
+              </button>
+            </form>
           </div>
         </div>
 
@@ -365,57 +455,6 @@ export default function KitchenPortal() {
           </div>
         )}
 
-        {/* Bottom: Isolated Sale Form */}
-        <div className="entry-card sale-card-pro" style={{maxWidth: '800px', margin: '0 auto 3rem auto'}}>
-          <div className="entry-header">
-            <h2>{t('record_sale')}</h2>
-            <p className="subtitle">{t('money_in')}</p>
-          </div>
-          <form onSubmit={handleRecordSale} className="entry-form">
-            <div className="form-group">
-              <label>{t('what_sold')}</label>
-              <textarea 
-                value={saleDesc}
-                onChange={(e) => setSaleDesc(e.target.value)}
-                placeholder="Example: 2 Fish, 5 Beers"
-                required
-                className="large-input"
-              />
-            </div>
-            <div className="form-group-row">
-              <div className="form-group">
-                <label>{t('price_rwf')}</label>
-                <input 
-                  type="number" 
-                  value={saleAmount}
-                  onChange={(e) => setSaleAmount(e.target.value)}
-                  placeholder="Price"
-                  required
-                  className="large-input"
-                />
-              </div>
-              <div className="form-group">
-                <label>{t('served_by')}</label>
-                <input 
-                  type="text" 
-                  value={saleServedBy}
-                  onChange={(e) => setSaleServedBy(e.target.value)}
-                  placeholder="Worker name"
-                  required
-                  className="large-input"
-                />
-              </div>
-            </div>
-            {message.text && message.text.includes('Sale') && (
-              <div className={`portal-msg-large ${message.type}`}>
-                {message.text}
-              </div>
-            )}
-            <button type="submit" className="btn-submit-pro sale-theme" disabled={loading}>
-              {loading ? t('loading') : t('save_sale')}
-            </button>
-          </form>
-        </div>
 
         {/* 7-Day Kitchen History Section - DATE ONLY - MOVED HERE */}
         <div className="kitchen-card-modern" style={{marginBottom: '3rem', maxWidth: '800px', margin: '0 auto 3rem auto'}}>
@@ -437,7 +476,7 @@ export default function KitchenPortal() {
                   minWidth: '110px',
                   background: 'white',
                   padding: '15px 10px',
-                  borderRadius: '16px',
+                  borderRadius: '10px',
                   boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
                   cursor: 'pointer',
                   textAlign: 'center'

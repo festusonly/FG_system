@@ -20,6 +20,7 @@
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
 }
 
 .btn-avatar {
@@ -414,12 +415,14 @@
 .metric-card {
   background-color: #ffffff;
   padding: 1.5rem;
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1.5px solid #f1f5f9;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .metric-card:hover {
@@ -1655,7 +1658,7 @@
 .nav-item.active {
   color: #0d9488;
   background: rgba(13, 148, 136, 0.08); /* Surrounded with light color */
-  border-radius: 16px;
+  border-radius: 10px;
   transform: scale(1.05);
   box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.1);
 }
@@ -1691,7 +1694,7 @@
 .history-card {
   background-color: #ffffff;
   padding: 1.5rem;
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.07);
   border: 1.5px solid #c084fc; /* Purple border for history */
   background: rgba(192, 132, 252, 0.05); /* Light purple tint */

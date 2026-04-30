@@ -254,7 +254,6 @@ export default function StaffPortal() {
           <div className="stat-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)'}}>
             <h3 style={{color: '#64748b'}}>{t('cash_to_give')}</h3>
             <p className="stat-value" style={{color: '#0d9488'}}>RWF {netCashInDrawer.toLocaleString()}</p>
-            <span style={{fontSize: '0.7rem', color: '#64748b'}}>{t('total_after_expenses')}</span>
           </div>
 
           {/* 2. Clients in Shift */}
