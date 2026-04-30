@@ -1,7 +1,8 @@
 .staff-portal {
   min-height: 100vh;
-  background-color: var(--bg-color);
+  background-color: #f8fafc; /* Back to clean premium light grey */
   color: var(--text-primary);
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .loading-banner {
@@ -38,7 +39,7 @@
 }
 
 .staff-header {
-  background-color: #0d9488; /* Brilliant Teal */
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); /* Premium Gradient */
   padding: 1.5rem 2rem;
   padding-top: calc(1.5rem + env(safe-area-inset-top));
   display: flex;
@@ -134,15 +135,20 @@
   margin-bottom: 2rem;
 }
 
-.stat-card {
-  background-color: var(--card-bg);
+  background-color: #ffffff;
   padding: 1.5rem;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15), 0 12px 15px -8px rgba(0, 0, 0, 0.1);
 }
 
 .stat-card.clickable {
@@ -221,11 +227,11 @@
 
 /* Rooms Section */
 .rooms-section {
-  background-color: var(--card-bg);
+  background-color: #ffffff;
   padding: 2rem;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   margin-bottom: 2rem;
 }
 
@@ -245,15 +251,21 @@
 
 .room-btn {
   padding: 1.5rem 1rem;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-color);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.room-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .room-name {

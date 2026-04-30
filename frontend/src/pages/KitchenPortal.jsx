@@ -269,12 +269,12 @@ export default function KitchenPortal() {
         )}
         {/* Top Metric Row (4 Cards) */}
         <div className="metrics-section" style={{marginBottom: '2rem'}}>
-          <div className="metric-card success">
+          <div className="metric-card" style={{border: '1.5px solid #34d399', background: 'rgba(52, 211, 153, 0.05)'}}>
             <h3>{t('sales_to_collect')}</h3>
             <p className="metric-value">RWF {pendingKitchenCash.toLocaleString()}</p>
             <span className="metric-label">{t('since_last_collection')}</span>
           </div>
-          <div className="metric-card warning">
+          <div className="metric-card" style={{border: '1.5px solid #fb7185', background: 'rgba(251, 113, 133, 0.05)'}}>
             <h3>{t('purchases_to_deduct')}</h3>
             <p className="metric-value">RWF {(kitchenTransactions
               .filter(t => {
@@ -285,13 +285,7 @@ export default function KitchenPortal() {
               .reduce((sum, t) => sum + t.amount, 0)).toLocaleString()}</p>
             <span className="metric-label">{t('since_last_collection')}</span>
           </div>
-          <div className={`metric-card ${(pendingKitchenCash - kitchenTransactions
-              .filter(t => {
-                const tTime = new Date(t.created_at).getTime()
-                const collTime = lastKitchenCollectionTime.getTime()
-                return t.type === 'purchase' && tTime > collTime
-              })
-              .reduce((sum, t) => sum + t.amount, 0)) >= 0 ? 'primary' : 'danger'}`}>
+          <div className="metric-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)'}}>
             <h3>{t('profit_for_dad')}</h3>
             <p className="metric-value">RWF {(pendingKitchenCash - kitchenTransactions
               .filter(t => {
@@ -304,7 +298,7 @@ export default function KitchenPortal() {
           </div>
 
           {/* 4th Card: Purchase Toggle */}
-          <div className="metric-card purchase-toggle-card" onClick={() => setShowPurcForm(true)} style={{cursor: 'pointer', border: '2px dashed #475569'}}>
+          <div className="metric-card purchase-toggle-card" onClick={() => setShowPurcForm(true)} style={{cursor: 'pointer', border: '1.5px solid #94a3b8', background: 'rgba(148, 163, 184, 0.05)'}}>
              <h3 style={{color: '#475569'}}>{t('record_purchase')}</h3>
              <div className="plus-icon" style={{fontSize: '2rem', margin: '0.5rem 0'}}>+</div>
              <span className="metric-label">{t('view_details')}</span>

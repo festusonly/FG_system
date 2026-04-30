@@ -214,6 +214,31 @@ export default function AdminDashboard() {
 
   return (
     <div className={`admin-dashboard ${showSidebar ? 'sidebar-open' : ''}`}>
+      {/* Bottom Navigation */}
+      <div className="bottom-nav">
+        <button 
+          className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('overview')}
+        >
+          <span className="nav-icon">🏠</span>
+          <span className="nav-text">{t('overview')}</span>
+        </button>
+        <button 
+          className={`nav-item ${activeTab === 'kitchen' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('kitchen')}
+        >
+          <span className="nav-icon">🍳</span>
+          <span className="nav-text">{t('kitchen')}</span>
+        </button>
+        <button 
+          className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('history')}
+        >
+          <span className="nav-icon">📊</span>
+          <span className="nav-text">{t('history')}</span>
+        </button>
+      </div>
+
       {/* Sidebar Overlay */}
       {showSidebar && <div className="sidebar-overlay" onClick={() => setShowSidebar(false)} />}
       
@@ -334,14 +359,13 @@ export default function AdminDashboard() {
             {/* Live Metrics */}
         <div className="metrics-section">
           {/* 1. Net Cash to Collect (Gross - Total money made) */}
-          <div className="metric-card primary">
+          <div className="metric-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)'}}>
             <h3>{t('net_cash_to_collect')}</h3>
             <p className="metric-value">RWF {cashOnHand.toLocaleString()}</p>
-            <span className="metric-label">{t('total_cash_minus_expenses')}</span>
           </div>
 
           {/* 3. Client in Shift */}
-          <div className="metric-card info">
+          <div className="metric-card" style={{border: '1.5px solid #818cf8', background: 'rgba(129, 140, 248, 0.05)'}}>
             <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
             <p className="metric-value">{shiftTransactions.length}</p>
             <button 
@@ -354,8 +378,9 @@ export default function AdminDashboard() {
 
           {/* 4. Occupied */}
           <div 
-            className={`metric-card warning clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
+            className={`metric-card clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
             onClick={() => handleRoomFilter('occupied')}
+            style={{border: '1.5px solid #fb7185', background: 'rgba(251, 113, 133, 0.05)'}}
           >
             <h3>{t('occupied')}</h3>
             <p className="metric-value">{occupiedRooms}</p>
@@ -372,27 +397,26 @@ export default function AdminDashboard() {
 
           {/* 5. Available */}
           <div 
-            className={`metric-card success clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
+            className={`metric-card clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
             onClick={() => handleRoomFilter('available')}
+            style={{border: '1.5px solid #34d399', background: 'rgba(52, 211, 153, 0.05)'}}
           >
             <h3>{t('available')}</h3>
             <p className="metric-value">{availableRooms}</p>
-            <span className="metric-label">{t('ready_for_booking') || 'Ready for booking'}</span>
           </div>
 
           {/* 6. Stay Breakdown */}
-          <div className="metric-card info">
+          <div className="metric-card" style={{border: '1.5px solid #c084fc', background: 'rgba(192, 132, 252, 0.05)'}}>
             <h3>{t('stay_breakdown')}</h3>
             <p className="metric-value breakdown-value">
               <span className="short-stay">{shortStayCount} {t('short_stay')}</span>
               <span className="divider">/</span>
               <span className="night-stay">{nightStayCount} {t('night_stay')}</span>
             </p>
-            <span className="metric-label">{t('active_bookings')}</span>
           </div>
 
           {/* 7. Shift Expenses */}
-          <div className="metric-card danger">
+          <div className="metric-card" style={{border: '1.5px solid #fbbf24', background: 'rgba(251, 191, 36, 0.05)'}}>
             <h3>{t('total_expenses')}</h3>
             <p className="metric-value" style={{color: '#ef4444'}}>RWF {Number(totalShiftExpenses).toLocaleString()}</p>
             <button 
@@ -825,30 +849,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Bottom Navigation for Mobile */}
-      <nav className="mobile-bottom-nav">
-        <button 
-          className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} 
-          onClick={() => setActiveTab('overview')}
-        >
-          <span className="nav-icon">{activeTab === 'overview' ? '🏠' : '🏠'}</span>
-          <span className="nav-label">{t('overview')}</span>
-        </button>
-        <button 
-          className={`nav-item ${activeTab === 'kitchen' ? 'active' : ''}`} 
-          onClick={() => setActiveTab('kitchen')}
-        >
-          <span className="nav-icon">🍳</span>
-          <span className="nav-label">{t('kitchen')}</span>
-        </button>
-        <button 
-          className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} 
-          onClick={() => setActiveTab('history')}
-        >
-          <span className="nav-icon">📊</span>
-          <span className="nav-label">{t('history')}</span>
-        </button>
-      </nav>
 
       {/* Today's Full Client Log Modal */}
       {showDailyClientsModal && (
@@ -1307,20 +1307,17 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
       </div>
 
       <div className="metrics-section" style={{marginBottom: '2rem'}}>
-        <div className="metric-card success">
+        <div className="metric-card" style={{border: '1.5px solid #34d399', background: 'rgba(52, 211, 153, 0.05)'}}>
           <h3>{t('sales_to_collect')}</h3>
           <p className="metric-value" style={{color: '#0d9488'}}>RWF {pendingSales.toLocaleString()}</p>
-          <span className="metric-label">Sales since last collection</span>
         </div>
-        <div className="metric-card warning">
+        <div className="metric-card" style={{border: '1.5px solid #fb7185', background: 'rgba(251, 113, 133, 0.05)'}}>
           <h3>{t('purchases_to_deduct')}</h3>
           <p className="metric-value" style={{color: '#ef4444'}}>RWF {pendingPurchases.toLocaleString()}</p>
-          <span className="metric-label">Purchases since last collection</span>
         </div>
-        <div className={`metric-card ${pendingProfit >= 0 ? 'primary' : 'danger'}`}>
+        <div className="metric-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)'}}>
           <h3>{t('profit_for_dad')}</h3>
           <p className="metric-value" style={{color: '#0d9488'}}>RWF {pendingProfit.toLocaleString()}</p>
-          <span className="metric-label">Net profit since collection</span>
         </div>
       </div>
 
@@ -1337,12 +1334,14 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
               onClick={() => setSelectedDateHistory(day)}
               style={{
                 minWidth: '120px',
-                background: 'white',
+                background: 'rgba(16, 185, 129, 0.05)',
                 padding: '20px 15px',
                 borderRadius: '16px',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.07)',
                 cursor: 'pointer',
-                textAlign: 'center'
+                textAlign: 'center',
+                border: '1.5px solid #10b981',
+                transition: 'all 0.3s ease'
               }}
             >
               <div style={{fontWeight: 'bold', color: '#1e293b', fontSize: '1rem'}}>{day.dateLabel}</div>
@@ -1360,9 +1359,10 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
           <div className="modal-content-large" style={{
             maxHeight: '85vh', 
             overflowY: 'auto', 
-            borderRadius: '12px', 
+            borderRadius: '20px', 
             background: '#ffffff',
-            padding: '0'
+            padding: '0',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
           }}>
             <div className="modal-header" style={{
               padding: '20px 24px', 
@@ -1378,12 +1378,12 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
 
             <div style={{padding: '24px'}}>
               <div style={{display: 'flex', gap: '15px', marginBottom: '25px'}}>
-                <div style={{flex: 1, background: '#ffffff', padding: '20px', borderRadius: '12px', border: '2px solid #94a3b8', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'}}>
-                  <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_sales')}</span>
+                <div style={{flex: 1, background: 'rgba(52, 211, 153, 0.05)', padding: '20px', borderRadius: '16px', border: '1.5px solid #34d399', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'}}>
+                  <span style={{fontSize: '0.7rem', color: '#059669', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_sales')}</span>
                   <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#0d9488', marginTop: '8px'}}>RWF {selectedDateHistory.sales.toLocaleString()}</div>
                 </div>
-                <div style={{flex: 1, background: '#ffffff', padding: '20px', borderRadius: '12px', border: '2px solid #94a3b8', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'}}>
-                  <span style={{fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_purchases')}</span>
+                <div style={{flex: 1, background: 'rgba(251, 113, 133, 0.05)', padding: '20px', borderRadius: '16px', border: '1.5px solid #fb7185', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'}}>
+                  <span style={{fontSize: '0.7rem', color: '#e11d48', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_purchases')}</span>
                   <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#ef4444', marginTop: '8px'}}>RWF {selectedDateHistory.purchases.toLocaleString()}</div>
                 </div>
               </div>

@@ -251,14 +251,14 @@ export default function StaffPortal() {
         {/* Dashboard Stats */}
         <div className="dashboard-stats">
           {/* 1. Cash to Give (Current Shift) */}
-          <div className="stat-card" style={{background: '#ffffff', color: '#1e293b', border: '3px solid #0d9488'}}>
+          <div className="stat-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)'}}>
             <h3 style={{color: '#64748b'}}>{t('cash_to_give')}</h3>
             <p className="stat-value" style={{color: '#0d9488'}}>RWF {netCashInDrawer.toLocaleString()}</p>
             <span style={{fontSize: '0.7rem', color: '#64748b'}}>{t('total_after_expenses')}</span>
           </div>
 
           {/* 2. Clients in Shift */}
-          <div className="stat-card">
+          <div className="stat-card" style={{border: '1.5px solid #818cf8', background: 'rgba(129, 140, 248, 0.05)'}}>
             <h3>{t('clients_in_shift')}</h3>
             <p className="stat-value">{shiftTransactions.length}</p>
             <button className="btn-details-card" onClick={() => setShowClientsModal(true)}>
@@ -270,6 +270,7 @@ export default function StaffPortal() {
           <div 
             className={`stat-card clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
             onClick={() => handleFilterCard('occupied')}
+            style={{border: '1.5px solid #fb7185', background: 'rgba(251, 113, 133, 0.05)'}}
           >
             <h3>{t('occupied')}</h3>
             <p className="stat-value">{totalRoomsTaken}</p>
@@ -279,13 +280,14 @@ export default function StaffPortal() {
           <div 
             className={`stat-card clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
             onClick={() => handleFilterCard('available')}
+            style={{border: '1.5px solid #34d399', background: 'rgba(52, 211, 153, 0.05)'}}
           >
             <h3>{t('available')}</h3>
             <p className="stat-value">{rooms.length - totalRoomsTaken}</p>
           </div>
 
           {/* 5. Today's Expenses */}
-          <div className="stat-card">
+          <div className="stat-card" style={{border: '1.5px solid #fbbf24', background: 'rgba(251, 191, 36, 0.05)'}}>
             <h3>{t('total_expenses')}</h3>
             <p className="stat-value" style={{color: '#ef4444'}}>RWF {Number(totalShiftExpenses).toLocaleString()}</p>
             <button className="btn-details-card" onClick={() => setShowExpenseDetails(true)}>
@@ -293,7 +295,7 @@ export default function StaffPortal() {
             </button>
           </div>
 
-          <div className="stat-card action-stat">
+          <div className="stat-card action-stat" style={{border: '1.5px solid #94a3b8', background: 'rgba(148, 163, 184, 0.05)'}}>
              <button className="btn-expense" onClick={() => setShowExpenseForm(true)}>
                {t('record_expense')}
              </button>
