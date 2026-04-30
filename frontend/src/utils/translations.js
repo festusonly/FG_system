@@ -117,6 +117,8 @@ export const translations = {
     type: 'Type',
     recent_activities: 'Recent Activities',
     occupied_short: 'Occupied',
+    utilization_available: 'Available',
+    utilization_active: 'Active',
     
     // Admin Dashboard - History
     performance_7day: '7-Day Performance History',
