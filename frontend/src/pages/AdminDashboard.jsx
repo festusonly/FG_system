@@ -53,6 +53,8 @@ export default function AdminDashboard() {
   const [showClientsModal, setShowClientsModal] = useState(false)
   const [showDailyClientsModal, setShowDailyClientsModal] = useState(false)
   const [showOccupiedModal, setShowOccupiedModal] = useState(false)
+  const [showAvailableModal, setShowAvailableModal] = useState(false)
+  const [activeDetailsTable, setActiveDetailsTable] = useState(null)
   const [showSidebar, setShowSidebar] = useState(false)
 
   const getGreeting = () => {
@@ -64,6 +66,16 @@ export default function AdminDashboard() {
 
   const [showAllHistory, setShowAllHistory] = useState(false)
   const [showAllCollections, setShowAllCollections] = useState(false)
+  const [showAllRecentTransactions, setShowAllRecentTransactions] = useState(false)
+
+  useEffect(() => {
+    if (activeDetailsTable) {
+      const element = document.getElementById('details-section')
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+  }, [activeDetailsTable])
 
   const todayString = new Date().toDateString()
   
@@ -453,12 +465,19 @@ export default function AdminDashboard() {
           </div>
 
           {/* 3. Client in Shift */}
-          <div className="metric-card" style={{border: '1.5px solid #818cf8', background: 'rgba(129, 140, 248, 0.05)'}}>
+          <div 
+            className={`metric-card clickable ${activeDetailsTable === 'shift' ? 'active-filter' : ''}`}
+            onClick={() => setActiveDetailsTable(prev => prev === 'shift' ? null : 'shift')}
+            style={{border: '1.5px solid #818cf8', background: 'rgba(129, 140, 248, 0.05)'}}
+          >
             <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
             <p className="metric-value">{shiftTransactions.length}</p>
             <button 
-              className="btn-details-card"
-              onClick={() => setShowClientsModal(true)}
+              className="btn-details-card" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowClientsModal(true);
+              }}
             >
               {t('view_details')}
             </button>
@@ -466,14 +485,14 @@ export default function AdminDashboard() {
 
           {/* 4. Occupied */}
           <div 
-            className={`metric-card clickable ${roomFilter === 'occupied' ? 'active-filter' : ''}`}
-            onClick={() => handleRoomFilter('occupied')}
+            className={`metric-card clickable ${activeDetailsTable === 'occupied' ? 'active-filter' : ''}`}
+            onClick={() => setActiveDetailsTable(prev => prev === 'occupied' ? null : 'occupied')}
             style={{border: '1.5px solid #fb7185', background: 'rgba(251, 113, 133, 0.05)'}}
           >
             <h3>{t('occupied')}</h3>
             <p className="metric-value">{occupiedRooms}</p>
             <button 
-              className="btn-details-card"
+              className="btn-details-card" 
               onClick={(e) => {
                 e.stopPropagation();
                 setShowOccupiedModal(true);
@@ -485,12 +504,21 @@ export default function AdminDashboard() {
 
           {/* 5. Available */}
           <div 
-            className={`metric-card clickable ${roomFilter === 'available' ? 'active-filter' : ''}`}
-            onClick={() => handleRoomFilter('available')}
+            className={`metric-card clickable ${activeDetailsTable === 'available' ? 'active-filter' : ''}`}
+            onClick={() => setActiveDetailsTable(prev => prev === 'available' ? null : 'available')}
             style={{border: '1.5px solid #34d399', background: 'rgba(52, 211, 153, 0.05)'}}
           >
             <h3>{t('available')}</h3>
             <p className="metric-value">{availableRooms}</p>
+            <button 
+              className="btn-details-card" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAvailableModal(true);
+              }}
+            >
+              {t('view_details')}
+            </button>
           </div>
 
           {/* 6. Stay Breakdown */}
@@ -516,12 +544,12 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="dashboard-grid">
+        <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr' }}>
           {/* Recent Transactions (Moved to main column) */}
           <div className="panel-section" id="transactions-section">
             <h2>{t('recent_transactions')}</h2>
-            <div className="table-responsive">
-              <table className="data-table-simple">
+            <div className="table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table className="data-table-simple" style={{ minWidth: '500px' }}>
                 <thead>
                   <tr>
                     <th>{t('room')}</th>
@@ -532,7 +560,7 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {todaysTransactions.length > 0 ? (
-                    todaysTransactions.slice(0, 5).map((tx) => (
+                    todaysTransactions.slice(0, showAllRecentTransactions ? undefined : 10).map((tx) => (
                       <tr key={tx.id}>
                         <td className="room-cell">{tx.room}</td>
                         <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>
@@ -556,46 +584,140 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
-          </div>
-
-          <div className="right-panels">
-            {/* Room Usage Table (Moved to right panels) */}
-            <div className="panel-section" id="room-utilization-section">
-              <h2>{t('room_utilization')} {roomFilter !== 'all' && `(${t(roomFilter) || roomFilter})`}</h2>
-              <div className="table-responsive">
-                <table className="data-table-simple">
-                  <thead>
-                    <tr>
-                      <th>{t('room')}</th>
-                      <th>{t('status')}</th>
-                      <th>{t('usage_count')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedRooms.map((room) => {
-                      const todayUsage = todaysTransactions.filter(tx => tx.roomId === room.id).length
-                      return (
-                        <tr key={room.id}>
-                          <td className="room-cell">{room.name}</td>
-                          <td>
-                            <span className={`status-badge ${room.status}`}>
-                              {room.status === 'occupied' ? t('utilization_active') : t('utilization_available')}
-                            </span>
-                          </td>
-                          <td className="count-cell">{todayUsage} {t('times_today')}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-
+            {todaysTransactions.length > 10 && (
+              <button 
+                onClick={() => setShowAllRecentTransactions(!showAllRecentTransactions)}
+                style={{width: '100%', marginTop: '1rem', padding: '10px', borderRadius: '12px', border: 'none', background: '#f8fafc', color: '#94a3b8', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', transition: 'all 0.2s'}}
+              >
+                {showAllRecentTransactions ? t('show_less') || 'Show Less' : `${t('view_more') || 'View More'} (${todaysTransactions.length - 10} more)`}
+              </button>
+            )}
           </div>
         </div>
-          </>
+
+        <div id="details-section">
+          {activeDetailsTable === 'shift' && (
+            <div className="panel-section" style={{ marginTop: '20px' }}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+                <h2>{t('shift_room_log') || 'Shift Room Log'}</h2>
+                <button onClick={() => setActiveDetailsTable(null)} style={{background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b'}}>&times;</button>
+              </div>
+            <div className="table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table className="data-table-simple" style={{ minWidth: '500px' }}>
+                <thead>
+                  <tr>
+                    <th>{t('room')}</th>
+                    <th>{t('check_in')}</th>
+                    <th>{t('check_out')}</th>
+                    <th>{t('amount')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shiftTransactions.length > 0 ? (
+                    shiftTransactions
+                      .sort((a, b) => {
+                        if (a.status === 'active' && b.status !== 'active') return -1
+                        if (a.status !== 'active' && b.status === 'active') return 1
+                        return new Date(a.time) - new Date(b.time)
+                      })
+                      .map((tx) => (
+                      <tr key={tx.id}>
+                        <td className="room-cell">{tx.room}</td>
+                        <td>{formatTime(tx.time)}</td>
+                        <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied_short')}</span>}</td>
+                        <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
+
+        {activeDetailsTable === 'occupied' && (
+          <div className="panel-section" style={{ marginTop: '20px' }}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+              <h2>{t('active_bookings')}</h2>
+              <button onClick={() => setActiveDetailsTable(null)} style={{background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b'}}>&times;</button>
+            </div>
+            <div className="table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table className="data-table-simple" style={{ minWidth: '500px' }}>
+                <thead>
+                  <tr>
+                    <th>{t('room')}</th>
+                    <th>{t('type')}</th>
+                    <th>{t('since')}</th>
+                    <th>{t('amount')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeTransactions.length > 0 ? (
+                    activeTransactions.map((tx) => (
+                      <tr key={tx.id}>
+                        <td className="room-cell">{tx.room}</td>
+                        <td>
+                          <span className={`status-badge ${tx.type === 'short_hours' ? 'available' : 'occupied'}`} style={{fontSize: '0.7rem'}}>
+                            {tx.type === 'short_hours' ? t('short_stay') : t('night_stay')}
+                          </span>
+                        </td>
+                        <td style={{color: '#64748b', fontSize: '0.85rem'}}>{formatTime(tx.time)}</td>
+                        <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeDetailsTable === 'available' && (
+          <div className="panel-section" style={{ marginTop: '20px' }}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+              <h2>{t('available')} Rooms</h2>
+              <button onClick={() => setActiveDetailsTable(null)} style={{background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b'}}>&times;</button>
+            </div>
+            <div className="table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table className="data-table-simple" style={{ minWidth: '300px' }}>
+                <thead>
+                  <tr>
+                    <th>{t('room')}</th>
+                    <th>{t('status')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rooms.filter(r => r.status === 'available').length > 0 ? (
+                    rooms
+                      .filter(r => r.status === 'available')
+                      .sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}))
+                      .map(room => (
+                      <tr key={room.id}>
+                        <td className="room-cell">{room.name}</td>
+                        <td>
+                          <span className="status-badge available">{t('utilization_available')}</span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="2" className="empty-state">No available rooms</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        </div>
+      </>
+    )}
 
         {activeTab === 'history' && (
           <div className="history-section">
@@ -877,10 +999,13 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+
+
       {/* Today's Client Usage Modal */}
       {showClientsModal && (
         <div className="modal-overlay" onClick={() => setShowClientsModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('shift_usage_breakdown') || 'Today\'s Room Usage Breakdown'}</h2>
               <button className="btn-close" onClick={() => setShowClientsModal(false)}>&times;</button>
@@ -910,7 +1035,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <h3 className="modal-subtitle">{t('shift_room_log') || 'Shift Room Log'}</h3>
+              <h3 className="modal-subtitle" style={{marginBottom: '15px'}}>{t('shift_room_log') || 'Shift Room Log'}</h3>
               <div className="table-responsive">
                 <table className="data-table">
                   <thead>
@@ -948,11 +1073,12 @@ export default function AdminDashboard() {
             </div>
             
             <div className="modal-footer">
-              <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>Close</button>
+              <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>{t('close')}</button>
             </div>
           </div>
         </div>
       )}
+
       {/* Occupied Details Modal */}
       {showOccupiedModal && (
         <div className="modal-overlay" onClick={() => setShowOccupiedModal(false)}>
@@ -973,7 +1099,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <h3 className="modal-subtitle">{t('active_bookings')}</h3>
+              <h3 className="modal-subtitle" style={{marginBottom: '15px'}}>{t('active_bookings')}</h3>
               <div className="table-responsive">
                 <table className="data-table">
                   <thead>
@@ -1014,6 +1140,49 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Available Details Modal */}
+      {showAvailableModal && (
+        <div className="modal-overlay" onClick={() => setShowAvailableModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{t('available')} Rooms</h2>
+              <button className="btn-close" onClick={() => setShowAvailableModal(true)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{t('room')}</th>
+                      <th>{t('status')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rooms.filter(r => r.status === 'available').length > 0 ? (
+                      rooms
+                        .filter(r => r.status === 'available')
+                        .sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}))
+                        .map(room => (
+                        <tr key={room.id}>
+                          <td className="room-cell">{room.name}</td>
+                          <td>
+                            <span className="status-badge available">{t('utilization_available')}</span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="2" className="empty-state">No available rooms</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-modal-close" onClick={() => setShowAvailableModal(false)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Today's Full Client Log Modal */}
       {showDailyClientsModal && (
