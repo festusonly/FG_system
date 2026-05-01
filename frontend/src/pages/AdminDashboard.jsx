@@ -29,8 +29,13 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
 
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'available', 'occupied'
-  const [activeTab, setActiveTab] = useState('overview') // 'overview', 'history', 'kitchen', 'settings'
-  
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('adminActiveTab') || 'overview'
+  })
+
+  useEffect(() => {
+    localStorage.setItem('adminActiveTab', activeTab)
+  }, [activeTab])
   // Safe Notification State
   const [notifPermission, setNotifPermission] = useState(() => {
     try {

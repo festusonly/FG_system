@@ -16,40 +16,37 @@ export function AuthProvider({ children }) {
       setLoading(false)
     }, 4000)
 
-    // 1. Check initial session
-    const initAuth = async () => {
-      console.log('initAuth: starting...')
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        console.log('initAuth: session =', session, 'error =', error)
-        if (error) throw error
-        if (session?.user) {
-          setUser(session.user)
-          await fetchUserRole(session.user.id)
-        }
-      } catch (err) {
-        console.error('Auth init error:', err.message)
-      } finally {
-        clearTimeout(hardTimeout)
+    // 1. Initial session check
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      clearTimeout(hardTimeout)
+      if (error) {
+        console.error('getSession error:', error.message)
         setLoading(false)
-        console.log('initAuth: done, loading=false')
+        return
       }
-    }
+      
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        fetchUserRole(session.user.id)
+      } else {
+        setLoading(false)
+      }
+    })
 
-    initAuth()
-
-    // 2. Listen for auth state changes (login / logout)
+    // 2. Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session?.user) {
-          setLoading(true) // Ensure we wait for role
-          setUser(session.user)
+        console.log('onAuthStateChange: event =', event)
+        setUser(session?.user ?? null)
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          setLoading(true)
           fetchUserRole(session.user.id)
-        } else {
-          setUser(null)
+        } else if (event === 'SIGNED_OUT') {
           setRole(null)
           setLoading(false)
         }
+        // For TOKEN_REFRESHED, USER_UPDATED etc, we just let setUser update silently.
       }
     )
 

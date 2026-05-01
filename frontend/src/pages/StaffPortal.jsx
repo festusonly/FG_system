@@ -24,8 +24,13 @@ export default function StaffPortal() {
   const [showExpenseDetails, setShowExpenseDetails] = useState(false)
   const [showClientsModal, setShowClientsModal] = useState(false)
   const [showDailyClientsModal, setShowDailyClientsModal] = useState(false)
-  const [roomFilter, setRoomFilter] = useState('all') // 'all', 'occupied', 'available'
+  const [roomFilter, setRoomFilter] = useState(() => {
+    return localStorage.getItem('staffRoomFilter') || 'all'
+  })
 
+  React.useEffect(() => {
+    localStorage.setItem('staffRoomFilter', roomFilter)
+  }, [roomFilter])
   // Deduction States
   const [showDeductionModal, setShowDeductionModal] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
