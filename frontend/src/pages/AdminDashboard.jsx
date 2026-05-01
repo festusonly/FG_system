@@ -3,6 +3,7 @@ import { supabase } from '../services/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import { useNavigate } from 'react-router-dom'
+import EmployeeManagementSection from '../components/EmployeeManagementSection'
 import '../styles/AdminDashboard.css'
 
 export default function AdminDashboard() {
@@ -60,6 +61,9 @@ export default function AdminDashboard() {
     if (hour < 18) return t('good_afternoon') || 'Good afternoon'
     return t('good_evening') || 'Good evening'
   }
+
+  const [showAllHistory, setShowAllHistory] = useState(false)
+  const [showAllCollections, setShowAllCollections] = useState(false)
 
   const todayString = new Date().toDateString()
   
@@ -136,7 +140,7 @@ export default function AdminDashboard() {
       // Pass raw day transactions to calculate details later in the modal
       days.push({
         date: dateString,
-        displayDate: i === 0 ? 'Today' : i === 1 ? 'Yesterday' : targetDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
+        displayDate: i === 0 ? 'Today' : i === 1 ? 'Yesterday' : `${targetDate.getDate()}/${targetDate.getMonth() + 1}`,
         revenue,
         expense,
         net: revenue - expense,
@@ -147,6 +151,62 @@ export default function AdminDashboard() {
     return days
   }
   const historyData = generateLast7DaysSummary()
+
+  // New Collection-to-Collection History Logic
+  const generateCollectionHistory = () => {
+    const markers = expenses
+      .filter(exp => exp.description === 'SYSTEM_CASH_COLLECTION')
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+    
+    const collectionPeriods = []
+    
+    for (let i = 0; i < markers.length; i++) {
+      const endMarker = markers[i]
+      const startMarker = markers[i+1]
+      
+      const endTime = new Date(endMarker.time)
+      const startTime = startMarker ? new Date(startMarker.time) : new Date(0)
+      
+      // Data in this period
+      const periodTx = transactions.filter(tx => {
+        const t = new Date(tx.time)
+        return t > startTime && t <= endTime
+      })
+      const periodExp = realExpenses.filter(exp => {
+        const t = new Date(exp.time)
+        return t > startTime && t <= endTime
+      })
+      
+      const revenue = periodTx.reduce((sum, tx) => sum + tx.amount, 0)
+      const expenseValue = periodExp.reduce((sum, exp) => sum + exp.amount, 0)
+      
+      const formatTime = (date) => {
+        if (date.getTime() === 0) return 'Beginning'
+        const d = date.getDate()
+        const m = date.getMonth() + 1
+        const h = date.getHours().toString().padStart(2, '0')
+        const min = date.getMinutes().toString().padStart(2, '0')
+        return `${d}/${m}, ${h}:${min}`
+      }
+
+      collectionPeriods.push({
+        id: endMarker.id,
+        endTime,
+        startTime,
+        startLabel: formatTime(startTime),
+        endLabel: formatTime(endTime),
+        displayDate: `${formatTime(startTime)} → ${formatTime(endTime)}`,
+        revenue,
+        expense: expenseValue,
+        net: revenue - expenseValue,
+        bookings: periodTx.length,
+        transactions: periodTx,
+        isCollection: true
+      })
+    }
+    return collectionPeriods
+  }
+  const collectionHistoryData = generateCollectionHistory()
 
   const scrollToSection = (sectionId) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
@@ -282,6 +342,13 @@ export default function AdminDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{marginRight: '12px'}}><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
             {t('history')}
           </button>
+          <button 
+            className={`sidebar-link ${activeTab === 'employees' ? 'active' : ''}`} 
+            onClick={() => { setActiveTab('employees'); setShowSidebar(false); }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{marginRight: '12px'}}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            {t('employees')}
+          </button>
           
           <div className="sidebar-divider"></div>
           
@@ -298,7 +365,7 @@ export default function AdminDashboard() {
             onClick={() => { refreshData(); setShowSidebar(false); }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{marginRight: '12px'}}><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-            Sync Data
+            {t('sync_data')}
           </button>
 
           <div className="sidebar-divider"></div>
@@ -532,34 +599,110 @@ export default function AdminDashboard() {
 
         {activeTab === 'history' && (
           <div className="history-section">
-            <h2>{t('performance_7day')}</h2>
-            <div className="history-grid">
-              {historyData.map((day) => (
-                <div key={day.date} className="history-card">
-                  <div className="history-date">
-                    <h3>{t(day.displayDate.toLowerCase()) || day.displayDate}</h3>
-                    <span className="history-bookings">{day.bookings} {t('bookings')}</span>
-                  </div>
-                  <div className="history-metrics">
-                    <div className="history-metric">
-                      <span>{t('revenue')}</span>
-                      <strong style={{color: '#0d9488'}}>RWF {day.revenue.toLocaleString()}</strong>
-                    </div>
-                    <div className="history-metric">
-                      <span>{t('expenses')}</span>
-                      <strong style={{color: '#ef4444'}}>RWF {day.expense.toLocaleString()}</strong>
-                    </div>
-                    <div className="history-metric">
-                      <span>{t('net_profit')}</span>
-                      <strong style={{color: '#0d9488'}}>RWF {day.net.toLocaleString()}</strong>
-                    </div>
-                  </div>
-                  
-                  <button className="btn-details-card" onClick={() => setSelectedDayDetails(day)}>
-                    {t('view_details')}
-                  </button>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '3rem'}}>
+              
+              {/* 1. Collection-to-Collection History (SHIFT BASED) */}
+              <div>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+                  <h2 style={{margin: 0}}>{t('collection_history') || 'Collection History'}</h2>
+                  <p style={{margin: 0, fontSize: '0.85rem', color: '#64748b'}}>{t('period_between_collections') || 'Between cash collections'}</p>
                 </div>
-              ))}
+                
+                <div className="history-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px'}}>
+                  {collectionHistoryData.slice(0, showAllCollections ? undefined : 3).map((period) => (
+                    <div key={period.id} className="history-card" style={{
+                      padding: '16px', 
+                      borderRadius: '16px', 
+                      border: '1px solid #e2e8f0', 
+                      borderLeft: '5px solid #0d9488',
+                      background: 'white', 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '15px', 
+                      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                    }}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                        <div style={{background: '#f0f9ff', color: '#0369a1', padding: '8px 12px', borderRadius: '12px', border: '1px solid #e0f2fe', minWidth: '100px'}}>
+                          <span style={{display: 'block', fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '2px', opacity: 0.7}}>{t('since_label')}:</span>
+                          <strong style={{fontSize: '0.9rem', fontWeight: '900'}}>{period.startLabel}</strong>
+                        </div>
+                        
+                        <div style={{color: '#94a3b8', fontSize: '1.2rem', fontWeight: 'bold'}}>→</div>
+                        
+                        <div style={{background: '#f0f9ff', color: '#0369a1', padding: '8px 12px', borderRadius: '12px', border: '1px solid #e0f2fe', minWidth: '100px'}}>
+                          <span style={{display: 'block', fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '2px', opacity: 0.7}}>{t('to_label')}:</span>
+                          <strong style={{fontSize: '0.9rem', fontWeight: '900'}}>{period.endLabel}</strong>
+                        </div>
+                      </div>
+                      
+                        <button 
+                          onClick={() => setSelectedDayDetails(period)}
+                          style={{padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#f1f5f9', color: '#0f766e', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer', transition: 'background 0.2s'}}
+                        >
+                          {t('view_details')}
+                        </button>
+                    </div>
+                  ))}
+                </div>
+                
+                {collectionHistoryData.length > 6 && (
+                  <button 
+                    onClick={() => setShowAllCollections(!showAllCollections)}
+                    style={{width: '100%', marginTop: '1.5rem', padding: '12px', borderRadius: '12px', border: 'none', background: '#0d9488', color: 'white', cursor: 'pointer', fontWeight: '800', fontSize: '0.85rem', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(13, 148, 136, 0.2)'}}
+                  >
+                    {showAllCollections ? t('show_less') || 'Show Less' : `${t('view_more') || 'View More'} (${collectionHistoryData.length - 3} more)`}
+                  </button>
+                )}
+              </div>
+
+              {/* 2. Standard Daily History */}
+              <div>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+                  <h2 style={{margin: 0}}>{t('performance_7day')}</h2>
+                  <p style={{margin: 0, fontSize: '0.85rem', color: '#64748b'}}>{t('standard_calendar_days') || 'Standard calendar days'}</p>
+                </div>
+                
+                <div className="history-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px'}}>
+                  {historyData.slice(0, showAllHistory ? undefined : 3).map((day) => (
+                    <div key={day.date} className="history-card" style={{
+                      padding: '16px', 
+                      borderRadius: '16px', 
+                      border: '1px solid #e2e8f0', 
+                      borderLeft: '5px solid #64748b',
+                      background: 'white', 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '15px', 
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                    }}>
+                      <div>
+                        <div style={{display: 'inline-block', background: '#f8fafc', color: '#475569', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '4px'}}>
+                          <h3 style={{margin: 0, fontSize: '1rem', fontWeight: '900'}}>{t(day.displayDate.toLowerCase()) || day.displayDate}</h3>
+                        </div>
+                      </div>
+                      
+                        <button 
+                          onClick={() => setSelectedDayDetails(day)}
+                          style={{padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#f1f5f9', color: '#64748b', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer'}}
+                        >
+                          {t('view_details')}
+                        </button>
+                    </div>
+                  ))}
+                </div>
+
+                {historyData.length > 6 && (
+                  <button 
+                    onClick={() => setShowAllHistory(!showAllHistory)}
+                    style={{width: '100%', marginTop: '1.5rem', padding: '12px', borderRadius: '12px', border: 'none', background: '#0d9488', color: 'white', cursor: 'pointer', fontWeight: '800', fontSize: '0.85rem', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(13, 148, 136, 0.2)'}}
+                  >
+                    {showAllHistory ? t('show_less') || 'Show Less' : t('view_more')}
+                  </button>
+                )}
+              </div>
+
             </div>
           </div>
         )}
@@ -569,6 +712,7 @@ export default function AdminDashboard() {
             lastKitchenCollectionTime={lastKitchenCollectionTime}
           />
         )}
+        {activeTab === 'employees' && <EmployeeManagementSection user={user} />}
         {activeTab === 'settings' && <AdminSettingsSection user={user} />}
       </div>
 
@@ -876,7 +1020,7 @@ export default function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setShowDailyClientsModal(false)}>
           <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Today's Full Client Log</h2>
+              <h2>{t('todays_client_log')}</h2>
               <button className="btn-close" onClick={() => setShowDailyClientsModal(false)}>&times;</button>
             </div>
             
@@ -933,7 +1077,7 @@ export default function AdminDashboard() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" className="empty-state">No clients today yet.</td>
+                        <td colSpan="5" className="empty-state">{t('no_clients_today')}</td>
                       </tr>
                     )}
                   </tbody>

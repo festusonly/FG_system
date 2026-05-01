@@ -50,6 +50,8 @@ export function AppProvider({ children }) {
   const [transactions, setTransactions] = useState(JSON.parse(localStorage.getItem('cache_transactions') || '[]'))
   const [expenses, setExpenses] = useState(JSON.parse(localStorage.getItem('cache_expenses') || '[]'))
   const [kitchenTransactions, setKitchenTransactions] = useState(JSON.parse(localStorage.getItem('cache_kitchenTransactions') || '[]'))
+  const [employees, setEmployees] = useState(JSON.parse(localStorage.getItem('cache_employees') || '[]'))
+  const [deductions, setDeductions] = useState(JSON.parse(localStorage.getItem('cache_deductions') || '[]'))
   const [loadingData, setLoadingData] = useState(true)
   const [language, setLanguage] = useState(localStorage.getItem('appLanguage') || 'en')
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
@@ -69,6 +71,12 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (kitchenTransactions.length > 0) localStorage.setItem('cache_kitchenTransactions', JSON.stringify(kitchenTransactions))
   }, [kitchenTransactions])
+  useEffect(() => {
+    if (employees.length > 0) localStorage.setItem('cache_employees', JSON.stringify(employees))
+  }, [employees])
+  useEffect(() => {
+    if (deductions.length > 0) localStorage.setItem('cache_deductions', JSON.stringify(deductions))
+  }, [deductions])
 
   // Monitor online status
   useEffect(() => {
@@ -213,28 +221,56 @@ export function AppProvider({ children }) {
     setKitchenTransactions(data)
   }, [])
 
+  const fetchEmployees = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('*')
+      .order('name', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching employees:', error.message)
+      return
+    }
+    setEmployees(data)
+  }, [])
+
+  const fetchDeductions = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('employee_deductions')
+      .select('*, recorded_by:users(name, email)')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching deductions:', error.message)
+      return
+    }
+    setDeductions(data)
+  }, [])
+
   // Load all data from Supabase when the user is authenticated
   useEffect(() => {
     if (!user) {
       setRooms([])
       setTransactions([])
       setExpenses([])
+      setEmployees([])
+      setDeductions([])
       setLoadingData(false)
       return
     }
 
     const loadAll = async () => {
       setLoadingData(true)
-      await Promise.all([fetchRooms(), fetchTransactions(), fetchExpenses(), fetchKitchenTransactions()])
+      await Promise.all([fetchRooms(), fetchTransactions(), fetchExpenses(), fetchKitchenTransactions(), fetchEmployees(), fetchDeductions()])
       setLoadingData(false)
     }
 
     loadAll()
-  }, [user, fetchRooms, fetchTransactions, fetchExpenses, fetchKitchenTransactions])
+  }, [user, fetchRooms, fetchTransactions, fetchExpenses, fetchKitchenTransactions, fetchEmployees, fetchDeductions])
 
   const refreshData = async () => {
     setLoadingData(true)
-    await Promise.all([fetchRooms(), fetchTransactions(), fetchExpenses(), fetchKitchenTransactions()])
+    await Promise.all([fetchRooms(), fetchTransactions(), fetchExpenses(), fetchKitchenTransactions(), fetchEmployees(), fetchDeductions()])
     setLoadingData(false)
   }
 
@@ -329,17 +365,202 @@ export function AppProvider({ children }) {
       })
       .subscribe()
 
+    // Subscribe to employees changes
+    const employeesChannel = supabase
+      .channel('employees-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => {
+        fetchEmployees()
+      })
+      .subscribe()
+
+    // Subscribe to deductions changes
+    const deductionsChannel = supabase
+      .channel('deductions-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'employee_deductions' }, () => {
+        fetchDeductions()
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(roomsChannel)
       supabase.removeChannel(txChannel)
       supabase.removeChannel(expChannel)
       supabase.removeChannel(kitchenChannel)
+      supabase.removeChannel(employeesChannel)
+      supabase.removeChannel(deductionsChannel)
     }
-  }, [user, fetchRooms, fetchTransactions, fetchExpenses, fetchKitchenTransactions])
+  }, [user, fetchRooms, fetchTransactions, fetchExpenses, fetchKitchenTransactions, fetchEmployees, fetchDeductions])
 
   // -----------------------------------------------------------------
   // ACTIONS
   // -----------------------------------------------------------------
+
+  const registerEmployee = async (employeeData, idImageFile) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      let imageUrl = null;
+      if (idImageFile) {
+        const fileExt = idImageFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('employee_ids')
+          .upload(filePath, idImageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('employee_ids')
+          .getPublicUrl(filePath);
+          
+        imageUrl = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('employees')
+        .insert({
+          name: employeeData.name,
+          age: parseInt(employeeData.age),
+          phone: employeeData.phone,
+          base_salary: parseFloat(employeeData.baseSalary || 0),
+          id_screenshot_url: imageUrl
+        });
+
+      if (error) throw error;
+      fetchEmployees();
+      return { success: true };
+    } catch (err) {
+      console.error('Error registering employee:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  const removeEmployee = async (employeeId) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .eq('id', employeeId);
+
+      if (error) throw error;
+      fetchEmployees();
+      fetchDeductions();
+      return { success: true };
+    } catch (err) {
+      console.error('Error removing employee:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  const recordDeduction = async (employeeId, type, amount, reason) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('employee_deductions')
+        .insert({
+          employee_id: employeeId,
+          recorded_by: user.id,
+          type: type, // 'loan' or 'fine'
+          amount_rwf: parseFloat(amount),
+          reason: reason
+        });
+
+      if (error) throw error;
+      fetchDeductions();
+      return { success: true };
+    } catch (err) {
+      console.error('Error recording deduction:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  const resolveDeduction = async (deductionId) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('employee_deductions')
+        .update({ status: 'resolved' })
+        .eq('id', deductionId);
+
+      if (error) throw error;
+      fetchDeductions();
+      return { success: true };
+    } catch (err) {
+      console.error('Error resolving deduction:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  const deleteDeduction = async (deductionId) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('employee_deductions')
+        .delete()
+        .eq('id', deductionId);
+
+      if (error) throw error;
+      fetchDeductions();
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting deduction:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  const updateEmployeeSalary = async (employeeId, newSalary) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .update({ base_salary: parseFloat(newSalary) })
+        .eq('id', employeeId);
+
+      if (error) throw error;
+      fetchEmployees();
+      return { success: true };
+    } catch (err) {
+      console.error('Error updating salary:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  const payEmployeeSalary = async (employeeId) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('employee_deductions')
+        .update({ status: 'resolved' })
+        .eq('employee_id', employeeId)
+        .eq('status', 'pending');
+
+      if (error) throw error;
+      fetchDeductions();
+      return { success: true };
+    } catch (err) {
+      console.error('Error paying employee:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  const payAllSalaries = async () => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('employee_deductions')
+        .update({ status: 'resolved' })
+        .eq('status', 'pending');
+
+      if (error) throw error;
+      fetchDeductions();
+      return { success: true };
+    } catch (err) {
+      console.error('Error paying all salaries:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
 
   const bookRoom = async (roomId, bookingDetails) => {
     if (!user) return { success: false, error: 'Not authenticated' }
@@ -506,6 +727,8 @@ export function AppProvider({ children }) {
     transactions,
     expenses,
     kitchenTransactions,
+    employees,
+    deductions,
     loadingData,
     dataError,
     lastCollectionTime,
@@ -515,6 +738,14 @@ export function AppProvider({ children }) {
     reportExpense,
     collectCash,
     collectKitchenCash,
+    registerEmployee,
+    removeEmployee,
+    updateEmployeeSalary,
+    recordDeduction,
+    resolveDeduction,
+    payEmployeeSalary,
+    payAllSalaries,
+    deleteDeduction,
     t,
     language,
     changeLanguage,

@@ -6,7 +6,7 @@ import '../styles/StaffPortal.css'
 
 export default function StaffPortal() {
   const { user, logout } = useAuth()
-  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData } = useApp()
+  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData, employees, recordDeduction } = useApp()
   const navigate = useNavigate()
 
   const [submitting, setSubmitting] = useState(false)
@@ -25,6 +25,14 @@ export default function StaffPortal() {
   const [showClientsModal, setShowClientsModal] = useState(false)
   const [showDailyClientsModal, setShowDailyClientsModal] = useState(false)
   const [roomFilter, setRoomFilter] = useState('all') // 'all', 'occupied', 'available'
+
+  // Deduction States
+  const [showDeductionModal, setShowDeductionModal] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(false)
+  const [deductionEmployeeId, setDeductionEmployeeId] = useState('')
+  const [deductionType, setDeductionType] = useState('loan')
+  const [deductionAmount, setDeductionAmount] = useState('')
+  const [deductionReason, setDeductionReason] = useState('')
 
   // Filter out system events (markers) from real expenses
   const realExpenses = expenses.filter(exp => 
@@ -151,55 +159,62 @@ export default function StaffPortal() {
     e.preventDefault()
     setSubmitting(true)
     setActionError('')
-    const result = await reportExpense(expenseAmount, expenseDescription)
+    try {
+      const result = await reportExpense(expenseAmount, expenseDescription)
+      setSubmitting(false)
+      if (!result.success) {
+        setActionError(result.error || 'Failed to report expense.')
+      } else {
+        setExpenseAmount('')
+        setExpenseDescription('')
+        setShowExpenseForm(false)
+      }
+    } catch (err) {
+      console.error('Failed to save expense:', err)
+      setActionError(err.message || 'Failed to save expense.')
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeductionSubmit = async (e) => {
+    e.preventDefault()
+    if (!deductionEmployeeId || !deductionAmount) return
+    if (deductionType === 'fine' && !deductionReason) return
+    
+    setSubmitting(true)
+    setActionError('')
+    const finalReason = deductionType === 'loan' ? 'Loan / Salary Advance' : deductionReason;
+    const result = await recordDeduction(deductionEmployeeId, deductionType, deductionAmount, finalReason)
     setSubmitting(false)
+    
     if (!result.success) {
-      setActionError(result.error || 'Failed to report expense.')
+      setActionError(result.error || 'Failed to record deduction.')
     } else {
-      setExpenseAmount('')
-      setExpenseDescription('')
-      setShowExpenseForm(false)
+      setDeductionEmployeeId('')
+      setDeductionType('loan')
+      setDeductionAmount('')
+      setDeductionReason('')
+      setShowDeductionModal(false)
     }
   }
 
   return (
     <div className="staff-portal">
       <header className="staff-header">
-        <div className="header-left">
-          <h1>{t('staff_portal')}</h1>
-          <p>Welcome, {user?.email}</p>
+        <div className="header-left" style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+          <button 
+            onClick={() => setShowSidebar(true)}
+            style={{background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}
+          >
+            ☰
+          </button>
+          <div>
+            <h1>{t('staff_portal')}</h1>
+            <p style={{fontSize: '0.8rem', opacity: 0.9}}>Welcome, {user?.email}</p>
+          </div>
         </div>
         <div className="header-actions" style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-          <div className="language-switch" style={{display: 'flex', background: 'rgba(255,255,255,0.2)', padding: '3px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(4px)'}}>
-             <button 
-               onClick={() => changeLanguage('en')}
-               style={{
-                 background: language === 'en' ? 'white' : 'transparent', 
-                 color: language === 'en' ? '#0d9488' : 'white', 
-                 border: 'none', 
-                 padding: '5px 12px', 
-                 borderRadius: '25px', 
-                 cursor: 'pointer', 
-                 fontWeight: 'bold',
-                 fontSize: '0.85rem',
-                 transition: 'all 0.3s ease'
-               }}
-             >EN</button>
-             <button 
-               onClick={() => changeLanguage('rw')}
-               style={{
-                 background: language === 'rw' ? 'white' : 'transparent', 
-                 color: language === 'rw' ? '#0d9488' : 'white', 
-                 border: 'none', 
-                 padding: '5px 12px', 
-                 borderRadius: '25px', 
-                 cursor: 'pointer', 
-                 fontWeight: 'bold',
-                 fontSize: '0.85rem',
-                 transition: 'all 0.3s ease'
-               }}
-             >RW</button>
-          </div>
+
            {deferredPrompt && !isPWAInstalled && (
             <button 
               onClick={installPWA}
@@ -221,7 +236,7 @@ export default function StaffPortal() {
               <span>📲</span> {t('install_app') || 'Install App'}
             </button>
           )}
-          <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
+
         </div>
       </header>
 
@@ -299,6 +314,8 @@ export default function StaffPortal() {
                {t('record_expense')}
              </button>
           </div>
+
+
         </div>
 
         {/* Expense Form Modal */}
@@ -337,6 +354,92 @@ export default function StaffPortal() {
                   type="button"
                   className="btn-cancel"
                   onClick={() => setShowExpenseForm(false)}
+                >
+                  {t('cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Deduction Form Modal */}
+        {showDeductionModal && (
+          <div className="modal-overlay">
+            <form className="modal-form" onSubmit={handleDeductionSubmit}>
+              <h3>Report Deduction (Loan / Fine)</h3>
+              
+              <div className="form-group">
+                <label>Employee</label>
+                <select
+                  value={deductionEmployeeId}
+                  onChange={(e) => setDeductionEmployeeId(e.target.value)}
+                  required
+                  style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1'}}
+                >
+                  <option value="">-- Select Employee --</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Type</label>
+                <div className="toggle-buttons" style={{display: 'flex', gap: '0.5rem'}}>
+                  <button
+                    type="button"
+                    className={`toggle-btn ${deductionType === 'loan' ? 'active' : ''}`}
+                    onClick={() => setDeductionType('loan')}
+                    style={{flex: 1}}
+                  >
+                    Loan (Avance)
+                  </button>
+                  <button
+                    type="button"
+                    className={`toggle-btn ${deductionType === 'fine' ? 'active' : ''}`}
+                    onClick={() => setDeductionType('fine')}
+                    style={{flex: 1, backgroundColor: deductionType === 'fine' ? '#ef4444' : ''}}
+                  >
+                    Fine
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Amount (RWF)</label>
+                <input
+                  type="number"
+                  value={deductionAmount}
+                  onChange={(e) => setDeductionAmount(e.target.value)}
+                  placeholder="e.g. 5000"
+                  required
+                  min="1"
+                  style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1'}}
+                />
+              </div>
+
+              {deductionType === 'fine' && (
+                <div className="form-group">
+                  <label>Reason / Details (Required for Fines)</label>
+                  <textarea
+                    value={deductionReason}
+                    onChange={(e) => setDeductionReason(e.target.value)}
+                    placeholder="Explain the reason for this fine..."
+                    required
+                    rows="3"
+                    style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', resize: 'vertical'}}
+                  />
+                </div>
+              )}
+
+              <div className="form-actions">
+                <button type="submit" className="btn-submit" disabled={submitting}>
+                  {submitting ? t('loading') : 'Save Deduction'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setShowDeductionModal(false)}
                 >
                   {t('cancel')}
                 </button>
@@ -705,7 +808,76 @@ export default function StaffPortal() {
           Sync Data
         </button>
       </div>
+
+      {/* Sidebar Menu */}
+      {showSidebar && (
+        <>
+          <div 
+            className="sidebar-overlay" 
+            onClick={() => setShowSidebar(false)}
+            style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, backdropFilter: 'blur(4px)'}}
+          />
+          <div 
+            className="sidebar-menu"
+            style={{
+              position: 'fixed', 
+              top: 0, 
+              left: 0, 
+              bottom: 0, 
+              width: '80%', 
+              maxWidth: '300px',
+              background: '#f8fafc', 
+              zIndex: 1001, 
+              padding: '0',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '5px 0 25px rgba(0,0,0,0.15)',
+              transition: 'transform 0.3s ease-out'
+            }}
+          >
+            <div style={{padding: '30px 20px', background: 'linear-gradient(135deg, #0d9488, #0f766e)', color: 'white'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+                <h2 style={{margin: 0, fontSize: '1.5rem'}}>{t('staff_menu')}</h2>
+                <button onClick={() => setShowSidebar(false)} style={{background: 'rgba(255,255,255,0.2)', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'white', width: '32px', height: '32px', borderRadius: '50%'}}>&times;</button>
+              </div>
+              <p style={{margin: 0, fontSize: '0.85rem', opacity: 0.8}}>{user?.email}</p>
+            </div>
+
+            <div style={{display: 'flex', flexDirection: 'column', gap: '10px', padding: '20px', flex: 1}}>
+              <button 
+                onClick={() => { setShowDeductionModal(true); setShowSidebar(false); }}
+                style={{textAlign: 'left', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', color: '#1e293b', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'}}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{color: '#0d9488'}}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+                {t('report_deduction')}
+              </button>
+
+
+              <div style={{marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '20px'}}>
+                <label style={{display: 'block', marginBottom: '12px', fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.05em'}}>{t('language').toUpperCase()}</label>
+                <div style={{display: 'flex', gap: '10px', background: '#f1f5f9', padding: '4px', borderRadius: '12px'}}>
+                  <button 
+                    onClick={() => changeLanguage('en')} 
+                    style={{flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: language === 'en' ? 'white' : 'transparent', color: language === 'en' ? '#0d9488' : '#64748b', fontWeight: 'bold', boxShadow: language === 'en' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', cursor: 'pointer'}}
+                  >English</button>
+                  <button 
+                    onClick={() => changeLanguage('rw')} 
+                    style={{flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: language === 'rw' ? 'white' : 'transparent', color: language === 'rw' ? '#0d9488' : '#64748b', fontWeight: 'bold', boxShadow: language === 'rw' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', cursor: 'pointer'}}
+                  >Rwanda</button>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleLogout}
+                style={{marginTop: 'auto', textAlign: 'left', padding: '16px', borderRadius: '12px', border: '1px solid #fee2e2', background: '#fef2f2', color: '#b91c1c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer'}}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                {t('logout')}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
-

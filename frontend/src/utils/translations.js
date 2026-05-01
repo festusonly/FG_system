@@ -19,6 +19,14 @@ export const translations = {
     overview: 'Rooms',
     history: 'History',
     settings: 'Settings',
+    employee: 'Employee',
+    pay_all_salaries: 'Pay All Salaries',
+    registered: 'Registered',
+    edit: 'Edit',
+    net_pay_amount: 'Net Pay Amount',
+    no_employees_found: 'No employees registered yet.',
+    select_employee: 'Select Employee',
+    sync_data: 'Sync Data',
     
     // Login
     welcome_back: 'Welcome Back',
@@ -131,6 +139,13 @@ export const translations = {
     daily_profit: 'Daily Profit',
     performance_5day_kitchen: '5-Day Kitchen History',
     detailed_log: 'Detailed Log',
+    todays_client_log: "Today's Full Client Log",
+    no_clients_today: 'No clients today yet.',
+    collection_history: 'Collection History',
+    period_between_collections: 'Between cash collections',
+    collection_period: 'Collection Period',
+    since_label: 'Since',
+    to_label: 'To',
     
     // Admin Dashboard - Settings
     security_settings: 'Security Settings',
@@ -186,7 +201,28 @@ export const translations = {
     alert_kitchen_sale_title: '🍳 Kitchen Sale',
     alert_kitchen_sale_desc: '{worker} just sold "{desc}" and received RWF {amount}.',
     alert_kitchen_purchase_title: '🛒 Kitchen Purchase',
-    alert_kitchen_purchase_desc: '{worker} spent RWF {amount} to buy: "{desc}".'
+    alert_kitchen_purchase_desc: '{worker} spent RWF {amount} to buy: "{desc}".',
+    
+    // Employee Management
+    employees: 'Employees',
+    search_employee: 'Search employee by name...',
+    pay_salary: 'Pay Salary',
+    record_deduction: 'Record Deduction',
+    view_id_card: 'View ID Card',
+    delete_employee: 'Delete Employee',
+    loan: 'Loan (Avance)',
+    fine: 'Fine (Amande)',
+    staff_menu: 'Staff Menu',
+    report_deduction: 'Report Deduction',
+    materials: 'Materials',
+    actions: 'Actions',
+    full_name: 'Full Name',
+    phone_number: 'Phone Number',
+    base_salary: 'Base Salary',
+    register_employee: 'Register New Employee',
+    save_deduction: 'Save Deduction',
+    reason_details: 'Reason / Details',
+    required_for_fines: 'Required for Fines'
   },
   rw: {
     // Header & General
@@ -208,6 +244,14 @@ export const translations = {
     overview: 'Ibyumba',
     history: 'Amateka',
     settings: 'Igenamiterere',
+    employee: 'Umukozi',
+    pay_all_salaries: 'Hemba Abakozi Bose',
+    registered: 'Banditse',
+    edit: 'Kosora',
+    net_pay_amount: 'Ayo Kwishura (Net)',
+    no_employees_found: 'Nta mukozi urandikwa muri sisitemu.',
+    select_employee: 'Hitamo Umukozi',
+    sync_data: 'Guhuza Amakuru',
     
     // Login
     welcome_back: 'Murakaza neza',
@@ -323,6 +367,13 @@ export const translations = {
     daily_profit: 'Inyungu y\'uyu munsi',
     performance_5day_kitchen: 'Amateka y\'Igikoni (Iminsi 5)',
     detailed_log: 'Amakuru arambuye',
+    todays_client_log: "Urutonde rw'Abakiriya b'Uyu Munsi",
+    no_clients_today: 'Nta mukiriya uraza uyu munsi.',
+    collection_history: 'Amateka yo Gukura Amafaranga',
+    period_between_collections: 'Igihe kiri hagati yo gukura amafaranga',
+    collection_period: 'Igihe cyashize',
+    since_label: 'Kuva',
+    to_label: 'Kugera',
     
     // Admin Dashboard - Settings
     security_settings: 'Igenamiterere ry\'Umutekano',
@@ -378,6 +429,27 @@ export const translations = {
     alert_kitchen_sale_title: '🍳 Igurisha mu Gikoni',
     alert_kitchen_sale_desc: '{worker} agurishije "{desc}" yakira RWF {amount}.',
     alert_kitchen_purchase_title: '🛒 Ibyaranguwe mu Gikoni',
-    alert_kitchen_purchase_desc: '{worker} akoresheje RWF {amount} arangura: "{desc}".'
+    alert_kitchen_purchase_desc: '{worker} akoresheje RWF {amount} arangura: "{desc}".',
+
+    // Employee Management
+    employees: 'Abakozi',
+    search_employee: 'Shakisha umukozi ukoresheje izina...',
+    pay_salary: 'Hemba Umukozi',
+    record_deduction: 'Andika Ideni/Amande',
+    view_id_card: 'Reba Indangamuntu',
+    delete_employee: 'Siba Umukozi',
+    loan: 'Inguzanyo (Avance)',
+    fine: 'Amande',
+    staff_menu: 'Menu y\'Abakozi',
+    report_deduction: 'Menyesha Ideni/Amande',
+    materials: 'Ibikoresho',
+    actions: 'Ibikorwa',
+    full_name: 'Izina Ryose',
+    phone_number: 'Nimero ya Terefone',
+    base_salary: 'Umushahara Fatizo',
+    register_employee: 'Andika Umukozi Mushya',
+    save_deduction: 'Bika Ideni/Amande',
+    reason_details: 'Impamvu / Ibisobanuro',
+    required_for_fines: 'Bigomba kwandikwa kuri amande'
   }
 };
