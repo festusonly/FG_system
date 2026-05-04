@@ -1618,11 +1618,23 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
   const historyData = generateKitchenHistory()
 
   const handleCollect = async () => {
-    if (pendingProfit <= 0) return alert('No profit to collect yet.')
-    if (window.confirm(`Collect RWF ${pendingProfit.toLocaleString()} (Net Profit) from kitchen?`)) {
+    // We allow collection even if negative to "settle" the period
+    const profitLabel = pendingProfit >= 0 ? `RWF ${pendingProfit.toLocaleString()} (Net Profit)` : `RWF ${pendingProfit.toLocaleString()} (Net Loss)`;
+    
+    if (window.confirm(`Settle kitchen account with ${profitLabel}? This will mark current transactions as collected.`)) {
       setIsCollecting(true)
-      await collectKitchenCash()
-      setIsCollecting(false)
+      try {
+        const res = await collectKitchenCash()
+        if (res.success) {
+          alert('Kitchen account settled successfully!')
+        } else {
+          alert('Error: ' + (res.error || 'Failed to settle account'))
+        }
+      } catch (err) {
+        alert('Error: ' + err.message)
+      } finally {
+        setIsCollecting(false)
+      }
     }
   }
 
@@ -1638,7 +1650,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
           <button 
             className="btn-collect" 
             onClick={handleCollect}
-            disabled={pendingProfit <= 0 || isCollecting}
+            disabled={isCollecting}
           >
             {isCollecting ? t('loading') : t('collect_cash')}
           </button>
