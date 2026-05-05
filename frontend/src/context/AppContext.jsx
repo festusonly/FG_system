@@ -716,7 +716,7 @@ export function AppProvider({ children }) {
       if (txError) throw txError
       const { error: expError } = await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       if (expError) throw expError
-      const { error: dedError } = await supabase.from('deductions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      const { error: dedError } = await supabase.from('employee_deductions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       if (dedError) throw dedError
       const { error: roomError } = await supabase.from('rooms').update({ status: 'available', usage_count: 0 }).neq('id', '00000000-0000-0000-0000-000000000000')
       if (roomError) throw roomError

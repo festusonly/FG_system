@@ -95,7 +95,7 @@ CREATE POLICY "Authenticated users can update rooms" ON public.rooms
 
 
 -- -----------------------------------------------------------------
--- 4. SEED THE 40 ROOMS
+-- 4. SEED THE 41 ROOMS
 -- -----------------------------------------------------------------
 INSERT INTO public.rooms (room_number, name, status, usage_count)
 VALUES
@@ -138,7 +138,8 @@ VALUES
   ('37', 'Room 37', 'available', 0),
   ('38', 'Room 38', 'available', 0),
   ('39', 'Room 39', 'available', 0),
-  ('40', 'Room 40', 'available', 0)
+  ('40', 'Room 40', 'available', 0),
+  ('41', 'Room 41', 'available', 0)
 ON CONFLICT (room_number) DO NOTHING;
 
 

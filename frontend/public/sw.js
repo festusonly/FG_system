@@ -32,11 +32,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event: Chrome PWA requirement
+// Fetch Event
 self.addEventListener('fetch', (event) => {
+  // 1. Handle Navigation Requests (Return index.html for any page navigation)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/index.html');
+      })
+    );
+    return;
+  }
+
+  // 2. Standard Asset Fetching
   if (event.request.method !== 'GET') return;
   
-  // Skip cross-origin requests (like supabase) to ensure stability
+  // Skip cross-origin requests (like supabase)
   if (!event.request.url.startsWith(self.location.origin)) return;
 
   event.respondWith(
@@ -55,7 +66,7 @@ self.addEventListener('fetch', (event) => {
 
         return response;
       }).catch(() => {
-        // Optional: return offline fallback
+        // Fallback for images or other assets if needed
       });
     })
   );
