@@ -48,6 +48,23 @@ export default function StaffPortal() {
   // Filter for TODAY'S data only
   const todayString = new Date().toDateString()
   const todaysTransactions = transactions.filter(tx => new Date(tx.time).toDateString() === todayString)
+  
+  // Deduplicated today's list for display
+  const todaysTxDeduped = (() => {
+    const completed = todaysTransactions.filter(tx => tx.status !== 'active')
+    const activeOnly = todaysTransactions.filter(tx => tx.status === 'active')
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+    const seenActive = new Set()
+    const uniqueActive = []
+    for (const tx of activeOnly) {
+      if (!seenActive.has(tx.roomId)) {
+        seenActive.add(tx.roomId)
+        uniqueActive.push(tx)
+      }
+    }
+    return [...completed, ...uniqueActive]
+  })()
+
   const todaysExpenses = realExpenses.filter(exp => new Date(exp.time).toDateString() === todayString)
 
   // Shift Calculations (Since Last Collection)
@@ -64,11 +81,27 @@ export default function StaffPortal() {
     return txTime > collTime
   })
 
-  const cashOnHand = shiftTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+  // Deduplicated shift list for DISPLAY & CASH (collapsed duplicates per room)
+  const shiftTxDeduped = (() => {
+    const completed = shiftTransactions.filter(tx => tx.status !== 'active')
+    const activeOnly = shiftTransactions.filter(tx => tx.status === 'active')
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+    const seenActive = new Set()
+    const uniqueActive = []
+    for (const tx of activeOnly) {
+      if (!seenActive.has(tx.roomId)) {
+        seenActive.add(tx.roomId)
+        uniqueActive.push(tx)
+      }
+    }
+    return [...completed, ...uniqueActive]
+  })()
+
+  const cashOnHand = shiftTxDeduped.reduce((sum, tx) => sum + tx.amount, 0)
   const totalShiftExpenses = shiftExpenses.reduce((sum, exp) => sum + exp.amount, 0)
   const netCashInDrawer = cashOnHand - totalShiftExpenses
 
-  // Stats (Still needed for specific daily view if needed)
+  // Stats (Ground Truth from rooms table)
   const totalRoomsTaken = rooms.filter(r => r.status === 'occupied').length
   const totalMoneyToday = todaysTransactions.reduce((sum, tx) => sum + tx.amount, 0)
   const totalExpensesToday = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
@@ -279,7 +312,7 @@ export default function StaffPortal() {
           {/* 2. Clients in Shift */}
           <div className="stat-card" style={{border: '1.5px solid #818cf8', background: 'rgba(129, 140, 248, 0.05)'}}>
             <h3>{t('clients_in_shift')}</h3>
-            <p className="stat-value">{shiftTransactions.length}</p>
+            <p className="stat-value">{shiftTxDeduped.length}</p>
             <button className="btn-details-card" onClick={() => setShowClientsModal(true)}>
               {t('view_details')}
             </button>
@@ -650,8 +683,8 @@ export default function StaffPortal() {
                       </tr>
                     </thead>
                     <tbody>
-                      {shiftTransactions.length > 0 ? (
-                        shiftTransactions
+                      {shiftTxDeduped.length > 0 ? (
+                        shiftTxDeduped
                           .sort((a, b) => {
                             if (a.status === 'active' && b.status !== 'active') return -1
                             if (a.status !== 'active' && b.status === 'active') return 1
@@ -741,7 +774,7 @@ export default function StaffPortal() {
                 <div className="modal-summary-grid">
                   <div className="modal-stat">
                     <span>{t('total_clients')}</span>
-                    <strong>{todaysTransactions.length}</strong>
+                    <strong>{todaysTxDeduped.length}</strong>
                   </div>
                   <div className="modal-stat">
                     <span>{t('net_revenue')}</span>
@@ -760,8 +793,8 @@ export default function StaffPortal() {
                       </tr>
                     </thead>
                     <tbody>
-                      {todaysTransactions.length > 0 ? (
-                        todaysTransactions
+                      {todaysTxDeduped.length > 0 ? (
+                        todaysTxDeduped
                           .sort((a, b) => {
                             if (a.status === 'active' && b.status !== 'active') return -1
                             if (a.status !== 'active' && b.status === 'active') return 1

@@ -1305,11 +1305,12 @@ export default function AdminDashboard() {
 // Sub-components moved outside to prevent remounting issues
 const AdminSettingsSection = ({ user }) => {
   const { updatePassword } = useAuth()
-  const { t } = useApp()
+  const { t, resetStaffData, resetKitchenData, refreshData } = useApp()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [updating, setUpdating] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
   const [msg, setMsg] = useState({ type: '', text: '' })
 
   const handlePasswordChange = async (e) => {
@@ -1331,6 +1332,40 @@ const AdminSettingsSection = ({ user }) => {
       setConfirmPassword('')
     } else {
       setMsg({ type: 'error', text: res.error })
+    }
+  }
+
+  const handleResetStaff = async () => {
+    if (window.confirm("⚠️ DANGER: This will delete ALL room transactions, expenses, and deductions, and reset all rooms to available. This cannot be undone! Are you sure?")) {
+      const confirmText = window.prompt("Type 'RESET' to confirm deleting all staff history:")
+      if (confirmText === 'RESET') {
+        setIsResetting(true)
+        const res = await resetStaffData()
+        setIsResetting(false)
+        if (res.success) {
+          alert("Staff data reset successfully!")
+          refreshData()
+        } else {
+          alert("Error: " + res.error)
+        }
+      }
+    }
+  }
+
+  const handleResetKitchen = async () => {
+    if (window.confirm("⚠️ DANGER: This will delete ALL kitchen sales and purchases. This cannot be undone! Are you sure?")) {
+      const confirmText = window.prompt("Type 'RESET' to confirm deleting all kitchen history:")
+      if (confirmText === 'RESET') {
+        setIsResetting(true)
+        const res = await resetKitchenData()
+        setIsResetting(false)
+        if (res.success) {
+          alert("Kitchen data reset successfully!")
+          refreshData()
+        } else {
+          alert("Error: " + res.error)
+        }
+      }
     }
   }
 
@@ -1361,7 +1396,6 @@ const AdminSettingsSection = ({ user }) => {
                     }
                     Notification.requestPermission().then(permission => {
                       if (permission === 'granted') {
-                        // Trigger a test message to register the SW controller
                         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                           navigator.serviceWorker.controller.postMessage({
                             type: 'SHOW_NOTIFICATION',
@@ -1369,7 +1403,6 @@ const AdminSettingsSection = ({ user }) => {
                             body: 'You will now receive live updates on this device.'
                           });
                         } else {
-                          // Fallback to local notification if controller not ready
                           new Notification('🔔 Alerts Enabled', { body: 'Ready for live updates!' });
                         }
                       }
@@ -1467,8 +1500,40 @@ const AdminSettingsSection = ({ user }) => {
       <div className="settings-card">
         <h2>{t('staff_access')}</h2>
         <p className="settings-subtitle">{t('staff_access_subtitle')}</p>
-        
         <StaffManagementList user={user} />
+      </div>
+
+      <div className="settings-card danger-zone" style={{marginTop: '2rem', border: '2px solid #ef4444', background: '#fef2f2'}}>
+        <h2 style={{color: '#b91c1c'}}>☢️ {t('danger_zone') || 'Danger Zone'}</h2>
+        <p className="settings-subtitle" style={{color: '#991b1b'}}>{t('danger_zone_subtitle') || 'These actions are permanent and cannot be undone.'}</p>
+        
+        <div style={{display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem'}}>
+          <div style={{padding: '1rem', background: '#ffffff', borderRadius: '12px', border: '1px solid #fee2e2'}}>
+            <h3 style={{fontSize: '1rem', margin: '0 0 0.5rem 0', color: '#1e293b'}}>Reset Staff & Rooms Data</h3>
+            <p style={{fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem'}}>Deletes all room transactions, expenses, deductions, and resets all rooms to 'Available'.</p>
+            <button 
+              className="btn-save-settings danger" 
+              style={{background: '#ef4444', width: 'auto'}}
+              onClick={handleResetStaff}
+              disabled={isResetting}
+            >
+              {isResetting ? t('loading') : 'Reset Staff Data'}
+            </button>
+          </div>
+
+          <div style={{padding: '1rem', background: '#ffffff', borderRadius: '12px', border: '1px solid #fee2e2'}}>
+            <h3 style={{fontSize: '1rem', margin: '0 0 0.5rem 0', color: '#1e293b'}}>Reset Kitchen Data</h3>
+            <p style={{fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem'}}>Deletes all kitchen sales and purchases history.</p>
+            <button 
+              className="btn-save-settings danger" 
+              style={{background: '#ef4444', width: 'auto'}}
+              onClick={handleResetKitchen}
+              disabled={isResetting}
+            >
+              {isResetting ? t('loading') : 'Reset Kitchen Data'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )

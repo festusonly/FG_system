@@ -710,6 +710,33 @@ export function AppProvider({ children }) {
       return { success: false, error: err.message }
     }
   }
+  const resetStaffData = async () => {
+    try {
+      const { error: txError } = await supabase.from('transactions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      if (txError) throw txError
+      const { error: expError } = await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      if (expError) throw expError
+      const { error: dedError } = await supabase.from('deductions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      if (dedError) throw dedError
+      const { error: roomError } = await supabase.from('rooms').update({ status: 'available', usage_count: 0 }).neq('id', '00000000-0000-0000-0000-000000000000')
+      if (roomError) throw roomError
+      return { success: true }
+    } catch (err) {
+      console.error('Reset staff data error:', err)
+      return { success: false, error: err.message }
+    }
+  }
+
+  const resetKitchenData = async () => {
+    try {
+      const { error: kTxError } = await supabase.from('kitchen_transactions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      if (kTxError) throw kTxError
+      return { success: true }
+    } catch (err) {
+      console.error('Reset kitchen data error:', err)
+      return { success: false, error: err.message }
+    }
+  }
 
   const value = {
     rooms,
@@ -742,7 +769,9 @@ export function AppProvider({ children }) {
     deferredPrompt,
     installPWA,
     isPWAInstalled,
-    refreshData
+    refreshData,
+    resetStaffData,
+    resetKitchenData
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
