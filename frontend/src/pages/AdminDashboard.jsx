@@ -115,10 +115,16 @@ export default function AdminDashboard() {
   const totalToday = todaysTransactions.reduce((sum, tx) => sum + tx.amount, 0)
   const totalExpensesToday = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
   
-  const occupiedRooms = rooms.filter(r => r.status === 'occupied').length
-  const availableRooms = rooms.length - occupiedRooms
+  // Use ALL transactions with status 'active' — NOT filtered by today.
+  // This ensures guests who checked in before midnight still appear.
+  // Cross-reference with rooms table so orphaned transactions (room=available but tx=active) are excluded.
+  const activeTransactions = transactions.filter(tx => 
+    tx.status === 'active' && rooms.some(r => r.id === tx.roomId && r.status === 'occupied')
+  )
 
-  const activeTransactions = todaysTransactions.filter(tx => tx.status === 'active')
+  const occupiedRooms = activeTransactions.length
+  const availableRooms = rooms.filter(r => r.status === 'available').length
+
   const shortStayCount = activeTransactions.filter(tx => tx.type === 'short_hours').length
   const nightStayCount = activeTransactions.filter(tx => tx.type === 'night' || tx.type === 'many_days').length
 

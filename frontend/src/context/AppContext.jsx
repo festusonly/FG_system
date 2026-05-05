@@ -566,7 +566,19 @@ export function AppProvider({ children }) {
     if (!user) return { success: false, error: 'Not authenticated' }
 
     try {
-      // 1. Insert the transaction into Supabase (Refreshed)
+      // 1. Double-check room status to prevent duplicate booking (integrity check)
+      const { data: currentRoomData, error: fetchErr } = await supabase
+        .from('rooms')
+        .select('status, usage_count')
+        .eq('id', roomId)
+        .single();
+      
+      if (fetchErr) throw fetchErr;
+      if (currentRoomData?.status === 'occupied') {
+        return { success: false, error: 'Room is already occupied.' }
+      }
+
+      // 2. Insert the transaction into Supabase (Refreshed)
       const { error: txError } = await supabase
         .from('transactions')
         .insert({
@@ -581,13 +593,12 @@ export function AppProvider({ children }) {
 
       if (txError) throw txError
 
-      // 2. Update room status and increment usage count
-      const currentRoom = rooms.find(r => r.id === roomId)
+      // 3. Update room status and increment usage count
       const { error: roomError } = await supabase
         .from('rooms')
         .update({
           status: 'occupied',
-          usage_count: (currentRoom?.usageCount || 0) + 1,
+          usage_count: (currentRoomData?.usage_count || 0) + 1,
           updated_at: new Date().toISOString(),
         })
         .eq('id', roomId)

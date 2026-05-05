@@ -12,6 +12,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: localStorage
+    storageKey: 'fg_system_auth_token', // explicit key prevents collision & accidental clearing
+    storage: {
+      // Custom storage wrapper: silently handles any storage errors (e.g. private mode, Android clearing)
+      getItem: (key) => {
+        try { return localStorage.getItem(key) } catch { return null }
+      },
+      setItem: (key, value) => {
+        try { localStorage.setItem(key, value) } catch {}
+      },
+      removeItem: (key) => {
+        try { localStorage.removeItem(key) } catch {}
+      },
+    }
   }
 })
