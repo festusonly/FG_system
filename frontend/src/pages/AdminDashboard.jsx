@@ -100,6 +100,24 @@ export default function AdminDashboard() {
     return txTime > collTime
   })
 
+  // Deduplicated shift list for DISPLAY only (counts & tables).
+  // Completed bookings are always shown (a room can be reused in a shift).
+  // For active bookings, collapse duplicates per room — keep only the latest.
+  const shiftTxDeduped = (() => {
+    const completed = shiftTransactions.filter(tx => tx.status !== 'active')
+    const activeOnly = shiftTransactions.filter(tx => tx.status === 'active')
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+    const seenActive = new Set()
+    const uniqueActive = []
+    for (const tx of activeOnly) {
+      if (!seenActive.has(tx.roomId)) {
+        seenActive.add(tx.roomId)
+        uniqueActive.push(tx)
+      }
+    }
+    return [...completed, ...uniqueActive]
+  })()
+
   const shiftExpenses = realExpenses.filter(exp => {
     if (!exp.time) return false;
     const txTime = new Date(exp.time).getTime()
@@ -107,7 +125,7 @@ export default function AdminDashboard() {
     return txTime > collTime
   })
 
-  const cashOnHand = shiftTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+  const cashOnHand = shiftTxDeduped.reduce((sum, tx) => sum + tx.amount, 0)
   const totalShiftExpenses = shiftExpenses.reduce((sum, exp) => sum + exp.amount, 0)
   const netCashToCollect = cashOnHand - totalShiftExpenses
 
@@ -115,14 +133,23 @@ export default function AdminDashboard() {
   const totalToday = todaysTransactions.reduce((sum, tx) => sum + tx.amount, 0)
   const totalExpensesToday = todaysExpenses.reduce((sum, exp) => sum + exp.amount, 0)
   
-  // Use ALL transactions with status 'active' — NOT filtered by today.
-  // This ensures guests who checked in before midnight still appear.
-  // Cross-reference with rooms table so orphaned transactions (room=available but tx=active) are excluded.
-  const activeTransactions = transactions.filter(tx => 
+  // Active transactions: cross-reference with rooms table to exclude orphans,
+  // then deduplicate by room (keep latest per room) to handle race-condition duplicates.
+  const allActiveTx = transactions.filter(tx =>
     tx.status === 'active' && rooms.some(r => r.id === tx.roomId && r.status === 'occupied')
-  )
+  ).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
 
-  const occupiedRooms = activeTransactions.length
+  const activeTransactions = []
+  const seenRoomIds = new Set()
+  for (const tx of allActiveTx) {
+    if (!seenRoomIds.has(tx.roomId)) {
+      seenRoomIds.add(tx.roomId)
+      activeTransactions.push(tx)
+    }
+  }
+
+  // Ground truth: count comes from the rooms table, not transaction count
+  const occupiedRooms = rooms.filter(r => r.status === 'occupied').length
   const availableRooms = rooms.filter(r => r.status === 'available').length
 
   const shortStayCount = activeTransactions.filter(tx => tx.type === 'short_hours').length
@@ -482,7 +509,7 @@ export default function AdminDashboard() {
             style={{border: '1.5px solid #818cf8', background: 'rgba(129, 140, 248, 0.05)'}}
           >
             <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
-            <p className="metric-value">{shiftTransactions.length}</p>
+            <p className="metric-value">{shiftTxDeduped.length}</p>
             <button 
               className="btn-details-card" 
               onClick={(e) => {
@@ -624,8 +651,8 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {shiftTransactions.length > 0 ? (
-                    shiftTransactions
+                  {shiftTxDeduped.length > 0 ? (
+                    shiftTxDeduped
                       .sort((a, b) => {
                         if (a.status === 'active' && b.status !== 'active') return -1
                         if (a.status !== 'active' && b.status === 'active') return 1
@@ -1058,8 +1085,8 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {shiftTransactions.length > 0 ? (
-                      shiftTransactions
+                    {shiftTxDeduped.length > 0 ? (
+                      shiftTxDeduped
                         .sort((a, b) => {
                           if (a.status === 'active' && b.status !== 'active') return -1
                           if (a.status !== 'active' && b.status === 'active') return 1
