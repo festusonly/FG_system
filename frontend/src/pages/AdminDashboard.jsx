@@ -1053,18 +1053,18 @@ export default function AdminDashboard() {
               <div className="modal-summary-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px', marginBottom: '25px'}}>
                 <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>
                   <span style={{fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('total_clients')}</span>
-                  <strong style={{fontSize: '1.25rem', color: '#1e293b'}}>{shiftTransactions.length}</strong>
+                  <strong style={{fontSize: '1.25rem', color: '#1e293b'}}>{shiftTxDeduped.length}</strong>
                 </div>
                 <div className="modal-stat" style={{background: '#f0f9ff', padding: '15px', borderRadius: '10px', border: '1px solid #e0f2fe'}}>
                   <span style={{fontSize: '0.75rem', color: '#0369a1', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('night_stay')} (Barara)</span>
                   <strong style={{fontSize: '1.25rem', color: '#0c4a6e'}}>
-                    {shiftTransactions.filter(tx => tx.type === 'night' || tx.type === 'many_days').length}
+                    {shiftTxDeduped.filter(tx => tx.type === 'night' || tx.type === 'many_days').length}
                   </strong>
                 </div>
                 <div className="modal-stat" style={{background: '#f0fdfa', padding: '15px', borderRadius: '10px', border: '1px solid #ccfbf1'}}>
                   <span style={{fontSize: '0.75rem', color: '#0f766e', textTransform: 'uppercase', fontWeight: '700', display: 'block', marginBottom: '5px'}}>{t('short_stay')} (Bataha)</span>
                   <strong style={{fontSize: '1.25rem', color: '#134e4a'}}>
-                    {shiftTransactions.filter(tx => tx.type === 'short_hours').length}
+                    {shiftTxDeduped.filter(tx => tx.type === 'short_hours').length}
                   </strong>
                 </div>
                 <div className="modal-stat" style={{background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #f1f5f9'}}>

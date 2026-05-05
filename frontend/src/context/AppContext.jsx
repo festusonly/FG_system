@@ -566,44 +566,22 @@ export function AppProvider({ children }) {
     if (!user) return { success: false, error: 'Not authenticated' }
 
     try {
-      // 1. Double-check room status to prevent duplicate booking (integrity check)
-      const { data: currentRoomData, error: fetchErr } = await supabase
-        .from('rooms')
-        .select('status, usage_count')
-        .eq('id', roomId)
-        .single();
-      
-      if (fetchErr) throw fetchErr;
-      if (currentRoomData?.status === 'occupied') {
-        return { success: false, error: 'Room is already occupied.' }
+      // Single atomic RPC call — inserts transaction + updates room status in one DB transaction.
+      // The SQL function uses FOR UPDATE row locking, so duplicate bookings are impossible.
+      const { data, error } = await supabase.rpc('book_room', {
+        p_room_id: roomId,
+        p_worker_id: user.id,
+        p_amount_rwf: parseFloat(bookingDetails.amount),
+        p_stay_type: bookingDetails.stayType,
+        p_days: bookingDetails.days ? parseInt(bookingDetails.days) : null,
+      })
+
+      if (error) throw error
+
+      // The RPC returns { success: true } or { success: false, error: '...' }
+      if (data?.success === false) {
+        return { success: false, error: data.error || 'Booking failed' }
       }
-
-      // 2. Insert the transaction into Supabase (Refreshed)
-      const { error: txError } = await supabase
-        .from('transactions')
-        .insert({
-          room_id: roomId,
-          worker_id: user.id,
-          amount_rwf: parseFloat(bookingDetails.amount),
-          stay_type: bookingDetails.stayType,
-          days: bookingDetails.days ? parseInt(bookingDetails.days) : null,
-          check_in_time: new Date().toISOString(),
-          status: 'active',
-        })
-
-      if (txError) throw txError
-
-      // 3. Update room status and increment usage count
-      const { error: roomError } = await supabase
-        .from('rooms')
-        .update({
-          status: 'occupied',
-          usage_count: (currentRoomData?.usage_count || 0) + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', roomId)
-
-      if (roomError) throw roomError
 
       // Real-time subscriptions will update the local state automatically
       return { success: true }
