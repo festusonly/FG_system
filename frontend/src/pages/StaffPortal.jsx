@@ -6,7 +6,7 @@ import '../styles/StaffPortal.css'
 
 export default function StaffPortal() {
   const { user, logout } = useAuth()
-  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData, employees, recordDeduction } = useApp()
+  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData, employees, recordDeduction, collectCash } = useApp()
   const navigate = useNavigate()
 
   const [submitting, setSubmitting] = useState(false)
@@ -236,6 +236,28 @@ export default function StaffPortal() {
     }
   }
 
+  const handleSettleShift = async () => {
+    const confirmSettle = window.confirm(
+      t('confirm_shift_settle', { amount: netCashInDrawer.toLocaleString() })
+    )
+    
+    if (confirmSettle) {
+      setSubmitting(true)
+      try {
+        const result = await collectCash()
+        if (result.success) {
+          alert(t('shift_settled_success') || 'Shift settled successfully! The next shift starts now.')
+        } else {
+          setActionError(result.error || 'Failed to settle shift.')
+        }
+      } catch (err) {
+        setActionError(err.message)
+      } finally {
+        setSubmitting(false)
+      }
+    }
+  }
+
   return (
     <div className="staff-portal">
       <header className="staff-header">
@@ -304,9 +326,19 @@ export default function StaffPortal() {
         {/* Dashboard Stats */}
         <div className="dashboard-stats">
           {/* 1. Cash to Give (Current Shift) */}
-          <div className="stat-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)'}}>
-            <h3 style={{color: '#64748b'}}>{t('cash_to_give')}</h3>
-            <p className="stat-value" style={{color: '#0d9488'}}>RWF {netCashInDrawer.toLocaleString()}</p>
+          <div className="stat-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
+            <div>
+              <h3 style={{color: '#64748b'}}>{t('cash_to_give')}</h3>
+              <p className="stat-value" style={{color: '#0d9488'}}>RWF {netCashInDrawer.toLocaleString()}</p>
+            </div>
+            <button 
+              className="btn-details-card" 
+              onClick={handleSettleShift}
+              disabled={submitting || netCashInDrawer <= 0}
+              style={{marginTop: '10px', background: '#0d9488', color: 'white', border: 'none'}}
+            >
+              {submitting ? t('loading') : (t('start_new_shift') || 'Start New Shift')}
+            </button>
           </div>
 
           {/* 2. Clients in Shift */}

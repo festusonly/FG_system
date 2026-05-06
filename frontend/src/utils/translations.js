@@ -224,7 +224,13 @@ export const translations = {
     register_employee: 'Register New Employee',
     save_deduction: 'Save Deduction',
     reason_details: 'Reason / Details',
-    required_for_fines: 'Required for Fines'
+    required_for_fines: 'Required for Fines',
+    start_new_shift: 'Start New Shift',
+    confirm_shift_settle: 'Are you sure you want to settle this shift?\n\nThis will mark RWF {amount} as collected and reset the drawer for the next shift.',
+    shift_settled_success: 'Shift settled successfully! The next shift starts now.',
+    undo_collection: 'Undo Last Rooms Collection',
+    undo_kitchen_collection: 'Undo Last Kitchen Collection',
+    confirm_undo: 'Are you sure you want to undo the last collection? This will bring back the previous transactions and cash balance.'
   },
   rw: {
     // Header & General
@@ -452,6 +458,12 @@ export const translations = {
     register_employee: 'Andika Umukozi Mushya',
     save_deduction: 'Bika Ideni/Amande',
     reason_details: 'Impamvu / Ibisobanuro',
-    required_for_fines: 'Bigomba kwandikwa kuri amande'
+    required_for_fines: 'Bigomba kwandikwa kuri amande',
+    start_new_shift: 'TANGIRA',
+    confirm_shift_settle: 'Urizera neza ko ushaka gusoza iyi shifuti?\n\nAmafaranga yose (RWF {amount}) ari mu isanduku agiye kubikwa muri konti, isanduku isigare irimo ubusa kuri shifuti itaha.',
+    shift_settled_success: 'Shifuti isojwe neza! Indi shifuti itangiye ubu.',
+    undo_collection: 'Gusubiza Inyuma Ikusanywa Ry\'Amafaranga (Ibyumba)',
+    undo_kitchen_collection: 'Gusubiza Inyuma Ikusanywa Ry\'Amafaranga (Igikoni)',
+    confirm_undo: 'Urizera neza ko ushaka gusubiza inyuma ikusanywa ry\'amafaranga ryakozwe vuba? Ibi biratuma amafaranga n\'abakiriya bongera kugaragara.'
   }
 };

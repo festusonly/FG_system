@@ -1305,13 +1305,41 @@ export default function AdminDashboard() {
 // Sub-components moved outside to prevent remounting issues
 const AdminSettingsSection = ({ user }) => {
   const { updatePassword } = useAuth()
-  const { t, resetStaffData, resetKitchenData, refreshData } = useApp()
+  const { t, undoLastCollection, undoLastKitchenCollection, refreshData } = useApp()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [updating, setUpdating] = useState(false)
-  const [isResetting, setIsResetting] = useState(false)
+  const [isUndoing, setIsUndoing] = useState(false)
   const [msg, setMsg] = useState({ type: '', text: '' })
+
+  const handleUndoRoom = async () => {
+    if (window.confirm(t('confirm_undo'))) {
+      setIsUndoing(true)
+      const res = await undoLastCollection()
+      setIsUndoing(false)
+      if (res.success) {
+        alert(t('success_save'))
+        refreshData()
+      } else {
+        alert(res.error)
+      }
+    }
+  }
+
+  const handleUndoKitchen = async () => {
+    if (window.confirm(t('confirm_undo'))) {
+      setIsUndoing(true)
+      const res = await undoLastKitchenCollection()
+      setIsUndoing(false)
+      if (res.success) {
+        alert(t('success_save'))
+        refreshData()
+      } else {
+        alert(res.error)
+      }
+    }
+  }
 
   const handlePasswordChange = async (e) => {
     e.preventDefault()
@@ -1332,40 +1360,6 @@ const AdminSettingsSection = ({ user }) => {
       setConfirmPassword('')
     } else {
       setMsg({ type: 'error', text: res.error })
-    }
-  }
-
-  const handleResetStaff = async () => {
-    if (window.confirm("⚠️ DANGER: This will delete ALL room transactions, expenses, and deductions, and reset all rooms to available. This cannot be undone! Are you sure?")) {
-      const confirmText = window.prompt("Type 'RESET' to confirm deleting all staff history:")
-      if (confirmText === 'RESET') {
-        setIsResetting(true)
-        const res = await resetStaffData()
-        setIsResetting(false)
-        if (res.success) {
-          alert("Staff data reset successfully!")
-          refreshData()
-        } else {
-          alert("Error: " + res.error)
-        }
-      }
-    }
-  }
-
-  const handleResetKitchen = async () => {
-    if (window.confirm("⚠️ DANGER: This will delete ALL kitchen sales and purchases. This cannot be undone! Are you sure?")) {
-      const confirmText = window.prompt("Type 'RESET' to confirm deleting all kitchen history:")
-      if (confirmText === 'RESET') {
-        setIsResetting(true)
-        const res = await resetKitchenData()
-        setIsResetting(false)
-        if (res.success) {
-          alert("Kitchen data reset successfully!")
-          refreshData()
-        } else {
-          alert("Error: " + res.error)
-        }
-      }
     }
   }
 
@@ -1503,36 +1497,32 @@ const AdminSettingsSection = ({ user }) => {
         <StaffManagementList user={user} />
       </div>
 
-      <div className="settings-card danger-zone" style={{marginTop: '2rem', border: '2px solid #ef4444', background: '#fef2f2'}}>
-        <h2 style={{color: '#b91c1c'}}>☢️ {t('danger_zone') || 'Danger Zone'}</h2>
-        <p className="settings-subtitle" style={{color: '#991b1b'}}>{t('danger_zone_subtitle') || 'These actions are permanent and cannot be undone.'}</p>
+      <div className="settings-card" style={{marginTop: '2rem', border: '1.5px solid #64748b', background: '#f8fafc'}}>
+        <h2 style={{color: '#475569'}}>🛠️ Maintenance & Recovery</h2>
+        <p className="settings-subtitle">Undo accidental shift resets or cash collections.</p>
         
-        <div style={{display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem'}}>
-          <div style={{padding: '1rem', background: '#ffffff', borderRadius: '12px', border: '1px solid #fee2e2'}}>
-            <h3 style={{fontSize: '1rem', margin: '0 0 0.5rem 0', color: '#1e293b'}}>Reset Staff & Rooms Data</h3>
-            <p style={{fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem'}}>Deletes all room transactions, expenses, deductions, and resets all rooms to 'Available'.</p>
+        <div style={{display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem'}}>
+          <div style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
             <button 
-              className="btn-save-settings danger" 
-              style={{background: '#ef4444', width: 'auto'}}
-              onClick={handleResetStaff}
-              disabled={isResetting}
+              className="btn-save-settings" 
+              style={{background: '#64748b', flex: 1, minWidth: '200px'}}
+              onClick={handleUndoRoom}
+              disabled={isUndoing}
             >
-              {isResetting ? t('loading') : 'Reset Staff Data'}
+              {isUndoing ? t('loading') : t('undo_collection')}
+            </button>
+            <button 
+              className="btn-save-settings" 
+              style={{background: '#94a3b8', flex: 1, minWidth: '200px'}}
+              onClick={handleUndoKitchen}
+              disabled={isUndoing}
+            >
+              {isUndoing ? t('loading') : t('undo_kitchen_collection')}
             </button>
           </div>
-
-          <div style={{padding: '1rem', background: '#ffffff', borderRadius: '12px', border: '1px solid #fee2e2'}}>
-            <h3 style={{fontSize: '1rem', margin: '0 0 0.5rem 0', color: '#1e293b'}}>Reset Kitchen Data</h3>
-            <p style={{fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem'}}>Deletes all kitchen sales and purchases history.</p>
-            <button 
-              className="btn-save-settings danger" 
-              style={{background: '#ef4444', width: 'auto'}}
-              onClick={handleResetKitchen}
-              disabled={isResetting}
-            >
-              {isResetting ? t('loading') : 'Reset Kitchen Data'}
-            </button>
-          </div>
+          <p style={{fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic'}}>
+            💡 This will delete the last "Collection" record and restore the previous balance.
+          </p>
         </div>
       </div>
     </div>

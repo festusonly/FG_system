@@ -710,30 +710,65 @@ export function AppProvider({ children }) {
       return { success: false, error: err.message }
     }
   }
-  const resetStaffData = async () => {
+
+  const undoLastCollection = async () => {
+    if (!user) return { success: false, error: 'Not authenticated' }
     try {
-      const { error: txError } = await supabase.from('transactions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      if (txError) throw txError
-      const { error: expError } = await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      if (expError) throw expError
-      const { error: dedError } = await supabase.from('employee_deductions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      if (dedError) throw dedError
-      const { error: roomError } = await supabase.from('rooms').update({ status: 'available', usage_count: 0 }).neq('id', '00000000-0000-0000-0000-000000000000')
-      if (roomError) throw roomError
+      // 1. Find the latest collection record
+      const { data, error: findError } = await supabase
+        .from('expenses')
+        .select('id, time')
+        .eq('description', 'SYSTEM_CASH_COLLECTION')
+        .order('time', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (findError) {
+        if (findError.code === 'PGRST116') return { success: false, error: 'No collection history found to undo.' }
+        throw findError
+      }
+
+      // 2. Delete it
+      const { error: deleteError } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', data.id)
+
+      if (deleteError) throw deleteError
       return { success: true }
     } catch (err) {
-      console.error('Reset staff data error:', err)
+      console.error('Undo collection error:', err.message)
       return { success: false, error: err.message }
     }
   }
 
-  const resetKitchenData = async () => {
+  const undoLastKitchenCollection = async () => {
+    if (!user) return { success: false, error: 'Not authenticated' }
     try {
-      const { error: kTxError } = await supabase.from('kitchen_transactions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      if (kTxError) throw kTxError
+      // 1. Find the latest kitchen collection record
+      const { data, error: findError } = await supabase
+        .from('expenses')
+        .select('id, time')
+        .eq('description', 'KITCHEN_CASH_COLLECTION')
+        .order('time', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (findError) {
+        if (findError.code === 'PGRST116') return { success: false, error: 'No kitchen collection history found.' }
+        throw findError
+      }
+
+      // 2. Delete it
+      const { error: deleteError } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', data.id)
+
+      if (deleteError) throw deleteError
       return { success: true }
     } catch (err) {
-      console.error('Reset kitchen data error:', err)
+      console.error('Undo kitchen collection error:', err.message)
       return { success: false, error: err.message }
     }
   }
@@ -770,8 +805,8 @@ export function AppProvider({ children }) {
     installPWA,
     isPWAInstalled,
     refreshData,
-    resetStaffData,
-    resetKitchenData
+    undoLastCollection,
+    undoLastKitchenCollection
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
