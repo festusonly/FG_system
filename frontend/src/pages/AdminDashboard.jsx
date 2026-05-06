@@ -36,6 +36,22 @@ export default function AdminDashboard() {
   useEffect(() => {
     localStorage.setItem('adminActiveTab', activeTab)
   }, [activeTab])
+
+  // Dark Mode State
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      return localStorage.getItem('adminDarkMode') === 'true'
+    } catch (e) {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    localStorage.setItem('adminDarkMode', isDarkMode)
+  }, [isDarkMode])
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev)
+
   // Safe Notification State
   const [notifPermission, setNotifPermission] = useState(() => {
     try {
@@ -324,7 +340,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className={`admin-dashboard ${showSidebar ? 'sidebar-open' : ''}`}>
+    <div className={`admin-dashboard ${showSidebar ? 'sidebar-open' : ''} ${isDarkMode ? 'dark-mode' : ''}`}>
       {/* Bottom Navigation */}
       <div className="bottom-nav">
         <button 
@@ -421,15 +437,17 @@ export default function AdminDashboard() {
           <div className="sidebar-divider"></div>
           
           <div className="sidebar-footer">
-            <div className="language-selector-sidebar">
-              <span className="lang-label">{t('language')}:</span>
-              <div className="lang-btns">
+            <div className="language-selector-sidebar" style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.2rem'}}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <span className="lang-label" style={{margin: 0, flex: 1}}>{t('language')}</span>
+              <div className="lang-btns" style={{padding: '2px'}}>
                 <button className={language === 'en' ? 'active' : ''} onClick={() => changeLanguage('en')}>EN</button>
                 <button className={language === 'rw' ? 'active' : ''} onClick={() => changeLanguage('rw')}>RW</button>
               </div>
             </div>
             <button onClick={logout} className="btn-logout-sidebar">
-              <span>🚪</span> {t('logout')}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              {t('logout')}
             </button>
           </div>
         </nav>
@@ -439,24 +457,76 @@ export default function AdminDashboard() {
         <button className="btn-avatar" onClick={() => setShowSidebar(true)}>
           {user?.email?.[0]?.toUpperCase() || 'A'}
         </button>
-        <h1 className="header-title">{t(activeTab) || 'Home'} <small style={{fontSize: '0.6rem', opacity: 0.5, verticalAlign: 'middle'}}>v1.0.5-notif-fix</small></h1>
+        <h1 className="header-title">{t(activeTab) || 'Home'}</h1>
         <div className="header-right">
           <div className="header-actions" style={{display: 'flex', gap: '0.75rem', alignItems: 'center'}}>
-            <div className="language-switch-header">
+            <div className="language-switch-header" style={{
+                background: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
+                border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)',
+                borderRadius: '50px',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px'
+              }}>
               <button 
-                className={`lang-btn ${language === 'en' ? 'active' : ''}`}
                 onClick={() => changeLanguage('en')}
+                style={{
+                  background: language === 'en' ? (isDarkMode ? 'rgba(13, 148, 136, 0.3)' : '#0d9488') : 'transparent',
+                  color: language === 'en' ? (isDarkMode ? '#2dd4bf' : 'white') : (isDarkMode ? '#94a3b8' : '#64748b'),
+                  border: 'none',
+                  borderRadius: '50px',
+                  padding: '4px 10px',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
               >
                 EN
               </button>
-              <span className="lang-divider">|</span>
               <button 
-                className={`lang-btn ${language === 'rw' ? 'active' : ''}`}
                 onClick={() => changeLanguage('rw')}
+                style={{
+                  background: language === 'rw' ? (isDarkMode ? 'rgba(13, 148, 136, 0.3)' : '#0d9488') : 'transparent',
+                  color: language === 'rw' ? (isDarkMode ? '#2dd4bf' : 'white') : (isDarkMode ? '#94a3b8' : '#64748b'),
+                  border: 'none',
+                  borderRadius: '50px',
+                  padding: '4px 10px',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
               >
                 RW
               </button>
             </div>
+            
+            <button 
+              onClick={toggleDarkMode}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              style={{
+                background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                border: isDarkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.1)',
+                borderRadius: '50px',
+                padding: '0.4rem 0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '5px',
+                fontSize: '1rem',
+                color: isDarkMode ? '#f8fafc' : '#1e293b',
+                transition: 'all 0.3s'
+              }}
+            >
+              {isDarkMode ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+              )}
+            </button>
           </div>
         </div>
       </header>
@@ -499,7 +569,7 @@ export default function AdminDashboard() {
           {/* 1. Net Cash to Collect (Gross - Total money made) */}
           <div className="metric-card" style={{border: '1.5px solid #2dd4bf', background: 'rgba(45, 212, 191, 0.05)'}}>
             <h3>{t('net_cash_to_collect')}</h3>
-            <p className="metric-value">RWF {cashOnHand.toLocaleString()}</p>
+            <p className="metric-value" style={{color: '#0d9488'}}>RWF {cashOnHand.toLocaleString()}</p>
           </div>
 
           {/* 3. Client in Shift */}
@@ -509,7 +579,7 @@ export default function AdminDashboard() {
             style={{border: '1.5px solid #818cf8', background: 'rgba(129, 140, 248, 0.05)'}}
           >
             <h3>{t('clients_in_shift') || 'Clients in Shift'}</h3>
-            <p className="metric-value">{shiftTxDeduped.length}</p>
+            <p className="metric-value" style={{color: '#4f46e5'}}>{shiftTxDeduped.length}</p>
             <button 
               className="btn-details-card" 
               onClick={(e) => {
@@ -528,7 +598,7 @@ export default function AdminDashboard() {
             style={{border: '1.5px solid #fb7185', background: 'rgba(251, 113, 133, 0.05)'}}
           >
             <h3>{t('occupied')}</h3>
-            <p className="metric-value">{occupiedRooms}</p>
+            <p className="metric-value" style={{color: '#e11d48'}}>{occupiedRooms}</p>
             <button 
               className="btn-details-card" 
               onClick={(e) => {
@@ -547,7 +617,7 @@ export default function AdminDashboard() {
             style={{border: '1.5px solid #34d399', background: 'rgba(52, 211, 153, 0.05)'}}
           >
             <h3>{t('available')}</h3>
-            <p className="metric-value">{availableRooms}</p>
+            <p className="metric-value" style={{color: '#059669'}}>{availableRooms}</p>
             <button 
               className="btn-details-card" 
               onClick={(e) => {
@@ -606,7 +676,7 @@ export default function AdminDashboard() {
                         </td>
                         <td className="type-cell">
                           <span className="type-badge">
-                            {tx.type.replace('_', ' ')}
+                            {t(tx.type) || tx.type.replace('_', ' ')}
                           </span>
                         </td>
                         <td className="time-cell">{formatTime(tx.time)}</td>
@@ -783,22 +853,23 @@ export default function AdminDashboard() {
                       boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
                     }}>
                       <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                        <div style={{background: '#f0f9ff', color: '#0369a1', padding: '8px 12px', borderRadius: '12px', border: '1px solid #e0f2fe', minWidth: '100px'}}>
-                          <span style={{display: 'block', fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '2px', opacity: 0.7}}>{t('since_label')}:</span>
-                          <strong style={{fontSize: '0.9rem', fontWeight: '900'}}>{period.startLabel}</strong>
+                        <div className="history-pill">
+                          <span className="history-pill-label">{t('since_label')}:</span>
+                          <strong className="history-pill-value">{period.startLabel}</strong>
                         </div>
                         
                         <div style={{color: '#94a3b8', fontSize: '1.2rem', fontWeight: 'bold'}}>→</div>
                         
-                        <div style={{background: '#f0f9ff', color: '#0369a1', padding: '8px 12px', borderRadius: '12px', border: '1px solid #e0f2fe', minWidth: '100px'}}>
-                          <span style={{display: 'block', fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '2px', opacity: 0.7}}>{t('to_label')}:</span>
-                          <strong style={{fontSize: '0.9rem', fontWeight: '900'}}>{period.endLabel}</strong>
+                        <div className="history-pill">
+                          <span className="history-pill-label">{t('to_label')}:</span>
+                          <strong className="history-pill-value">{period.endLabel}</strong>
                         </div>
                       </div>
                       
                         <button 
                           onClick={() => setSelectedDayDetails(period)}
-                          style={{padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#f1f5f9', color: '#0f766e', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer', transition: 'background 0.2s'}}
+                          className="btn-details-card"
+                          style={{padding: '8px 16px', fontSize: '0.8rem'}}
                         >
                           {t('view_details')}
                         </button>
@@ -838,14 +909,15 @@ export default function AdminDashboard() {
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                     }}>
                       <div>
-                        <div style={{display: 'inline-block', background: '#f8fafc', color: '#475569', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '4px'}}>
+                        <div className="history-pill-secondary">
                           <h3 style={{margin: 0, fontSize: '1rem', fontWeight: '900'}}>{t(day.displayDate.toLowerCase()) || day.displayDate}</h3>
                         </div>
                       </div>
                       
                         <button 
                           onClick={() => setSelectedDayDetails(day)}
-                          style={{padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#f1f5f9', color: '#64748b', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer'}}
+                          className="btn-details-card"
+                          style={{padding: '8px 16px', fontSize: '0.8rem'}}
                         >
                           {t('view_details')}
                         </button>
@@ -1783,7 +1855,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                 transition: 'all 0.3s ease'
               }}
             >
-              <div style={{fontWeight: 'bold', color: '#1e293b', fontSize: '1rem'}}>{day.dateLabel}</div>
+              <div className="history-day-title" style={{fontWeight: 'bold', fontSize: '1rem'}}>{day.dateLabel}</div>
               <button className="btn-details-card" style={{marginTop: '10px', fontSize: '0.7rem', padding: '4px 10px'}}>
                 {t('view_details')}
               </button>
@@ -1792,43 +1864,29 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
         </div>
       </div>
 
-      {/* History Detail Modal - CLEAN ROOM STYLE */}
+      {/* History Detail Modal - STANDARD THEME */}
       {selectedDateHistory && (
-        <div className="modal-overlay">
-          <div className="modal-content-large" style={{
-            maxHeight: '85vh', 
-            overflowY: 'auto', 
-            borderRadius: '20px', 
-            background: '#ffffff',
-            padding: '0',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}>
-            <div className="modal-header" style={{
-              padding: '20px 24px', 
-              borderBottom: '1px solid #f1f5f9',
-              background: '#ffffff',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <h2 style={{fontSize: '1.25rem', fontWeight: '800', color: '#1e293b'}}>{selectedDateHistory.dateLabel} - {t('detailed_log')}</h2>
-              <button className="btn-close-circle" onClick={() => setSelectedDateHistory(null)} style={{background: 'transparent', border: 'none', fontSize: '1.8rem', cursor: 'pointer', color: '#0d9488', fontWeight: 'bold'}}>×</button>
+        <div className="modal-overlay" onClick={() => setSelectedDateHistory(null)}>
+          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{selectedDateHistory.dateLabel} - {t('detailed_log')}</h2>
+              <button className="modal-close" onClick={() => setSelectedDateHistory(null)}>&times;</button>
             </div>
 
-            <div style={{padding: '24px'}}>
-              <div style={{display: 'flex', gap: '15px', marginBottom: '25px'}}>
-                <div style={{flex: 1, background: 'rgba(52, 211, 153, 0.05)', padding: '20px', borderRadius: '16px', border: '1.5px solid #34d399', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'}}>
-                  <span style={{fontSize: '0.7rem', color: '#059669', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_sales')}</span>
-                  <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#0d9488', marginTop: '8px'}}>RWF {selectedDateHistory.sales.toLocaleString()}</div>
+            <div className="modal-body">
+              <div className="modal-summary-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px', marginBottom: '25px'}}>
+                <div className="modal-stat" style={{border: '1.5px solid #34d399'}}>
+                  <span style={{fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '5px'}}>{t('total_sales')}</span>
+                  <strong style={{fontSize: '1.25rem', color: '#0d9488'}}>RWF {selectedDateHistory.sales.toLocaleString()}</strong>
                 </div>
-                <div style={{flex: 1, background: 'rgba(251, 113, 133, 0.05)', padding: '20px', borderRadius: '16px', border: '1.5px solid #fb7185', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'}}>
-                  <span style={{fontSize: '0.7rem', color: '#e11d48', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em'}}>{t('total_purchases')}</span>
-                  <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#ef4444', marginTop: '8px'}}>RWF {selectedDateHistory.purchases.toLocaleString()}</div>
+                <div className="modal-stat" style={{border: '1.5px solid #fb7185'}}>
+                  <span style={{fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '5px'}}>{t('total_purchases')}</span>
+                  <strong style={{fontSize: '1.25rem', color: '#ef4444'}}>RWF {selectedDateHistory.purchases.toLocaleString()}</strong>
                 </div>
               </div>
 
-              <h3 style={{fontSize: '0.85rem', color: '#0d9488', textTransform: 'uppercase', fontWeight: '700', marginBottom: '15px', marginTop: '10px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                <span style={{background: '#ccfbf1', padding: '4px 8px', borderRadius: '6px'}}>💰</span> {t('sales_details')}
+              <h3 className="modal-subtitle" style={{marginBottom: '15px'}}>
+                💰 {t('sales_details')}
               </h3>
               <div className="table-responsive" style={{marginBottom: '30px'}}>
                 <table className="data-table">
@@ -1847,7 +1905,6 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                           <td style={{
                             padding: '12px', 
                             fontWeight: '500', 
-                            color: '#1e293b', 
                             fontSize: '0.9rem',
                             whiteSpace: 'pre-line',
                             wordBreak: 'break-word',
@@ -1856,13 +1913,13 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                           }}>
                             {tx.description}
                           </td>
-                          <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#0d9488', fontSize: '0.95rem'}}>
+                          <td className="text-success" style={{padding: '12px', textAlign: 'right', fontWeight: '700', fontSize: '0.95rem'}}>
                             RWF {tx.amount.toLocaleString()}
                           </td>
-                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                          <td className="time-cell" style={{padding: '12px', fontSize: '0.85rem'}}>
                             {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
                           </td>
-                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                          <td style={{padding: '12px', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
                         </tr>
                       ))
                     ) : (
@@ -1894,7 +1951,6 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                           <td style={{
                             padding: '12px', 
                             fontWeight: '500', 
-                            color: '#1e293b', 
                             fontSize: '0.9rem',
                             whiteSpace: 'pre-line',
                             wordBreak: 'break-word',
@@ -1906,10 +1962,10 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                           <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#ef4444', fontSize: '0.95rem'}}>
                             - RWF {tx.amount.toLocaleString()}
                           </td>
-                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>
+                          <td className="time-cell" style={{padding: '12px', fontSize: '0.85rem'}}>
                             {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
                           </td>
-                          <td style={{padding: '12px', color: '#64748b', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                          <td style={{padding: '12px', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
                         </tr>
                       ))
                     ) : (
@@ -1920,24 +1976,10 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                   </tbody>
                 </table>
               </div>
-              
-              <button 
-                className="btn-modal-close" 
-                onClick={() => setSelectedDateHistory(null)} 
-                style={{
-                  marginTop: '30px', 
-                  width: '100%', 
-                  padding: '14px', 
-                  borderRadius: '10px', 
-                  background: '#0d9488', 
-                  border: 'none', 
-                  fontWeight: '700', 
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  boxShadow: '0 4px 6px -1px rgba(13, 148, 136, 0.2)'
-                }}
-              >{t('close')}</button>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn-modal-close" onClick={() => setSelectedDateHistory(null)}>{t('close')}</button>
             </div>
           </div>
         </div>

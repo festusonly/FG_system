@@ -108,7 +108,7 @@ export default function EmployeeManagementSection({ user }) {
       {/* Top Header & Stats */}
       <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '1rem', marginBottom: '2rem'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-          <div style={{background: '#f0fdfa', border: '1px solid #ccfbf1', padding: '8px 16px', borderRadius: '8px', color: '#0f766e', fontWeight: 'bold'}}>
+          <div className="history-pill" style={{fontWeight: 'bold'}}>
             {employees.length} {t('registered')}
           </div>
         </div>
@@ -151,22 +151,14 @@ export default function EmployeeManagementSection({ user }) {
           placeholder={t('search_employee')} 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            width: '100%', 
-            padding: '12px 15px 12px 45px', 
-            borderRadius: '12px', 
-            border: '1px solid #e2e8f0', 
-            fontSize: '1rem', 
-            boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-            outline: 'none',
-            transition: 'border-color 0.2s'
-          }}
+          className="modern-search-input"
         />
       </div>
 
-      <div className="table-responsive" style={{background: 'white', borderRadius: '12px', padding: '1rem', paddingBottom: '250px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', minHeight: '400px', overflowX: 'auto'}}>
-        <table className="data-table" style={{fontSize: '0.85rem', width: '100%', borderCollapse: 'collapse', minWidth: '800px'}}>
-          <thead>
+      <div className="panel-section" style={{padding: '1rem', paddingBottom: '250px', minHeight: '400px'}}>
+        <div className="table-responsive">
+          <table className="data-table" style={{width: '100%', minWidth: '800px'}}>
+            <thead>
             <tr>
               <th>{t('employee')}</th>
               <th>{t('phone_number')}</th>
@@ -186,8 +178,8 @@ export default function EmployeeManagementSection({ user }) {
 
                 return (
                   <React.Fragment key={emp.id}>
-                    <tr style={{borderTop: '1px solid #f1f5f9', background: '#fafaf9'}}>
-                      <td style={{fontWeight: 'bold', color: '#1e293b'}}>
+                    <tr>
+                      <td className="history-day-title" style={{fontWeight: 'bold'}}>
                         {emp.name}
                       </td>
                       <td>{emp.phone}</td>
@@ -234,7 +226,8 @@ export default function EmployeeManagementSection({ user }) {
                       <td style={{position: 'relative'}}>
                         <button 
                           onClick={() => setActiveActionMenuEmp(emp)}
-                          style={{background: 'white', border: '1px solid #cbd5e1', borderRadius: '4px', padding: '4px 12px', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 'bold'}}
+                          className="btn-details-card"
+                          style={{padding: '4px 12px', fontSize: '1.2rem', fontWeight: 'bold'}}
                         >
                           ⋮
                         </button>
@@ -250,6 +243,7 @@ export default function EmployeeManagementSection({ user }) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modals */}
@@ -370,7 +364,7 @@ export default function EmployeeManagementSection({ user }) {
             <div className="modal-body">
               <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                 {deductions.filter(d => d.employee_id === viewingDeductionsEmp.id && d.status === 'pending').map(d => (
-                  <div key={d.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 15px', borderRadius: '8px'}}>
+                  <div key={d.id} className="history-pill-secondary" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px', width: '100%'}}>
                     <div>
                       <span style={{fontWeight: 'bold', display: 'inline-block', marginRight: '10px', color: d.type === 'fine' ? '#ef4444' : '#f59e0b'}}>{d.type.toUpperCase()}</span>
                       <span style={{color: '#1e293b', fontWeight: '500'}}>{d.reason}</span>
@@ -401,8 +395,8 @@ export default function EmployeeManagementSection({ user }) {
       {activeActionMenuEmp && (
         <div className="modal-overlay" onClick={() => setActiveActionMenuEmp(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '400px', padding: '0'}}>
-            <div className="modal-header" style={{padding: '1rem 1.5rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0'}}>
-              <h2 style={{margin: 0, fontSize: '1.2rem', color: '#0f766e'}}>Actions: {activeActionMenuEmp.name}</h2>
+            <div className="modal-header">
+              <h2 style={{margin: 0, fontSize: '1.2rem'}} className="history-day-title">Actions: {activeActionMenuEmp.name}</h2>
               <button className="modal-close" onClick={() => setActiveActionMenuEmp(null)}>&times;</button>
             </div>
             <div style={{display: 'flex', flexDirection: 'column', gap: '10px', padding: '15px'}}>
@@ -437,7 +431,7 @@ export default function EmployeeManagementSection({ user }) {
                 {t('delete_employee')}
               </button>
             </div>
-            <div style={{padding: '1rem', background: '#f8fafc', borderTop: '1px solid #e2e8f0'}}>
+            <div className="modal-footer" style={{padding: '1rem'}}>
               <button className="btn-cancel" onClick={() => setActiveActionMenuEmp(null)} style={{width: '100%'}}>{t('cancel')}</button>
             </div>
           </div>

@@ -677,3 +677,148 @@
     flex-direction: column;
   }
 }
+
+/* =====================================================
+   VIEW DETAILS MODAL — TABLE STYLES
+   ===================================================== */
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.data-table thead {
+  background-color: #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.data-table th {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.15s ease;
+}
+
+.data-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.data-table td {
+  padding: 0.85rem 1rem;
+  color: #1e293b;
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+.text-success {
+  color: #0d9488 !important;
+  font-weight: 700;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem !important;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.desc-cell {
+  max-width: 200px;
+}
+
+.entry-desc-modern {
+  white-space: pre-line;
+  display: block;
+  line-height: 1.5;
+  color: #334155;
+  font-size: 0.875rem;
+}
+
+.amount-cell {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.time-cell {
+  color: #64748b;
+  white-space: nowrap;
+  font-size: 0.825rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.status-badge.occupied,
+.status-badge.active {
+  background-color: rgba(13, 148, 136, 0.1);
+  color: #0d9488;
+  border: 1px solid rgba(13, 148, 136, 0.25);
+}
+
+.status-badge.available {
+  background-color: rgba(52, 211, 153, 0.1);
+  color: #059669;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+/* Modal content sizing fix */
+.modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Responsive: stack modal on small screens */
+@media (max-width: 600px) {
+  .modal-content,
+  .modal-content.modal-large {
+    max-width: 95vw;
+    margin: 0 1rem;
+  }
+
+  .modal-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
