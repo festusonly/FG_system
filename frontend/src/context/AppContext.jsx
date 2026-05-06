@@ -714,27 +714,11 @@ export function AppProvider({ children }) {
   const undoLastCollection = async () => {
     if (!user) return { success: false, error: 'Not authenticated' }
     try {
-      // 1. Find the latest collection record
-      const { data, error: findError } = await supabase
-        .from('expenses')
-        .select('id, time')
-        .eq('description', 'SYSTEM_CASH_COLLECTION')
-        .order('time', { ascending: false })
-        .limit(1)
-        .single()
+      const { error } = await supabase.rpc('admin_undo_collection', {
+        p_type: 'SYSTEM_CASH_COLLECTION'
+      })
 
-      if (findError) {
-        if (findError.code === 'PGRST116') return { success: false, error: 'No collection history found to undo.' }
-        throw findError
-      }
-
-      // 2. Delete it
-      const { error: deleteError } = await supabase
-        .from('expenses')
-        .delete()
-        .eq('id', data.id)
-
-      if (deleteError) throw deleteError
+      if (error) throw error
       return { success: true }
     } catch (err) {
       console.error('Undo collection error:', err.message)
@@ -745,27 +729,11 @@ export function AppProvider({ children }) {
   const undoLastKitchenCollection = async () => {
     if (!user) return { success: false, error: 'Not authenticated' }
     try {
-      // 1. Find the latest kitchen collection record
-      const { data, error: findError } = await supabase
-        .from('expenses')
-        .select('id, time')
-        .eq('description', 'KITCHEN_CASH_COLLECTION')
-        .order('time', { ascending: false })
-        .limit(1)
-        .single()
+      const { error } = await supabase.rpc('admin_undo_collection', {
+        p_type: 'KITCHEN_CASH_COLLECTION'
+      })
 
-      if (findError) {
-        if (findError.code === 'PGRST116') return { success: false, error: 'No kitchen collection history found.' }
-        throw findError
-      }
-
-      // 2. Delete it
-      const { error: deleteError } = await supabase
-        .from('expenses')
-        .delete()
-        .eq('id', data.id)
-
-      if (deleteError) throw deleteError
+      if (error) throw error
       return { success: true }
     } catch (err) {
       console.error('Undo kitchen collection error:', err.message)

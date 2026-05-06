@@ -230,7 +230,9 @@ export const translations = {
     shift_settled_success: 'Shift settled successfully! The next shift starts now.',
     undo_collection: 'Undo Last Rooms Collection',
     undo_kitchen_collection: 'Undo Last Kitchen Collection',
-    confirm_undo: 'Are you sure you want to undo the last collection? This will bring back the previous transactions and cash balance.'
+    confirm_undo: 'Are you sure you want to undo the last collection? This will bring back the previous transactions and cash balance.',
+    start_new_kitchen_shift: 'Start New Kitchen Shift',
+    confirm_kitchen_settle: 'Are you sure you want to settle the kitchen shift?\n\nThis will mark RWF {amount} as collected and reset the profit for the next shift.'
   },
   rw: {
     // Header & General
@@ -464,6 +466,8 @@ export const translations = {
     shift_settled_success: 'Shifuti isojwe neza! Indi shifuti itangiye ubu.',
     undo_collection: 'Gusubiza Inyuma Ikusanywa Ry\'Amafaranga (Ibyumba)',
     undo_kitchen_collection: 'Gusubiza Inyuma Ikusanywa Ry\'Amafaranga (Igikoni)',
-    confirm_undo: 'Urizera neza ko ushaka gusubiza inyuma ikusanywa ry\'amafaranga ryakozwe vuba? Ibi biratuma amafaranga n\'abakiriya bongera kugaragara.'
+    confirm_undo: 'Urizera neza ko ushaka gusubiza inyuma ikusanywa ry\'amafaranga ryakozwe vuba? Ibi biratuma amafaranga n\'abakiriya bongera kugaragara.',
+    start_new_kitchen_shift: 'TANGIRA (Igikoni)',
+    confirm_kitchen_settle: 'Urizera neza ko ushaka gusoza iyi shifuti yo mu gikoni?\n\nAmafaranga y\'inyungu agiye kubikwa muri konti, isanduku isigare irimo ubusa kuri shifuti itaha.'
   }
 };

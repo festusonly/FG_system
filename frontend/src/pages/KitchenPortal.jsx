@@ -8,7 +8,7 @@ import '../styles/AdminDashboard.css' // Import for metric-card styles
 
 export default function KitchenPortal() {
   const { user, logout } = useAuth()
-  const { kitchenTransactions, lastKitchenCollectionTime, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData } = useApp()
+  const { kitchenTransactions, lastKitchenCollectionTime, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData, collectKitchenCash } = useApp()
   const navigate = useNavigate()
   // Sale States
   const [saleDesc, setSaleDesc] = useState('')
@@ -19,13 +19,14 @@ export default function KitchenPortal() {
   const [purcItems, setPurcItems] = useState([{ desc: '', total: '' }])
   const [showPurcForm, setShowPurcForm] = useState(false)
 
-  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(false)
+  const [selectedDateHistory, setSelectedDateHistory] = useState(null)
+
   const [message, setMessage] = useState({ type: '', text: '' })
 
   const todayString = new Date().toDateString()
   
-  const [selectedDateHistory, setSelectedDateHistory] = useState(null)
-
   // 1. Auto-Delete logic (Keep database lean)
   React.useEffect(() => {
     const cleanupOldData = async () => {
@@ -133,7 +134,7 @@ export default function KitchenPortal() {
     e.preventDefault()
     if (!saleDesc || !saleAmount || !saleServedBy) return
     
-    setLoading(true)
+    setSubmitting(true)
     const { error } = await supabase
       .from('kitchen_transactions')
       .insert([
@@ -146,7 +147,7 @@ export default function KitchenPortal() {
         }
       ])
     
-    setLoading(false)
+    setSubmitting(false)
 
     if (error) {
       setMessage({ type: 'error', text: error.message })
@@ -164,7 +165,7 @@ export default function KitchenPortal() {
     const total = calculateTotal(purcItems, 'purchase')
     if (total <= 0) return
     
-    setLoading(true)
+    setSubmitting(true)
     const { error } = await supabase
       .from('kitchen_transactions')
       .insert([
@@ -177,7 +178,7 @@ export default function KitchenPortal() {
         }
       ])
     
-    setLoading(false)
+    setSubmitting(false)
 
     if (error) {
       setMessage({ type: 'error', text: error.message })
@@ -194,67 +195,129 @@ export default function KitchenPortal() {
     navigate('/login')
   }
 
+  const handleSettleKitchen = async () => {
+    const profit = pendingKitchenCash - (kitchenTransactions
+      .filter(t => {
+        const tTime = new Date(t.created_at).getTime()
+        const collTime = lastKitchenCollectionTime.getTime()
+        return t.type === 'purchase' && tTime > collTime
+      })
+      .reduce((sum, t) => sum + t.amount, 0))
+
+    const confirmSettle = window.confirm(
+      t('confirm_kitchen_settle', { amount: profit.toLocaleString() })
+    )
+    
+    if (confirmSettle) {
+      setSubmitting(true)
+      try {
+        const result = await collectKitchenCash()
+        if (result.success) {
+          alert(t('shift_settled_success'))
+        } else {
+          setMessage({ type: 'error', text: result.error || 'Failed to settle kitchen shift.' })
+        }
+      } catch (err) {
+        setMessage({ type: 'error', text: err.message })
+      } finally {
+        setSubmitting(false)
+      }
+    }
+  }
+
   return (
     <div className="kitchen-portal">
-      <header className="portal-header">
-        <div className="header-content">
-          <h1>{t('kitchen_portal')}</h1>
-          <p>Worker: {user?.email}</p>
+      {/* Sidebar Navigation */}
+      {showSidebar && <div className="sidebar-overlay" onClick={() => setShowSidebar(false)} />}
+      <aside className={`sidebar ${showSidebar ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <h2>{t('kitchen_portal')}</h2>
+          <p style={{fontSize: '0.85rem', color: '#64748b', marginTop: '5px'}}>{user?.email}</p>
         </div>
-        <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-          <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '30px', border: '1px solid #e2e8f0'}}>
-             <button 
-               onClick={() => changeLanguage('en')}
-               style={{
-                 background: language === 'en' ? '#0d9488' : 'transparent', 
-                 color: language === 'en' ? 'white' : '#64748b', 
-                 border: 'none', 
-                 padding: '5px 12px', 
-                 borderRadius: '25px', 
-                 cursor: 'pointer', 
-                 fontWeight: 'bold',
-                 fontSize: '0.85rem',
-                 transition: 'all 0.3s ease'
-               }}
-             >EN</button>
-             <button 
-               onClick={() => changeLanguage('rw')}
-               style={{
-                 background: language === 'rw' ? '#0d9488' : 'transparent', 
-                 color: language === 'rw' ? 'white' : '#64748b', 
-                 border: 'none', 
-                 padding: '5px 12px', 
-                 borderRadius: '25px', 
-                 cursor: 'pointer', 
-                 fontWeight: 'bold',
-                 fontSize: '0.85rem',
-                 transition: 'all 0.3s ease'
-               }}
-             >RW</button>
+
+        <div className="sidebar-menu">
+          <div className="menu-section">
+            <p className="menu-section-label">{t('language')}</p>
+            <div className="language-switch" style={{display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '12px'}}>
+              <button 
+                onClick={() => { changeLanguage('en'); setShowSidebar(false); }}
+                style={{
+                  flex: 1,
+                  background: language === 'en' ? '#0d9488' : 'transparent', 
+                  color: language === 'en' ? 'white' : '#64748b', 
+                  border: 'none', 
+                  padding: '8px', 
+                  borderRadius: '10px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s'
+                }}
+              >English</button>
+              <button 
+                onClick={() => { changeLanguage('rw'); setShowSidebar(false); }}
+                style={{
+                  flex: 1,
+                  background: language === 'rw' ? '#0d9488' : 'transparent', 
+                  color: language === 'rw' ? 'white' : '#64748b', 
+                  border: 'none', 
+                  padding: '8px', 
+                  borderRadius: '10px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s'
+                }}
+              >Kinyarwanda</button>
+            </div>
           </div>
-           {deferredPrompt && !isPWAInstalled && (
-            <button 
-              onClick={installPWA}
-              style={{
-                background: 'linear-gradient(135deg, #0d9488, #0f766e)',
-                color: 'white',
-                border: 'none',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                fontWeight: 'bold',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
-              {t('install_app') || 'Install App'}
-            </button>
+
+          {deferredPrompt && !isPWAInstalled && (
+            <div className="menu-section">
+              <p className="menu-section-label">App</p>
+              <button 
+                onClick={installPWA}
+                style={{
+                  width: '100%',
+                  background: '#f1f5f9',
+                  color: '#0d9488',
+                  border: '1px solid #e2e8f0',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                {t('install_app') || 'Install App'}
+              </button>
+            </div>
           )}
-          <button onClick={handleLogout} className="btn-logout">{t('logout')}</button>
+        </div>
+
+        <div className="sidebar-footer">
+          <button onClick={handleLogout} className="btn-sidebar-logout">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            {t('logout')}
+          </button>
+        </div>
+      </aside>
+
+      <header className="portal-header">
+        <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+          <button className="hamburger-menu" onClick={() => setShowSidebar(true)}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+          </button>
+          <div className="header-content">
+            <h1 style={{fontSize: '1.25rem', margin: 0}}>{t('kitchen_portal')}</h1>
+          </div>
+        </div>
+        
+        {/* Quick info if needed, or leave empty for cleaner look */}
+        <div style={{fontSize: '0.85rem', fontWeight: '600', background: 'rgba(255,255,255,0.1)', padding: '4px 12px', borderRadius: '20px'}}>
+           {new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
         </div>
       </header>
 
@@ -269,6 +332,29 @@ export default function KitchenPortal() {
           </div>
         )}
         {/* Top Metric Row (4 Cards) */}
+        <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', maxWidth: '1400px'}}>
+           <button 
+             onClick={handleSettleKitchen}
+             disabled={submitting}
+             style={{
+               background: '#0d9488',
+               color: 'white',
+               border: 'none',
+               padding: '10px 20px',
+               borderRadius: '30px',
+               fontWeight: '800',
+               cursor: 'pointer',
+               boxShadow: '0 4px 10px rgba(13, 148, 136, 0.2)',
+               display: 'flex',
+               alignItems: 'center',
+               gap: '8px'
+             }}
+           >
+             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+             {submitting ? t('loading') : (t('start_new_kitchen_shift') || 'Start New Shift')}
+           </button>
+        </div>
+
         <div className="metrics-section" style={{marginBottom: '2rem'}}>
           <div className="metric-card" style={{border: '1.5px solid #34d399', background: 'rgba(52, 211, 153, 0.05)'}}>
             <h3>{t('sales_to_collect')}</h3>
@@ -377,7 +463,7 @@ export default function KitchenPortal() {
                   {message.text}
                 </div>
               )}
-              <button type="submit" className="btn-submit-pro sale-theme" disabled={loading} style={{
+              <button type="submit" className="btn-submit-pro sale-theme" disabled={submitting} style={{
                 background: '#128c7e',
                 color: 'white',
                 padding: '1rem',
@@ -390,7 +476,7 @@ export default function KitchenPortal() {
                 width: '100%',
                 transition: 'all 0.2s'
               }}>
-                {loading ? t('loading') : t('save_sale')}
+                {submitting ? t('loading') : t('save_sale')}
               </button>
             </form>
           </div>
@@ -448,8 +534,8 @@ export default function KitchenPortal() {
                     {message.text}
                   </div>
                 )}
-                <button type="submit" className="btn-submit-pro purchase-theme" disabled={loading}>
-                  {loading ? t('loading') : t('save_purchase')}
+                <button type="submit" className="btn-submit-pro purchase-theme" disabled={submitting}>
+                  {submitting ? t('loading') : t('save_purchase')}
                 </button>
               </form>
             </div>
