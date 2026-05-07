@@ -2143,8 +2143,8 @@
 
 .dark-mode .data-table tbody tr:hover td,
 .dark-mode .data-table-simple tbody tr:hover td {
-  background: transparent !important;
-  cursor: default;
+  background: rgba(255, 255, 255, 0.05) !important;
+  cursor: pointer;
 }
 
 .dark-mode .data-table tbody tr:last-child td,
