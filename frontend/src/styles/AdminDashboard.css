@@ -493,13 +493,13 @@
 }
 
 .metric-card {
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   padding: 1.5rem;
   border-radius: 28px;
-  box-shadow: 0 10px 40px -10px rgba(13, 148, 136, 0.08), inset 0 2px 5px rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 40px -10px rgba(13, 148, 136, 0.1), inset 0 2px 5px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -642,10 +642,28 @@
 
 .table-responsive {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 148, 136, 0.2) transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: rgba(13, 148, 136, 0.2);
+  border-radius: 10px;
 }
 
 .data-table {
   width: 100%;
+  min-width: 600px; /* Ensures table is wide enough to trigger scroll */
   border-collapse: collapse;
 }
 
@@ -654,15 +672,37 @@
   padding: 1rem 1.5rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
+  border-right: none !important;
+  border-left: none !important;
 }
 
 .data-table th {
   font-size: 0.75rem;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  background-color: #F8FAFC;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background-color: #f0fdfa; /* Soft Mint/Teal Tint */
+  border-bottom: 2px solid #f1f5f9;
+}
+
+@media (max-width: 600px) {
+  .data-table {
+    min-width: 500px !important;
+  }
+  .data-table th, 
+  .data-table td {
+    padding: 0.75rem 0.6rem !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+.data-table tbody tr {
+  transition: none;
+}
+
+.data-table tbody tr:hover td {
+  background-color: transparent !important;
 }
 
 .data-table tbody tr:last-child td {
@@ -892,6 +932,11 @@
   max-width: 700px;
 }
 
+.modal-content.modal-xl {
+  max-width: 1000px;
+  width: 90%;
+}
+
 .p-0 {
   padding: 0 !important;
 }
@@ -911,16 +956,16 @@
 }
 
 .modal-content {
-  background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
   border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.15), 0 18px 36px -18px rgba(0, 0, 0, 0.1);
 }
 
 .modal-header {
@@ -953,7 +998,20 @@
   padding: 1.5rem;
 }
 
-.modal-body {
+@media (max-width: 600px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  .modal-content.modal-xl {
+    width: 96% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 20px !important;
+  }
+  .modal-body {
+    padding: 1rem 0.6rem !important;
+  }
+}
   padding: 1.5rem;
 }
 
@@ -1208,9 +1266,37 @@
 .settings-card {
   background: white;
   padding: 2rem;
+  border-radius: 28px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.settings-card.pwa-card {
+  background: #f0fdfa;
+  border: 2px solid #0d9488;
+}
+
+.settings-card.maintenance-card {
+  background: #f8fafc;
+  border: 1.5px solid #64748b;
+}
+
+.ios-warning {
+  font-size: 0.75rem; 
+  color: #b91c1c; 
+  fontWeight: bold; 
+  background: #fee2e2; 
+  padding: 10px; 
   border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border-color);
+  margin: 1rem 0;
+}
+
+.settings-tip {
+  font-size: 0.7rem; 
+  color: #64748b; 
+  font-style: italic; 
+  margin-top: 0.8rem;
 }
 
 .settings-card h2 {
@@ -1569,7 +1655,6 @@
   padding: 1rem;
   text-align: left;
   border-bottom: 2px solid #94a3b8;
-  border-right: 1px solid #cbd5e1;
   font-weight: 700;
   color: #1e293b;
 }
@@ -1578,7 +1663,6 @@
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #cbd5e1;
-  border-right: 1px solid #cbd5e1;
   color: #1e293b;
 }
 
@@ -2027,14 +2111,21 @@
 .dark-mode .data-table,
 .dark-mode .data-table-simple {
   background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .dark-mode .data-table th,
-.dark-mode .data-table-simple th {
-  background-color: rgba(255, 255, 255, 0.03) !important;
-  color: #cbd5e1 !important;
+.dark-mode .data-table-simple th,
+.dark-mode table th {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: #94a3b8 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .dark-mode .data-table td,
@@ -2042,6 +2133,23 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   color: #e2e8f0 !important;
   background: transparent !important;
+}
+
+/* NO hover effects on table rows — globally removed */
+.dark-mode .data-table tbody tr,
+.dark-mode .data-table-simple tbody tr {
+  transition: none !important;
+}
+
+.dark-mode .data-table tbody tr:hover td,
+.dark-mode .data-table-simple tbody tr:hover td {
+  background: transparent !important;
+  cursor: default;
+}
+
+.dark-mode .data-table tbody tr:last-child td,
+.dark-mode .data-table-simple tbody tr:last-child td {
+  border-bottom: none !important;
 }
 
 
@@ -2295,4 +2403,85 @@
   .dashboard-content {
     margin-left: 280px !important;
   }
+}
+
+/* Settings Cards Dark Mode Fixes */
+.dark-mode .settings-card {
+  background: rgba(30, 41, 59, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-mode .settings-card.pwa-card {
+  background: rgba(13, 148, 136, 0.1) !important;
+  border: 2px solid rgba(13, 148, 136, 0.3) !important;
+}
+
+.dark-mode .settings-card.maintenance-card {
+  background: rgba(71, 85, 105, 0.15) !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.2) !important;
+}
+
+.dark-mode .settings-card h2 {
+  color: #f8fafc !important;
+}
+
+.dark-mode .settings-card.maintenance-card h2 {
+  color: #cbd5e1 !important;
+}
+
+.dark-mode .worker-item {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+}
+
+.dark-mode .worker-item strong {
+  color: #f8fafc;
+}
+
+.dark-mode .worker-item:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(13, 148, 136, 0.4);
+}
+
+.dark-mode .ios-warning {
+  background: rgba(153, 27, 27, 0.2);
+  color: #fca5a5;
+}
+
+.dark-mode .settings-tip {
+  color: #94a3b8;
+}
+
+/* Settings Page Dark Mode */
+.dark-mode .settings-subtitle {
+  color: #94a3b8;
+}
+
+.dark-mode .form-group label {
+  color: #cbd5e1;
+}
+
+.dark-mode .form-group input {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+}
+
+.dark-mode .form-group input:focus {
+  border-color: #2dd4bf !important;
+  background: rgba(30, 41, 59, 0.8) !important;
+}
+
+.dark-mode .settings-msg.success {
+  background-color: rgba(22, 101, 52, 0.2) !important;
+  color: #4ade80 !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+.dark-mode .settings-msg.error {
+  background-color: rgba(153, 27, 27, 0.2) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
 }

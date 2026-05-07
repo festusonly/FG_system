@@ -537,29 +537,47 @@ export default function StaffPortal() {
           </div>
         </div>
 
-        {/* Selected Room Details / Checkout */}
+        {/* Selected Room Details / Checkout Modal */}
         {selectedRoom && selectedRoom.status === 'occupied' && (() => {
           const activeTx = getActiveTransaction(selectedRoom.id)
           return (
-            <div className="room-details-panel" id="checkout-panel">
-              <h3>{selectedRoom.name} - {t('kirimo_umuntu')}</h3>
-              {activeTx ? (
-                <>
-                  <p><strong>{t('type')}:</strong> {t(activeTx.type) || activeTx.type.replace(/_/g, ' ')}</p>
-                  {activeTx.days && <p><strong>{t('number_of_days')}:</strong> {activeTx.days}</p>}
-                  <p><strong>{t('since')}:</strong> {formatTime(activeTx.time)}</p>
-                  <p><strong>{t('amount_paid')}:</strong> RWF {activeTx.amount.toLocaleString()}</p>
-                </>
-              ) : (
-                <p>No active booking found.</p>
-              )}
-              <button
-                className="btn-checkout"
-                onClick={() => handleCheckout(selectedRoom.id)}
-                disabled={submitting}
-              >
-                {submitting ? t('loading') : t('check_out')}
-              </button>
+            <div className="modal-overlay" onClick={() => setSelectedRoom(null)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '450px'}}>
+                <div className="modal-header">
+                  <h3>{selectedRoom.name} - {t('kirimo_umuntu')}</h3>
+                  <button className="btn-close" onClick={() => setSelectedRoom(null)}>&times;</button>
+                </div>
+                <div className="modal-body" style={{padding: '20px'}}>
+                  {activeTx ? (
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px'}}>
+                      <p style={{margin: 0}}><strong>{t('type')}:</strong> {t(activeTx.type) || activeTx.type.replace(/_/g, ' ')}</p>
+                      {activeTx.days && <p style={{margin: 0}}><strong>{t('number_of_days')}:</strong> {activeTx.days}</p>}
+                      <p style={{margin: 0}}><strong>{t('since')}:</strong> {formatTime(activeTx.time)}</p>
+                      <p style={{margin: 0, fontSize: '1.2rem', color: '#0d9488'}}><strong>{t('amount_paid')}:</strong> RWF {activeTx.amount.toLocaleString()}</p>
+                    </div>
+                  ) : (
+                    <p style={{textAlign: 'center', color: '#64748b', margin: '20px 0'}}>No active booking found.</p>
+                  )}
+                  
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <button
+                      className="btn-checkout"
+                      onClick={() => handleCheckout(selectedRoom.id)}
+                      disabled={submitting}
+                      style={{width: '100%', padding: '14px', borderRadius: '12px', background: '#ef4444', color: 'white', border: 'none', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer'}}
+                    >
+                      {submitting ? t('loading') : t('check_out')}
+                    </button>
+                    <button
+                      className="btn-modal-close"
+                      onClick={() => setSelectedRoom(null)}
+                      style={{width: '100%', padding: '14px', borderRadius: '12px', background: '#f1f5f9', color: '#64748b', border: 'none', fontWeight: 'bold', cursor: 'pointer'}}
+                    >
+                      {t('close')}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )
         })()}

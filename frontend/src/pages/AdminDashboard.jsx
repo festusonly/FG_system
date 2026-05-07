@@ -951,7 +951,7 @@ export default function AdminDashboard() {
       {/* Details Modal */}
       {selectedDayDetails && (
         <div className="modal-overlay" onClick={() => setSelectedDayDetails(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-xl" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t(selectedDayDetails.displayDate.toLowerCase()) || selectedDayDetails.displayDate} - {t('detailed_log')}</h2>
               <button className="modal-close" onClick={() => setSelectedDayDetails(null)}>&times;</button>
@@ -1064,7 +1064,7 @@ export default function AdminDashboard() {
       {/* All Expenses List Modal */}
       {showExpensesModal && (
         <div className="modal-overlay" onClick={() => setShowExpensesModal(false)}>
-          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-xl" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('total_expenses')}</h2>
               <button className="btn-close" onClick={() => setShowExpensesModal(false)}>&times;</button>
@@ -1115,7 +1115,7 @@ export default function AdminDashboard() {
       {/* Today's Client Usage Modal */}
       {showClientsModal && (
         <div className="modal-overlay" onClick={() => setShowClientsModal(false)}>
-          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-xl" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('shift_usage_breakdown') || 'Today\'s Room Usage Breakdown'}</h2>
               <button className="btn-close" onClick={() => setShowClientsModal(false)}>&times;</button>
@@ -1192,7 +1192,7 @@ export default function AdminDashboard() {
       {/* Occupied Details Modal */}
       {showOccupiedModal && (
         <div className="modal-overlay" onClick={() => setShowOccupiedModal(false)}>
-          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-xl" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('occupied')} - {t('detailed_log')}</h2>
               <button className="btn-close" onClick={() => setShowOccupiedModal(false)}>&times;</button>
@@ -1253,7 +1253,7 @@ export default function AdminDashboard() {
       {/* Available Details Modal */}
       {showAvailableModal && (
         <div className="modal-overlay" onClick={() => setShowAvailableModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-xl" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('available')} Rooms</h2>
               <button className="btn-close" onClick={() => setShowAvailableModal(true)}>&times;</button>
@@ -1297,7 +1297,7 @@ export default function AdminDashboard() {
       {/* Today's Full Client Log Modal */}
       {showDailyClientsModal && (
         <div className="modal-overlay" onClick={() => setShowDailyClientsModal(false)}>
-          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-xl" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('todays_client_log')}</h2>
               <button className="btn-close" onClick={() => setShowDailyClientsModal(false)}>&times;</button>
@@ -1437,7 +1437,7 @@ const AdminSettingsSection = ({ user }) => {
 
   return (
     <div className="settings-section">
-      <div className="settings-card" style={{marginBottom: '1.5rem', border: '2px solid #0d9488', background: '#f0fdfa'}}>
+      <div className="settings-card pwa-card" style={{marginBottom: '1.5rem'}}>
         <h2 style={{color: '#0d9488'}}>🔔 PWA Command Center</h2>
         <p className="settings-subtitle">Manage notifications for this device. Essential for iOS and locked-phone alerts.</p>
         
@@ -1503,12 +1503,12 @@ const AdminSettingsSection = ({ user }) => {
           </div>
 
           {/iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()) && !(window.navigator.standalone) && (
-             <p style={{fontSize: '0.75rem', color: '#b91c1c', fontWeight: 'bold', background: '#fee2e2', padding: '8px', borderRadius: '8px'}}>
+             <p className="ios-warning">
                ⚠️ iOS Warning: Notifications ONLY work if you "Add to Home Screen" first!
              </p>
           )}
 
-          <p style={{fontSize: '0.7rem', color: '#64748b', fontStyle: 'italic', marginTop: '0.5rem'}}>
+          <p className="settings-tip">
             💡 Tip: If you don't hear a sound, check if your phone/PC is in "Do Not Disturb" or "Focus Mode".
           </p>
         </div>
@@ -1569,7 +1569,7 @@ const AdminSettingsSection = ({ user }) => {
         <StaffManagementList user={user} />
       </div>
 
-      <div className="settings-card" style={{marginTop: '2rem', border: '1.5px solid #64748b', background: '#f8fafc'}}>
+      <div className="settings-card maintenance-card" style={{marginTop: '2rem'}}>
         <h2 style={{color: '#475569'}}>🛠️ Maintenance & Recovery</h2>
         <p className="settings-subtitle">Undo accidental shift resets or cash collections.</p>
         
@@ -1867,7 +1867,7 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
       {/* History Detail Modal - STANDARD THEME */}
       {selectedDateHistory && (
         <div className="modal-overlay" onClick={() => setSelectedDateHistory(null)}>
-          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-xl" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{selectedDateHistory.dateLabel} - {t('detailed_log')}</h2>
               <button className="modal-close" onClick={() => setSelectedDateHistory(null)}>&times;</button>
@@ -1885,17 +1885,44 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                 </div>
               </div>
 
-              <h3 className="modal-subtitle" style={{marginBottom: '15px'}}>
-                💰 {t('sales_details')}
+              <h3 className="modal-subtitle" style={{
+                marginBottom: '18px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px',
+                fontSize: '0.9rem',
+                color: '#475569',
+                letterSpacing: '0.03em',
+                fontWeight: '800'
+              }}>
+                <span style={{
+                  background: 'rgba(13, 148, 136, 0.1)', 
+                  color: '#0d9488',
+                  padding: '8px', 
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(13, 148, 136, 0.1)'
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                </span> 
+                {t('sales_details')}
               </h3>
-              <div className="table-responsive" style={{marginBottom: '30px'}}>
-                <table className="data-table">
+              <div className="table-responsive" style={{
+                marginBottom: '30px', 
+                borderRadius: '16px', 
+                border: '1px solid #f1f5f9', 
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch'
+              }}>
+                <table className="data-table" style={{ minWidth: '500px' }}>
                   <thead>
                     <tr>
-                      <th>{t('order')}</th>
-                      <th className="text-right">{t('amount')}</th>
-                      <th>{t('time')}</th>
-                      <th>{t('served_by')}</th>
+                      <th style={{ width: '45%' }}>{t('order')}</th>
+                      <th style={{ width: '25%', textAlign: 'right' }}>{t('amount')}</th>
+                      <th style={{ width: '15%' }}>{t('time')}</th>
+                      <th style={{ width: '15%' }}>{t('served_by')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1903,45 +1930,70 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                       selectedDateHistory.transactions.filter(tx => tx.type === 'order').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
                         <tr key={tx.id}>
                           <td style={{
-                            padding: '12px', 
-                            fontWeight: '500', 
-                            fontSize: '0.9rem',
+                            padding: '16px', 
+                            fontWeight: '600', 
+                            fontSize: '0.875rem',
                             whiteSpace: 'pre-line',
-                            wordBreak: 'break-word',
-                            minWidth: '200px',
-                            lineHeight: '1.4'
+                            lineHeight: '1.5'
                           }}>
                             {tx.description}
                           </td>
-                          <td className="text-success" style={{padding: '12px', textAlign: 'right', fontWeight: '700', fontSize: '0.95rem'}}>
+                          <td className="text-success" style={{padding: '16px', textAlign: 'right', fontWeight: '800'}}>
                             RWF {tx.amount.toLocaleString()}
                           </td>
-                          <td className="time-cell" style={{padding: '12px', fontSize: '0.85rem'}}>
+                          <td className="time-cell" style={{padding: '16px'}}>
                             {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
                           </td>
-                          <td style={{padding: '12px', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                          <td style={{padding: '16px', fontSize: '0.825rem', color: '#64748b'}}>{tx.served_by || '--'}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" style={{textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: '0.85rem'}}>{t('no_history')}</td>
+                        <td colSpan="4" className="empty-state">{t('no_history')}</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
 
-              <h3 style={{fontSize: '0.85rem', color: '#e11d48', textTransform: 'uppercase', fontWeight: '700', marginBottom: '15px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                <span style={{background: '#fff1f2', padding: '4px 8px', borderRadius: '6px'}}>🛒</span> {t('purchases_details')}
+              <h3 style={{
+                fontSize: '0.9rem', 
+                color: '#475569', 
+                textTransform: 'uppercase', 
+                fontWeight: '800', 
+                marginBottom: '18px', 
+                letterSpacing: '0.03em', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px'
+              }}>
+                <span style={{
+                  background: 'rgba(225, 29, 72, 0.1)', 
+                  color: '#e11d48',
+                  padding: '8px', 
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(225, 29, 72, 0.1)'
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                </span> 
+                {t('purchases_details')}
               </h3>
-              <div className="table-responsive">
-                <table className="data-table">
+              <div className="table-responsive" style={{
+                borderRadius: '16px', 
+                border: '1px solid #f1f5f9', 
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch'
+              }}>
+                <table className="data-table" style={{ minWidth: '500px' }}>
                   <thead>
                     <tr>
-                      <th>{t('order')}</th>
-                      <th className="text-right">{t('amount')}</th>
-                      <th>{t('time')}</th>
-                      <th>{t('served_by')}</th>
+                      <th style={{ width: '45%' }}>{t('order')}</th>
+                      <th style={{ width: '25%', textAlign: 'right' }}>{t('amount')}</th>
+                      <th style={{ width: '15%' }}>{t('time')}</th>
+                      <th style={{ width: '15%' }}>{t('served_by')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1949,28 +2001,26 @@ const KitchenReportSection = ({ kitchenTransactions, lastKitchenCollectionTime }
                       selectedDateHistory.transactions.filter(tx => tx.type === 'purchase').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
                         <tr key={tx.id}>
                           <td style={{
-                            padding: '12px', 
-                            fontWeight: '500', 
-                            fontSize: '0.9rem',
+                            padding: '16px', 
+                            fontWeight: '600', 
+                            fontSize: '0.875rem',
                             whiteSpace: 'pre-line',
-                            wordBreak: 'break-word',
-                            minWidth: '200px',
-                            lineHeight: '1.4'
+                            lineHeight: '1.5'
                           }}>
                             {tx.description}
                           </td>
-                          <td style={{padding: '12px', textAlign: 'right', fontWeight: '700', color: '#ef4444', fontSize: '0.95rem'}}>
-                            - RWF {tx.amount.toLocaleString()}
+                          <td className="text-danger" style={{padding: '16px', textAlign: 'right', fontWeight: '800'}}>
+                            RWF {tx.amount.toLocaleString()}
                           </td>
-                          <td className="time-cell" style={{padding: '12px', fontSize: '0.85rem'}}>
+                          <td className="time-cell" style={{padding: '16px'}}>
                             {new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
                           </td>
-                          <td style={{padding: '12px', fontSize: '0.85rem'}}>{tx.served_by || '--'}</td>
+                          <td style={{padding: '16px', fontSize: '0.825rem', color: '#64748b'}}>{tx.served_by || '--'}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" style={{textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: '0.85rem'}}>{t('no_history')}</td>
+                        <td colSpan="4" className="empty-state">{t('no_history')}</td>
                       </tr>
                     )}
                   </tbody>
