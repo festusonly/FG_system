@@ -389,93 +389,51 @@ export default function KitchenPortal() {
         </div>
 
         {/* TOP: Record Sale Form (Highest Visibility) */}
-        <div className="entry-card sale-card-pro" style={{
-          maxWidth: '800px', 
-          margin: '0 auto 2.5rem auto',
-          border: '2px solid #000000',
-          borderRadius: '10px',
-          boxShadow: '0 15px 35px -5px rgba(18, 140, 126, 0.15), 0 10px 15px -8px rgba(18, 140, 126, 0.1)',
-          background: 'white',
-          overflow: 'hidden'
-        }}>
-          <div className="entry-header" style={{background: 'rgba(18, 140, 126, 0.05)', padding: '1.5rem', borderBottom: '2px solid #000000'}}>
-            <h2 style={{color: '#000000', display: 'flex', alignItems: 'center', gap: '10px', margin: 0}}>
-              {t('record_sale')}
-            </h2>
-            <p className="subtitle" style={{color: '#000000', fontWeight: '600', margin: '5px 0 0 0'}}>{t('money_in')}</p>
+        <div className="modern-entry-card">
+          <div className="modern-entry-header">
+            <h2>{t('record_sale')}</h2>
+            <p className="subtitle">{t('money_in')}</p>
           </div>
-          <div style={{padding: '1.5rem'}}>
+          <div style={{padding: '2rem'}}>
             <form onSubmit={handleRecordSale} className="entry-form">
               <div className="form-group" style={{marginBottom: '1.5rem'}}>
-                <label style={{display: 'block', marginBottom: '8px', color: '#000000', fontWeight: '700'}}>{t('what_sold')}</label>
+                <label>{t('what_sold')}</label>
                 <textarea 
+                  className="modern-textarea"
                   value={saleDesc}
                   onChange={(e) => setSaleDesc(e.target.value)}
                   placeholder="Example: 2 Fish, 5 Beers"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: '2px solid #000000',
-                    minHeight: '80px',
-                    fontSize: '1rem',
-                    fontFamily: 'inherit'
-                  }}
                 />
               </div>
               <div className="form-group" style={{marginBottom: '1.5rem'}}>
-                <label style={{display: 'block', marginBottom: '8px', color: '#000000', fontWeight: '700'}}>{t('price_rwf')}</label>
+                <label>{t('price_rwf')}</label>
                 <input 
+                  className="modern-input"
                   type="number" 
                   value={saleAmount}
                   onChange={(e) => setSaleAmount(e.target.value)}
                   placeholder="Price"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: '2px solid #000000',
-                    fontSize: '1rem'
-                  }}
                 />
               </div>
               <div className="form-group" style={{marginBottom: '1.5rem'}}>
-                <label style={{display: 'block', marginBottom: '8px', color: '#000000', fontWeight: '700'}}>{t('served_by')}</label>
+                <label>{t('served_by')}</label>
                 <input 
+                  className="modern-input"
                   type="text" 
                   value={saleServedBy}
                   onChange={(e) => setSaleServedBy(e.target.value)}
                   placeholder="Worker name"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: '2px solid #000000',
-                    fontSize: '1rem'
-                  }}
                 />
               </div>
               {message.text && message.text.includes('Sale') && (
-                <div className={`portal-msg-large ${message.type}`} style={{borderRadius: '10px', padding: '1rem', marginBottom: '1rem', background: message.type === 'success' ? '#ecfdf5' : '#fff1f2', color: message.type === 'success' ? '#059669' : '#e11d48'}}>
+                <div className={`portal-msg-large ${message.type}`}>
                   {message.text}
                 </div>
               )}
-              <button type="submit" className="btn-submit-pro sale-theme" disabled={submitting} style={{
-                background: '#128c7e',
-                color: 'white',
-                padding: '1rem',
-                borderRadius: '10px',
-                fontSize: '1.1rem',
-                fontWeight: '800',
-                border: 'none',
-                boxShadow: '0 4px 12px rgba(18, 140, 126, 0.3)',
-                cursor: 'pointer',
-                width: '100%',
-                transition: 'all 0.2s'
-              }}>
+              <button type="submit" className="modern-btn-submit" disabled={submitting}>
                 {submitting ? t('loading') : t('save_sale')}
               </button>
             </form>

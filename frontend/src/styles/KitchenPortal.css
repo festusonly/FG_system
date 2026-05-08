@@ -503,3 +503,112 @@
   background: #cbd5e1;
   border-radius: 10px;
 }
+
+/* Modern Sale Form - Standalone Styles */
+.modern-entry-card {
+  max-width: 800px;
+  margin: 0 auto 2.5rem auto;
+  background: white;
+  border-radius: 28px;
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  /* Stronger, glowing shadow to make it pop */
+  box-shadow: 0 20px 40px -10px rgba(13, 148, 136, 0.15), 0 10px 20px -5px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.modern-entry-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 50px -15px rgba(13, 148, 136, 0.2), 0 15px 25px -10px rgba(0, 0, 0, 0.1);
+}
+
+/* Eye-catching left accent bar */
+.modern-entry-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: linear-gradient(to bottom, #0d9488, #2dd4bf);
+}
+
+.modern-entry-header {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.08) 0%, rgba(20, 184, 166, 0.03) 100%);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+}
+
+.modern-entry-header h2 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0d9488;
+  margin: 0;
+}
+
+.modern-entry-header .subtitle {
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.modern-input, .modern-textarea {
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 1rem;
+  color: #1e293b;
+  transition: all 0.3s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.modern-input:focus, .modern-textarea:focus {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
+  background: white;
+}
+
+.modern-btn-submit {
+  width: 100%;
+  padding: 1.1rem;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  color: white;
+  border: none;
+  border-radius: 18px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 15px rgba(13, 148, 136, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.modern-btn-submit:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 25px rgba(13, 148, 136, 0.35);
+}
+
+.modern-btn-submit:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.dark-mode .modern-entry-card {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .modern-input, .dark-mode .modern-textarea {
+  background: rgba(15, 23, 42, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.dark-mode .modern-input:focus {
+  background: rgba(15, 23, 42, 0.6);
+}
