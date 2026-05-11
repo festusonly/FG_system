@@ -667,8 +667,8 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {todaysTransactions.length > 0 ? (
-                    todaysTransactions.slice(0, showAllRecentTransactions ? undefined : 10).map((tx) => (
+                  {shiftTransactions.length > 0 ? (
+                    shiftTransactions.slice(0, showAllRecentTransactions ? undefined : 10).map((tx) => (
                       <tr key={tx.id}>
                         <td className="room-cell">{tx.room}</td>
                         <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>
@@ -692,12 +692,12 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
-            {todaysTransactions.length > 10 && (
+            {shiftTransactions.length > 10 && (
               <button 
                 onClick={() => setShowAllRecentTransactions(!showAllRecentTransactions)}
                 style={{width: '100%', marginTop: '1rem', padding: '10px', borderRadius: '12px', border: 'none', background: '#f8fafc', color: '#94a3b8', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', transition: 'all 0.2s'}}
               >
-                {showAllRecentTransactions ? t('show_less') || 'Show Less' : `${t('view_more') || 'View More'} (${todaysTransactions.length - 10} more)`}
+                {showAllRecentTransactions ? t('show_less') || 'Show Less' : `${t('view_more') || 'View More'} (${shiftTransactions.length - 10} more)`}
               </button>
             )}
           </div>
@@ -1006,7 +1006,41 @@ export default function AdminDashboard() {
                           <td>{tx.room}</td>
                           <td>{formatTime(tx.time)}</td>
                           <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied_short')}</span>}</td>
-                          <td style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                          <td style={{color: '#0d9488', fontWeight: '700'}}>
+                            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px'}}>
+                              <span>RWF {tx.amount.toLocaleString()}</span>
+                              {(() => {
+                                // Logic: If updatedAt is much later than creation, AND it's not just a normal checkout time
+                                const created = new Date(tx.time).getTime();
+                                const updated = tx.updatedAt ? new Date(tx.updatedAt).getTime() : created;
+                                const checkout = tx.checkoutTime ? new Date(tx.checkoutTime).getTime() : 0;
+                                
+                                // Edited if:
+                                // 1. Active room and updated > 10s after creation
+                                // 2. Completed room and updated > 5s away from checkout time
+                                const isEdited = (tx.status === 'active' && (updated - created > 10000)) || 
+                                                 (tx.status === 'completed' && checkout > 0 && Math.abs(updated - checkout) > 5000);
+                                
+                                if (isEdited) {
+                                  return (
+                                    <span style={{
+                                      fontSize: '0.6rem',
+                                      background: '#fef3c7',
+                                      color: '#92400e',
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      fontWeight: '800',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.05em'
+                                    }}>
+                                      {t('edited_label') || 'Edited'}: {formatTime(tx.updatedAt)}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -1169,7 +1203,26 @@ export default function AdminDashboard() {
                           <td>{tx.room}</td>
                           <td>{formatTime(tx.time)}</td>
                           <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied_short')}</span>}</td>
-                          <td className="text-success">RWF {tx.amount.toLocaleString()}</td>
+                          <td className="text-success" style={{fontWeight: '700'}}>
+                            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px'}}>
+                              <span>RWF {tx.amount.toLocaleString()}</span>
+                              {(() => {
+                                const created = new Date(tx.time).getTime();
+                                const updated = tx.updatedAt ? new Date(tx.updatedAt).getTime() : created;
+                                const checkout = tx.checkoutTime ? new Date(tx.checkoutTime).getTime() : 0;
+                                const isEdited = (tx.status === 'active' && (updated - created > 10000)) || 
+                                                 (tx.status === 'completed' && checkout > 0 && Math.abs(updated - checkout) > 5000);
+                                if (isEdited) {
+                                  return (
+                                    <span style={{fontSize: '0.6rem', background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em'}}>
+                                      {t('edited_label') || 'Edited'}: {formatTime(tx.updatedAt)}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -1231,7 +1284,24 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td style={{color: '#64748b', fontSize: '0.85rem'}}>{formatTime(tx.time)}</td>
-                          <td style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                          <td style={{color: '#0d9488', fontWeight: '700'}}>
+                            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px'}}>
+                              <span>RWF {tx.amount.toLocaleString()}</span>
+                              {(() => {
+                                const created = new Date(tx.time).getTime();
+                                const updated = tx.updatedAt ? new Date(tx.updatedAt).getTime() : created;
+                                const isEdited = updated - created > 10000;
+                                if (isEdited) {
+                                  return (
+                                    <span style={{fontSize: '0.6rem', background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em'}}>
+                                      {t('edited_label') || 'Edited'}: {formatTime(tx.updatedAt)}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -1351,7 +1421,26 @@ export default function AdminDashboard() {
                           <td>{tx.room}</td>
                           <td>{formatTime(tx.time)}</td>
                           <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
-                          <td style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                          <td style={{color: '#0d9488', fontWeight: '700'}}>
+                            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px'}}>
+                              <span>RWF {tx.amount.toLocaleString()}</span>
+                              {(() => {
+                                const created = new Date(tx.time).getTime();
+                                const updated = tx.updatedAt ? new Date(tx.updatedAt).getTime() : created;
+                                const checkout = tx.checkoutTime ? new Date(tx.checkoutTime).getTime() : 0;
+                                const isEdited = (tx.status === 'active' && (updated - created > 10000)) || 
+                                                 (tx.status === 'completed' && checkout > 0 && Math.abs(updated - checkout) > 5000);
+                                if (isEdited) {
+                                  return (
+                                    <span style={{fontSize: '0.6rem', background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em'}}>
+                                      {t('edited_label') || 'Edited'}: {formatTime(tx.updatedAt)}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     ) : (
