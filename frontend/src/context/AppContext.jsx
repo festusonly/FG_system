@@ -422,7 +422,7 @@ export function AppProvider({ children }) {
         .from('employees')
         .insert({
           name: employeeData.name,
-          age: parseInt(employeeData.age),
+          age: Number(employeeData.age) || 0,
           phone: employeeData.phone,
           base_salary: parseFloat(employeeData.baseSalary || 0),
           id_screenshot_url: imageUrl
