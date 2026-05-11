@@ -821,9 +821,11 @@ export default function StaffPortal() {
                       style={{width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0'}}
                       required
                     >
-                      {rooms.map(r => (
-                        <option key={r.id} value={r.id}>{r.name}</option>
-                      ))}
+                      {rooms
+                        .sort((a, b) => parseInt(a.roomNumber) - parseInt(b.roomNumber))
+                        .map(r => (
+                          <option key={r.id} value={r.id}>{r.name}</option>
+                        ))}
                     </select>
                   </div>
                   
