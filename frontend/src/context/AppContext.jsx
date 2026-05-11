@@ -741,6 +741,26 @@ export function AppProvider({ children }) {
     }
   }
 
+  const editTransaction = async (id, updates) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .update({
+          amount_rwf: updates.amount,
+          room_id: updates.roomId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+      
+      if (error) throw error
+      return { success: true }
+    } catch (err) {
+      console.error('Error editing transaction:', err.message)
+      return { success: false, error: err.message }
+    }
+  }
+
   const value = {
     rooms,
     transactions,
@@ -774,7 +794,8 @@ export function AppProvider({ children }) {
     isPWAInstalled,
     refreshData,
     undoLastCollection,
-    undoLastKitchenCollection
+    undoLastKitchenCollection,
+    editTransaction
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

@@ -6,7 +6,7 @@ import '../styles/StaffPortal.css'
 
 export default function StaffPortal() {
   const { user, logout } = useAuth()
-  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData, employees, recordDeduction, collectCash } = useApp()
+  const { rooms, transactions, expenses, lastCollectionTime, bookRoom, checkoutRoom, reportExpense, loadingData, t, language, changeLanguage, isOffline, deferredPrompt, installPWA, isPWAInstalled, refreshData, employees, recordDeduction, collectCash, editTransaction } = useApp()
   const navigate = useNavigate()
 
   const [submitting, setSubmitting] = useState(false)
@@ -15,6 +15,11 @@ export default function StaffPortal() {
   const [amount, setAmount] = useState('')
   const [stayType, setStayType] = useState('short_hours')
   const [days, setDays] = useState(1)
+  const [message, setMessage] = useState({ type: '', text: '' })
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingLog, setEditingLog] = useState(null)
+  const [editAmount, setEditAmount] = useState('')
+  const [editRoomId, setEditRoomId] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   
@@ -156,6 +161,28 @@ export default function StaffPortal() {
       setActionError(result.error || 'Failed to check out room.')
     } else {
       setSelectedRoom(null)
+    }
+  }
+
+  const handleEditLog = (tx) => {
+    setEditingLog(tx)
+    setEditAmount(tx.amount.toString())
+    setEditRoomId(tx.roomId)
+    setShowEditModal(true)
+  }
+
+  const handleSaveEdit = async () => {
+    setSubmitting(true)
+    const result = await editTransaction(editingLog.id, {
+      amount: parseFloat(editAmount),
+      roomId: editRoomId
+    })
+    setSubmitting(false)
+    if (result.success) {
+      setShowEditModal(false)
+      setEditingLog(null)
+    } else {
+      setActionError(result.error || 'Failed to update transaction.')
     }
   }
 
@@ -730,6 +757,7 @@ export default function StaffPortal() {
                         <th>{t('check_in')}</th>
                         <th>{t('check_out')}</th>
                         <th>{t('amount')}</th>
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -746,11 +774,21 @@ export default function StaffPortal() {
                             <td>{formatTime(tx.time)}</td>
                             <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">Active</span>}</td>
                             <td className="text-success">RWF {Number(tx.amount).toLocaleString()}</td>
+                            <td>
+                              <button 
+                                className="btn-edit-inline" 
+                                onClick={() => handleEditLog(tx)}
+                                title={t('edit')}
+                                style={{background: 'rgba(13, 148, 136, 0.1)', border: 'none', color: '#0d9488', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex'}}
+                              >
+                                ✏️
+                              </button>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="4" className="empty-state">No clients in this shift yet.</td>
+                          <td colSpan="5" className="empty-state">No clients in this shift yet.</td>
                         </tr>
                       )}
                     </tbody>
@@ -759,6 +797,57 @@ export default function StaffPortal() {
               </div>
               <div className="modal-footer">
                 <button className="btn-modal-close" onClick={() => setShowClientsModal(false)}>{t('close')}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Log Modal */}
+        {showEditModal && editingLog && (
+          <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '400px'}}>
+              <div className="modal-header">
+                <h3>{t('edit_entry') || "Edit Entry"}</h3>
+                <button type="button" className="btn-close" onClick={() => setShowEditModal(false)}>&times;</button>
+              </div>
+              
+              <div className="modal-body" style={{padding: '20px'}}>
+                <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }}>
+                  <div className="form-group" style={{marginBottom: '1.5rem'}}>
+                    <label>{t('room')}</label>
+                    <select 
+                      value={editRoomId}
+                      onChange={(e) => setEditRoomId(e.target.value)}
+                      style={{width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0'}}
+                      required
+                    >
+                      {rooms.map(r => (
+                        <option key={r.id} value={r.id}>{r.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="form-group" style={{marginBottom: '1.5rem'}}>
+                    <label>{t('amount_paid')}</label>
+                    <input 
+                      type="number"
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      style={{width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0'}}
+                      required
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="form-actions" style={{display: 'flex', gap: '10px'}}>
+                    <button type="submit" className="btn-submit" disabled={submitting} style={{flex: 1, padding: '12px'}}>
+                      {submitting ? t('loading') : t('save_changes')}
+                    </button>
+                    <button type="button" className="btn-cancel" onClick={() => setShowEditModal(false)} style={{flex: 1, padding: '12px'}}>
+                      {t('cancel')}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
