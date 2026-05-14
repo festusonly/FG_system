@@ -98,6 +98,30 @@ export default function AdminDashboard() {
     }
   }, [activeDetailsTable])
 
+  useEffect(() => {
+    const cleanupOldData = async () => {
+      try {
+        const thresholdDate = new Date()
+        thresholdDate.setDate(thresholdDate.getDate() - 8)
+        const threshold = thresholdDate.toISOString()
+
+        // 1. Delete old room transactions
+        const { error: txErr } = await supabase.from('transactions').delete().lt('created_at', threshold)
+        if (txErr) console.error('TX Cleanup Error:', txErr)
+        
+        // 2. Delete old expenses (including shift markers)
+        const { error: expErr } = await supabase.from('expenses').delete().lt('created_at', threshold)
+        if (expErr) console.error('EXP Cleanup Error:', expErr)
+        
+        console.log('🧹 Database cleanup: Finished checking for old records.')
+        refreshData() // Re-fetch to clear deleted data from UI
+      } catch (err) {
+        console.error('Cleanup error:', err.message)
+      }
+    }
+    if (user) cleanupOldData()
+  }, [user])
+
   const todayString = new Date().toDateString()
   
   // Filter out system events (markers) from real expenses
@@ -233,6 +257,11 @@ export default function AdminDashboard() {
       const endTime = new Date(endMarker.time)
       const startTime = startMarker ? new Date(startMarker.time) : new Date(0)
       
+      // Visual Filter: Only show shifts that ended within the last 7 days
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      if (endTime < sevenDaysAgo) continue;
+
       // Data in this period
       const periodTx = transactions.filter(tx => {
         const t = new Date(tx.time)
@@ -255,10 +284,13 @@ export default function AdminDashboard() {
         return `${d}/${m}, ${h}:${min}`
       }
 
+      const isNightShift = endTime.getHours() < 10 || endTime.getHours() >= 22;
+
       collectionPeriods.push({
         id: endMarker.id,
         endTime,
         startTime,
+        isNightShift,
         startLabel: formatTime(startTime),
         endLabel: formatTime(endTime),
         displayDate: `${formatTime(startTime)} → ${formatTime(endTime)}`,
@@ -843,36 +875,73 @@ export default function AdminDashboard() {
                     <div key={period.id} className="history-card" style={{
                       padding: '16px', 
                       borderRadius: '16px', 
-                      border: '1px solid #e2e8f0', 
-                      borderLeft: '5px solid #0d9488',
-                      background: 'white', 
+                      border: '1px solid ' + (period.isNightShift ? '#475569' : '#e2e8f0'), 
+                      borderLeft: '5px solid ' + (period.isNightShift ? '#818cf8' : '#0d9488'),
+                      background: period.isNightShift ? '#334155' : 'white', 
+                      color: period.isNightShift ? '#f8fafc' : 'inherit',
                       display: 'flex', 
+                      flexDirection: 'column',
                       justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '15px', 
+                      gap: '12px', 
                       boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                        <div className="history-pill">
-                          <span className="history-pill-label">{t('since_label')}:</span>
-                          <strong className="history-pill-value">{period.startLabel}</strong>
+                      {/* Floating Emoji Background */}
+                      <div style={{position: 'absolute', right: '-10px', top: '-10px', opacity: '0.07', fontSize: '5rem', pointerEvents: 'none'}}>
+                        {period.isNightShift ? '🌙' : '☀️'}
+                      </div>
+
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1}}>
+                         <span style={{
+                           fontSize: '0.65rem', 
+                           fontWeight: '900', 
+                           textTransform: 'uppercase', 
+                           letterSpacing: '0.08em',
+                           color: period.isNightShift ? '#818cf8' : '#0d9488',
+                           display: 'flex',
+                           alignItems: 'center',
+                           gap: '6px',
+                           background: period.isNightShift ? 'rgba(129, 140, 248, 0.1)' : 'rgba(13, 148, 136, 0.05)',
+                           padding: '4px 10px',
+                           borderRadius: '20px'
+                         }}>
+                           {period.isNightShift ? '🌙 Night Shift' : '☀️ Day Shift'}
+                         </span>
+                         <span style={{fontSize: '0.85rem', fontWeight: 'bold', color: period.isNightShift ? '#34d399' : '#059669'}}>
+                           RWF {period.revenue.toLocaleString()}
+                         </span>
+                      </div>
+
+                      <div style={{display: 'flex', alignItems: 'center', gap: '8px', position: 'relative', zIndex: 1}}>
+                        <div className="history-pill" style={{background: period.isNightShift ? '#1e293b' : '#f8fafc', border: '1px solid ' + (period.isNightShift ? '#334155' : '#f1f5f9'), flex: 1}}>
+                          <span className="history-pill-label" style={{color: period.isNightShift ? '#94a3b8' : '#64748b'}}>{t('since_label')}:</span>
+                          <strong className="history-pill-value" style={{color: period.isNightShift ? '#f1f5f9' : '#1e293b'}}>{period.startLabel}</strong>
                         </div>
                         
-                        <div style={{color: '#94a3b8', fontSize: '1.2rem', fontWeight: 'bold'}}>→</div>
+                        <div style={{color: period.isNightShift ? '#475569' : '#cbd5e1', fontSize: '1rem'}}>→</div>
                         
-                        <div className="history-pill">
-                          <span className="history-pill-label">{t('to_label')}:</span>
-                          <strong className="history-pill-value">{period.endLabel}</strong>
+                        <div className="history-pill" style={{background: period.isNightShift ? '#1e293b' : '#f8fafc', border: '1px solid ' + (period.isNightShift ? '#334155' : '#f1f5f9'), flex: 1}}>
+                          <span className="history-pill-label" style={{color: period.isNightShift ? '#94a3b8' : '#64748b'}}>{t('to_label')}:</span>
+                          <strong className="history-pill-value" style={{color: period.isNightShift ? '#f1f5f9' : '#1e293b'}}>{period.endLabel}</strong>
                         </div>
                       </div>
                       
+                      <div style={{display: 'flex', justifyContent: 'flex-end', position: 'relative', zIndex: 1}}>
                         <button 
                           onClick={() => setSelectedDayDetails(period)}
                           className="btn-details-card"
-                          style={{padding: '8px 16px', fontSize: '0.8rem'}}
+                          style={{
+                            background: period.isNightShift ? '#312e81' : '#0d9488',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 15px',
+                            width: '100%'
+                          }}
                         >
                           {t('view_details')}
                         </button>
+                      </div>
                     </div>
                   ))}
                 </div>
