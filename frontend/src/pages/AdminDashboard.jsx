@@ -24,7 +24,9 @@ export default function AdminDashboard() {
     deferredPrompt,
     installPWA,
     isPWAInstalled,
-    refreshData
+    refreshData,
+    deleteTransaction,
+    deleteShift
   } = useApp()
   const navigate = useNavigate()
 
@@ -209,6 +211,34 @@ export default function AdminDashboard() {
     if (cashOnHand === 0) return alert('No cash to collect right now.')
     if (window.confirm(`Are you sure you want to collect RWF ${cashOnHand.toLocaleString()}? This will reset the Cash on Hand meter to zero.`)) {
       await collectCash()
+    }
+  }
+
+  const handleDeleteTransaction = async (id, roomName) => {
+    const isConfirmed = window.confirm(
+      `⚠️ WARNING:\nAre you sure you want to PERMANENTLY delete the booking/transaction for room "${roomName}"?\n\nIf the room is currently marked as occupied, this will instantly reset its status back to "Available".`
+    )
+    if (isConfirmed) {
+      const res = await deleteTransaction(id)
+      if (res.success) {
+        alert("Transaction deleted and room status reset successfully!")
+      } else {
+        alert("Error deleting transaction: " + res.error)
+      }
+    }
+  }
+
+  const handleDeleteShift = async (collectionExpenseId, label) => {
+    const isConfirmed = window.confirm(
+      `🚨 CRITICAL WARNING:\nAre you sure you want to PERMANENTLY delete the shift ending at "${label}"?\n\nThis will completely delete:\n1. The Cash Collection record\n2. ALL room booking transactions inside this shift\n3. ALL expenses recorded during this shift\n\nThis action CANNOT BE UNDONE and will affect your financial totals.`
+    )
+    if (isConfirmed) {
+      const res = await deleteShift(collectionExpenseId)
+      if (res.success) {
+        alert("Shift card and all associated records deleted successfully!")
+      } else {
+        alert("Error deleting shift: " + res.error)
+      }
     }
   }
 
@@ -696,6 +726,7 @@ export default function AdminDashboard() {
                     <th>{t('amount')}</th>
                     <th>{t('type')}</th>
                     <th>{t('time')}</th>
+                    <th>{t('actions') || 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -712,11 +743,31 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="time-cell">{formatTime(tx.time)}</td>
+                        <td className="action-cell">
+                          <button 
+                            onClick={() => handleDeleteTransaction(tx.id, tx.room)} 
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              transition: 'background 0.2s',
+                              fontSize: '1rem'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'none'}
+                            title={t('delete') || 'Delete'}
+                          >
+                            🗑️
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="empty-state">
+                      <td colSpan="5" className="empty-state">
                         {t('no_transactions')}
                       </td>
                     </tr>
@@ -750,6 +801,7 @@ export default function AdminDashboard() {
                     <th>{t('check_in')}</th>
                     <th>{t('check_out')}</th>
                     <th>{t('amount')}</th>
+                    <th>{t('actions') || 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -766,11 +818,31 @@ export default function AdminDashboard() {
                         <td>{formatTime(tx.time)}</td>
                         <td>{tx.status === 'completed' ? formatTime(tx.checkoutTime) : <span className="status-badge occupied">{t('occupied_short')}</span>}</td>
                         <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                        <td className="action-cell">
+                          <button 
+                            onClick={() => handleDeleteTransaction(tx.id, tx.room)} 
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              transition: 'background 0.2s',
+                              fontSize: '1rem'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'none'}
+                            title={t('delete') || 'Delete'}
+                          >
+                            🗑️
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
+                      <td colSpan="5" className="empty-state">{t('no_transactions')}</td>
                     </tr>
                   )}
                 </tbody>
@@ -793,6 +865,7 @@ export default function AdminDashboard() {
                     <th>{t('type')}</th>
                     <th>{t('since')}</th>
                     <th>{t('amount')}</th>
+                    <th>{t('actions') || 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -807,11 +880,31 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{color: '#64748b', fontSize: '0.85rem'}}>{formatTime(tx.time)}</td>
                         <td className="amount-cell" style={{color: '#0d9488', fontWeight: '700'}}>RWF {tx.amount.toLocaleString()}</td>
+                        <td className="action-cell">
+                          <button 
+                            onClick={() => handleDeleteTransaction(tx.id, tx.room)} 
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              transition: 'background 0.2s',
+                              fontSize: '1rem'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'none'}
+                            title={t('delete') || 'Delete'}
+                          >
+                            🗑️
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
+                      <td colSpan="5" className="empty-state">{t('no_transactions')}</td>
                     </tr>
                   )}
                 </tbody>
@@ -927,7 +1020,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       
-                      <div style={{display: 'flex', justifyContent: 'flex-end', position: 'relative', zIndex: 1}}>
+                      <div style={{display: 'flex', gap: '8px', position: 'relative', zIndex: 1}}>
                         <button 
                           onClick={() => setSelectedDayDetails(period)}
                           className="btn-details-card"
@@ -935,11 +1028,43 @@ export default function AdminDashboard() {
                             background: period.isNightShift ? '#312e81' : '#0d9488',
                             color: 'white',
                             border: 'none',
-                            padding: '6px 15px',
-                            width: '100%'
+                            padding: '8px 15px',
+                            flex: 1,
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '0.85rem',
+                            textAlign: 'center'
                           }}
                         >
                           {t('view_details')}
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteShift(period.id, `${period.startLabel} - ${period.endLabel}`)}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            color: '#ef4444',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            fontSize: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = '#ef4444';
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                            e.currentTarget.style.color = '#ef4444';
+                          }}
+                          title={t('delete_shift') || 'Delete Shift'}
+                        >
+                          🗑️
                         </button>
                       </div>
                     </div>
@@ -1060,6 +1185,7 @@ export default function AdminDashboard() {
                       <th>{t('check_in')}</th>
                       <th>{t('check_out')}</th>
                       <th>{t('amount')}</th>
+                      <th>{t('actions') || 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1110,11 +1236,34 @@ export default function AdminDashboard() {
                               })()}
                             </div>
                           </td>
+                          <td className="action-cell">
+                            <button 
+                              onClick={() => {
+                                handleDeleteTransaction(tx.id, tx.room);
+                                setSelectedDayDetails(null); // Close modal on delete to refresh list properly
+                              }} 
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                transition: 'background 0.2s',
+                                fontSize: '1rem'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                              onMouseOut={(e) => e.currentTarget.style.background = 'none'}
+                              title={t('delete') || 'Delete'}
+                            >
+                              🗑️
+                            </button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
+                        <td colSpan="5" className="empty-state">{t('no_transactions')}</td>
                       </tr>
                     )}
                   </tbody>
@@ -1257,6 +1406,7 @@ export default function AdminDashboard() {
                       <th>{t('check_in')}</th>
                       <th>{t('check_out')}</th>
                       <th>{t('amount')}</th>
+                      <th>{t('actions') || 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1292,11 +1442,34 @@ export default function AdminDashboard() {
                               })()}
                             </div>
                           </td>
+                          <td className="action-cell">
+                            <button 
+                              onClick={() => {
+                                handleDeleteTransaction(tx.id, tx.room);
+                                setShowClientsModal(false); // Close modal on delete to refresh list properly
+                              }} 
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                transition: 'background 0.2s',
+                                fontSize: '1rem'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                              onMouseOut={(e) => e.currentTarget.style.background = 'none'}
+                              title={t('delete') || 'Delete'}
+                            >
+                              🗑️
+                            </button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
+                        <td colSpan="5" className="empty-state">{t('no_transactions')}</td>
                       </tr>
                     )}
                   </tbody>
@@ -1340,6 +1513,7 @@ export default function AdminDashboard() {
                       <th>{t('type')}</th>
                       <th>{t('since')}</th>
                       <th>{t('amount')}</th>
+                      <th>{t('actions') || 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1371,11 +1545,34 @@ export default function AdminDashboard() {
                               })()}
                             </div>
                           </td>
+                          <td className="action-cell">
+                            <button 
+                              onClick={() => {
+                                handleDeleteTransaction(tx.id, tx.room);
+                                setShowOccupiedModal(false); // Close modal on delete to refresh list properly
+                              }} 
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                transition: 'background 0.2s',
+                                fontSize: '1rem'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                              onMouseOut={(e) => e.currentTarget.style.background = 'none'}
+                              title={t('delete') || 'Delete'}
+                            >
+                              🗑️
+                            </button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="empty-state">{t('no_transactions')}</td>
+                        <td colSpan="5" className="empty-state">{t('no_transactions')}</td>
                       </tr>
                     )}
                   </tbody>

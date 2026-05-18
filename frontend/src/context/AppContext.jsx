@@ -762,6 +762,118 @@ export function AppProvider({ children }) {
     }
   }
 
+  const deleteTransaction = async (id) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const tx = transactions.find(t => t.id === id)
+      if (tx && tx.status === 'active') {
+        const { error: roomError } = await supabase
+          .from('rooms')
+          .update({ status: 'available' })
+          .eq('id', tx.roomId)
+        if (roomError) throw roomError
+      }
+
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+
+      refreshData()
+      return { success: true }
+    } catch (err) {
+      console.error('Error deleting transaction:', err.message)
+      return { success: false, error: err.message }
+    }
+  }
+
+  const deleteShift = async (collectionExpenseId) => {
+    if (!user) return { success: false, error: 'Not authenticated' }
+    try {
+      const targetMarker = expenses.find(e => e.id === collectionExpenseId)
+      if (!targetMarker) return { success: false, error: 'Collection record not found' }
+
+      const endTimeStr = targetMarker.time
+      const endTime = new Date(endTimeStr)
+
+      const allMarkers = expenses
+        .filter(exp => exp.description === 'SYSTEM_CASH_COLLECTION')
+        .sort((a, b) => new Date(a.time) - new Date(b.time))
+      
+      const targetIndex = allMarkers.findIndex(m => m.id === collectionExpenseId)
+      const startMarker = targetIndex > 0 ? allMarkers[targetIndex - 1] : null
+      const startTime = startMarker ? new Date(startMarker.time) : new Date(0)
+
+      // Find all transactions inside this shift timeframe
+      const shiftTxs = transactions.filter(tx => {
+        const t = new Date(tx.time)
+        return t > startTime && t <= endTime
+      })
+
+      // Find all expenses inside this shift timeframe
+      const shiftExps = expenses.filter(exp => {
+        const t = new Date(exp.time)
+        return t > startTime && t <= endTime
+      })
+
+      // 1. Reset room status back to available if any room in this shift is currently occupied/active
+      for (const tx of shiftTxs) {
+        if (tx.status === 'active') {
+          const { error: roomError } = await supabase
+            .from('rooms')
+            .update({ status: 'available' })
+            .eq('id', tx.roomId)
+          if (roomError) console.error(`Error freeing room ${tx.room}:`, roomError.message)
+        }
+      }
+
+      // 2. Delete the transactions individually to guarantee RLS bypass and exact match
+      for (const tx of shiftTxs) {
+        const { data, error: txError } = await supabase
+          .from('transactions')
+          .delete()
+          .eq('id', tx.id)
+          .select()
+        if (txError) throw txError
+        if (!data || data.length === 0) throw new Error(`Permission denied: Could not delete transaction for room ${tx.room}`)
+      }
+
+      // 3. Delete the expenses individually
+      for (const exp of shiftExps) {
+        const { data, error: expError } = await supabase
+          .from('expenses')
+          .delete()
+          .eq('id', exp.id)
+          .select()
+        if (expError) throw expError
+        if (!data || data.length === 0) {
+          throw new Error(`Permission denied: Could not delete expense/marker: ${exp.description || 'Unknown'}. Check Supabase RLS policies.`)
+        }
+      }
+
+      // 4. Force target collection marker itself to be deleted just in case it wasn't caught in shiftExps
+      if (!shiftExps.find(e => e.id === collectionExpenseId)) {
+        const { data: markerData, error: markerError } = await supabase
+          .from('expenses')
+          .delete()
+          .eq('id', collectionExpenseId)
+          .select()
+        if (markerError) throw markerError
+        if (!markerData || markerData.length === 0) {
+           throw new Error("Permission denied: Could not delete the shift marker.")
+        }
+      }
+
+      refreshData()
+      return { success: true }
+    } catch (err) {
+      console.error('Error deleting shift:', err.message)
+      return { success: false, error: err.message }
+    }
+  }
+
   const value = {
     rooms,
     transactions,
@@ -796,7 +908,9 @@ export function AppProvider({ children }) {
     refreshData,
     undoLastCollection,
     undoLastKitchenCollection,
-    editTransaction
+    editTransaction,
+    deleteTransaction,
+    deleteShift
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
